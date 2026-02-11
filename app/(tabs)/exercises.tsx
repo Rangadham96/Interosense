@@ -28,6 +28,8 @@ const ALL_CATEGORIES: ExerciseCategory[] = [
   'tension',
   'temperature',
   'exposure',
+  'gut',
+  'movement',
 ];
 
 export default function ExercisesScreen() {

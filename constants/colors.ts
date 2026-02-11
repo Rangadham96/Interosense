@@ -43,7 +43,9 @@ const Colors = {
     tension: '#F0C05A',
     temperature: '#E8B4B8',
     exposure: '#7FB069',
-  },
+    gut: '#C4A484',
+    movement: '#6AABCF',
+  } as Record<string, string>,
 
   intensity: {
     low: '#7FB069',

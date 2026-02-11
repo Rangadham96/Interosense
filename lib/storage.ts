@@ -10,6 +10,8 @@ const KEYS = {
   BOOKMARKS: '@interosense:bookmarks',
   ARTICLES_READ: '@interosense:articles_read',
   SETTINGS: '@interosense:settings',
+  ASSESSMENTS: '@interosense:assessments',
+  WEARABLE_DATA: '@interosense:wearable_data',
 };
 
 export interface UserProfile {
@@ -18,6 +20,8 @@ export interface UserProfile {
   experienceLevel: 'beginner' | 'intermediate' | 'advanced';
   dailyMinutes: number;
   createdAt: string;
+  conditions?: string[];
+  focusAreas?: string[];
 }
 
 export interface SessionRecord {
@@ -40,6 +44,8 @@ export interface CheckinRecord {
   mood: string;
   sensations: string[];
   notes: string;
+  stressLevel?: number;
+  bodyAreas?: string[];
 }
 
 export interface BodyMark {
@@ -70,6 +76,27 @@ export interface AppSettings {
   reminderTime: string;
   reducedMotion: boolean;
   fontSize: 'small' | 'medium' | 'large';
+}
+
+export interface AssessmentRecord {
+  id: string;
+  scaleId: string;
+  scaleName: string;
+  completedAt: string;
+  totalScore: number;
+  severity: string;
+  answers: number[];
+}
+
+export interface WearableDataPoint {
+  id: string;
+  timestamp: string;
+  heartRate?: number;
+  hrv?: number;
+  steps?: number;
+  sleepHours?: number;
+  restingHeartRate?: number;
+  source: 'manual' | 'healthkit' | 'simulated';
 }
 
 async function getJSON<T>(key: string, defaultValue: T): Promise<T> {
@@ -182,5 +209,26 @@ export const Storage = {
   },
   async setSettings(settings: AppSettings): Promise<void> {
     await setJSON(KEYS.SETTINGS, settings);
+  },
+
+  async getAssessments(): Promise<AssessmentRecord[]> {
+    return getJSON<AssessmentRecord[]>(KEYS.ASSESSMENTS, []);
+  },
+  async addAssessment(assessment: AssessmentRecord): Promise<void> {
+    const assessments = await this.getAssessments();
+    assessments.push(assessment);
+    await setJSON(KEYS.ASSESSMENTS, assessments);
+  },
+
+  async getWearableData(): Promise<WearableDataPoint[]> {
+    return getJSON<WearableDataPoint[]>(KEYS.WEARABLE_DATA, []);
+  },
+  async addWearableData(data: WearableDataPoint): Promise<void> {
+    const existing = await this.getWearableData();
+    existing.push(data);
+    await setJSON(KEYS.WEARABLE_DATA, existing);
+  },
+  async setWearableData(data: WearableDataPoint[]): Promise<void> {
+    await setJSON(KEYS.WEARABLE_DATA, data);
   },
 };

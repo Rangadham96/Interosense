@@ -200,6 +200,46 @@ export default function ExerciseSessionScreen() {
             ))}
           </View>
 
+          {exercise.scienceNote && (
+            <View style={styles.benefitsCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <Feather name="book-open" size={14} color={Colors.secondaryLight} />
+                <Text style={styles.benefitsTitle}>Science</Text>
+              </View>
+              <Text style={styles.benefitText}>{exercise.scienceNote}</Text>
+            </View>
+          )}
+
+          {exercise.preparationTips && exercise.preparationTips.length > 0 && (
+            <View style={styles.benefitsCard}>
+              <Text style={styles.benefitsTitle}>Preparation</Text>
+              {exercise.preparationTips.map((tip, i) => (
+                <View key={i} style={styles.benefitRow}>
+                  <Feather name="info" size={14} color="rgba(255,255,255,0.5)" />
+                  <Text style={styles.benefitText}>{tip}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {exercise.contraindications && exercise.contraindications.length > 0 && (
+            <View style={[styles.benefitsCard, { backgroundColor: 'rgba(240,192,90,0.12)' }]}>
+              <Text style={styles.benefitsTitle}>Contraindications</Text>
+              {exercise.contraindications.map((c, i) => (
+                <View key={i} style={styles.benefitRow}>
+                  <Feather name="alert-triangle" size={14} color={Colors.warning} />
+                  <Text style={styles.benefitText}>{c}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {exercise.researchCitation && (
+            <Text style={{ fontFamily: 'Nunito_400Regular', fontSize: 11, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: 20, lineHeight: 15, paddingHorizontal: 8 }}>
+              {exercise.researchCitation}
+            </Text>
+          )}
+
           <TouchableOpacity style={styles.beginButton} onPress={handleBegin} activeOpacity={0.85}>
             <Feather name="play" size={22} color={Colors.primary} />
             <Text style={styles.beginButtonText}>Begin</Text>

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import { Storage, UserProfile, SessionRecord, CheckinRecord, BodyMark, Goal, AppSettings } from '@/lib/storage';
+import { Storage, UserProfile, SessionRecord, CheckinRecord, BodyMark, Goal, AppSettings, AssessmentRecord, WearableDataPoint } from '@/lib/storage';
 import { getUnlockedAchievements } from '@/constants/achievements';
+import { generateAdvisorState, AdvisorState } from '@/lib/personalization-engine';
 import { format, isToday, isYesterday, differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
 
 interface AppState {
@@ -14,6 +15,8 @@ interface AppState {
   bookmarks: string[];
   articlesRead: string[];
   settings: AppSettings;
+  assessments: AssessmentRecord[];
+  wearableData: WearableDataPoint[];
   unlockedAchievements: string[];
   totalSessions: number;
   totalMinutes: number;
@@ -24,6 +27,7 @@ interface AppState {
   maxAwareness: number;
   todayCheckedIn: boolean;
   todaySessionCount: number;
+  advisorState: AdvisorState;
 }
 
 interface AppActions {
@@ -37,6 +41,9 @@ interface AppActions {
   toggleBookmark: (articleId: string) => Promise<void>;
   markArticleRead: (articleId: string) => Promise<void>;
   updateSettings: (settings: AppSettings) => Promise<void>;
+  addAssessment: (assessment: AssessmentRecord) => Promise<void>;
+  addWearableData: (data: WearableDataPoint) => Promise<void>;
+  updateProfile: (profile: UserProfile) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -88,6 +95,15 @@ function calculateStreak(sessions: SessionRecord[]): { current: number; longest:
   return { current, longest };
 }
 
+const defaultAdvisorState: AdvisorState = {
+  recommendations: [],
+  insights: [],
+  nextExercise: null,
+  greeting: 'Welcome to InteroSense',
+  streakMessage: 'Start your journey today',
+  todayFocus: 'Begin with a simple breathing exercise to build your foundation.',
+};
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
@@ -105,10 +121,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     reducedMotion: false,
     fontSize: 'medium',
   });
+  const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
+  const [wearableData, setWearableData] = useState<WearableDataPoint[]>([]);
 
   const loadData = useCallback(async () => {
     try {
-      const [ob, prof, sess, chk, bm, gl, bk, ar, st] = await Promise.all([
+      const [ob, prof, sess, chk, bm, gl, bk, ar, st, assess, wear] = await Promise.all([
         Storage.isOnboardingComplete(),
         Storage.getUserProfile(),
         Storage.getSessions(),
@@ -118,6 +136,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         Storage.getBookmarks(),
         Storage.getArticlesRead(),
         Storage.getSettings(),
+        Storage.getAssessments(),
+        Storage.getWearableData(),
       ]);
       setOnboardingComplete(ob);
       setProfile(prof);
@@ -128,6 +148,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setBookmarks(bk);
       setArticlesRead(ar);
       setSettings(st);
+      setAssessments(assess);
+      setWearableData(wear);
     } catch (e) {
       console.error('Failed to load data:', e);
     } finally {
@@ -167,6 +189,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       articlesRead: articlesRead.length,
     });
   }, [totalSessions, currentStreak, categoriesExplored, checkins.length, totalMinutes, maxAwareness, articlesRead.length]);
+
+  const advisorState = useMemo(() => {
+    return generateAdvisorState(
+      profile,
+      sessions,
+      checkins,
+      assessments,
+      todayCheckedIn,
+      currentStreak,
+      totalMinutes,
+      wearableData,
+    );
+  }, [profile, sessions, checkins, assessments, todayCheckedIn, currentStreak, totalMinutes, wearableData]);
 
   const completeOnboarding = useCallback(async (prof: UserProfile) => {
     await Storage.setOnboardingComplete();
@@ -222,6 +257,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSettings(newSettings);
   }, []);
 
+  const addAssessment = useCallback(async (assessment: AssessmentRecord) => {
+    await Storage.addAssessment(assessment);
+    setAssessments(prev => [...prev, assessment]);
+  }, []);
+
+  const addWearableDataCb = useCallback(async (data: WearableDataPoint) => {
+    await Storage.addWearableData(data);
+    setWearableData(prev => [...prev, data]);
+  }, []);
+
+  const updateProfile = useCallback(async (prof: UserProfile) => {
+    await Storage.setUserProfile(prof);
+    setProfile(prof);
+  }, []);
+
   const value = useMemo<AppContextValue>(() => ({
     isLoading,
     onboardingComplete,
@@ -233,6 +283,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     bookmarks,
     articlesRead,
     settings,
+    assessments,
+    wearableData,
     unlockedAchievements,
     totalSessions,
     totalMinutes,
@@ -243,6 +295,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     maxAwareness,
     todayCheckedIn,
     todaySessionCount,
+    advisorState,
     completeOnboarding,
     addSession,
     addCheckin,
@@ -253,14 +306,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toggleBookmark,
     markArticleRead,
     updateSettings,
+    addAssessment,
+    addWearableData: addWearableDataCb,
+    updateProfile,
     refresh: loadData,
   }), [
     isLoading, onboardingComplete, profile, sessions, checkins, bodyMarks, goals,
-    bookmarks, articlesRead, settings, unlockedAchievements, totalSessions, totalMinutes,
-    currentStreak, longestStreak, categoriesExplored, averageAwareness, maxAwareness,
-    todayCheckedIn, todaySessionCount, completeOnboarding, addSession, addCheckin,
-    addBodyMark, clearBodyMarks, addGoal, updateGoals, toggleBookmark, markArticleRead,
-    updateSettings, loadData,
+    bookmarks, articlesRead, settings, assessments, wearableData, unlockedAchievements,
+    totalSessions, totalMinutes, currentStreak, longestStreak, categoriesExplored,
+    averageAwareness, maxAwareness, todayCheckedIn, todaySessionCount, advisorState,
+    completeOnboarding, addSession, addCheckin, addBodyMark, clearBodyMarks,
+    addGoal, updateGoals, toggleBookmark, markArticleRead, updateSettings,
+    addAssessment, addWearableDataCb, updateProfile, loadData,
   ]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

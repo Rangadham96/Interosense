@@ -31,6 +31,9 @@ function RootLayoutNav() {
       <Stack.Screen name="goals" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="achievements" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="settings" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="conditions" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="condition/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="assessment/[id]" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
     </Stack>
   );
 }
