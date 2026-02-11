@@ -47,7 +47,7 @@ export default function ExerciseSessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { addSession, sessions, totalSessions, currentStreak, unlockedAchievements } = useApp();
+  const { addSession, sessions, totalSessions, currentStreak, unlockedAchievements, exerciseBookmarks, toggleExerciseBookmark } = useApp();
   const exercise = getExerciseById(id);
 
   const [phase, setPhase] = useState<SessionPhase>('prestart');
@@ -218,6 +218,18 @@ export default function ExerciseSessionScreen() {
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
             <Feather name="x-circle" size={28} color="rgba(255,255,255,0.8)" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bookmarkButton}
+            onPress={() => toggleExerciseBookmark(exercise.id)}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Feather
+              name="bookmark"
+              size={28}
+              color={exerciseBookmarks.includes(exercise.id) ? Colors.warning : 'rgba(255,255,255,0.8)'}
+            />
           </TouchableOpacity>
 
           <View style={styles.prestartHeader}>
@@ -570,6 +582,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 20,
+    zIndex: 10,
+  },
+  bookmarkButton: {
+    position: 'absolute',
+    top: 0,
+    right: 20,
     zIndex: 10,
   },
   prestartContent: {

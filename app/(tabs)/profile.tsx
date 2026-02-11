@@ -79,15 +79,23 @@ export default function ProfileScreen() {
   };
 
   const activityItems: MenuItem[] = [
+    { icon: 'clock', iconBg: Colors.secondary, title: 'Session History', onPress: () => router.push('/session-history'), badge: totalSessions },
     { icon: 'target', iconBg: Colors.primary, title: 'My Goals', onPress: () => router.push('/goals') },
     { icon: 'award', iconBg: Colors.warning, title: 'Achievements', onPress: () => router.push('/achievements'), badge: unlockedAchievements.length },
-    { icon: 'map', iconBg: Colors.secondary, title: 'Body Map', onPress: () => router.push('/bodymap') },
+    { icon: 'map', iconBg: Colors.secondaryDark, title: 'Body Map', onPress: () => router.push('/bodymap') },
     { icon: 'heart', iconBg: Colors.error, title: 'Health Data', onPress: () => router.push('/wearable') },
   ];
 
   const learnItems: MenuItem[] = [
     { icon: 'book-open', iconBg: Colors.accent, title: 'Articles', onPress: () => router.push('/articles') },
     { icon: 'bookmark', iconBg: Colors.primaryLight, title: 'Bookmarks', onPress: () => router.push('/bookmarks') },
+    { icon: 'search', iconBg: Colors.secondaryLight, title: 'Search', onPress: () => router.push('/search') },
+  ];
+
+  const personalItems: MenuItem[] = [
+    { icon: 'user', iconBg: Colors.primary, title: 'Edit Profile', onPress: () => router.push('/edit-profile') },
+    { icon: 'list', iconBg: Colors.accent, title: 'My Conditions', onPress: () => router.push('/edit-conditions') },
+    { icon: 'sliders', iconBg: Colors.secondary, title: 'Preferences', onPress: () => router.push('/edit-preferences') },
   ];
 
   const appItems: MenuItem[] = [
@@ -143,6 +151,7 @@ export default function ProfileScreen() {
         </View>
 
         <MenuSection title="Activity" items={activityItems} />
+        <MenuSection title="Personal" items={personalItems} />
         <MenuSection title="Learn" items={learnItems} />
         <MenuSection title="App" items={appItems} />
 
