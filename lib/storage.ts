@@ -12,6 +12,7 @@ const KEYS = {
   SETTINGS: '@interosense:settings',
   ASSESSMENTS: '@interosense:assessments',
   WEARABLE_DATA: '@interosense:wearable_data',
+  EXERCISE_BOOKMARKS: '@interosense:exercise_bookmarks',
 };
 
 export interface UserProfile {
@@ -22,6 +23,10 @@ export interface UserProfile {
   createdAt: string;
   conditions?: string[];
   focusAreas?: string[];
+  gender?: 'male' | 'female' | 'non-binary' | 'prefer-not-to-say' | '';
+  dateOfBirth?: string;
+  bio?: string;
+  profileImage?: string;
 }
 
 export interface SessionRecord {
@@ -230,5 +235,22 @@ export const Storage = {
   },
   async setWearableData(data: WearableDataPoint[]): Promise<void> {
     await setJSON(KEYS.WEARABLE_DATA, data);
+  },
+
+  async getExerciseBookmarks(): Promise<string[]> {
+    return getJSON<string[]>(KEYS.EXERCISE_BOOKMARKS, []);
+  },
+  async toggleExerciseBookmark(exerciseId: string): Promise<boolean> {
+    const bookmarks = await this.getExerciseBookmarks();
+    const idx = bookmarks.indexOf(exerciseId);
+    if (idx >= 0) {
+      bookmarks.splice(idx, 1);
+      await setJSON(KEYS.EXERCISE_BOOKMARKS, bookmarks);
+      return false;
+    } else {
+      bookmarks.push(exerciseId);
+      await setJSON(KEYS.EXERCISE_BOOKMARKS, bookmarks);
+      return true;
+    }
   },
 };

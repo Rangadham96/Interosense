@@ -13,6 +13,7 @@ interface AppState {
   bodyMarks: BodyMark[];
   goals: Goal[];
   bookmarks: string[];
+  exerciseBookmarks: string[];
   articlesRead: string[];
   settings: AppSettings;
   assessments: AssessmentRecord[];
@@ -44,6 +45,7 @@ interface AppActions {
   addAssessment: (assessment: AssessmentRecord) => Promise<void>;
   addWearableData: (data: WearableDataPoint) => Promise<void>;
   updateProfile: (profile: UserProfile) => Promise<void>;
+  toggleExerciseBookmark: (exerciseId: string) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -123,10 +125,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   });
   const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
   const [wearableData, setWearableData] = useState<WearableDataPoint[]>([]);
+  const [exerciseBookmarks, setExerciseBookmarks] = useState<string[]>([]);
 
   const loadData = useCallback(async () => {
     try {
-      const [ob, prof, sess, chk, bm, gl, bk, ar, st, assess, wear] = await Promise.all([
+      const [ob, prof, sess, chk, bm, gl, bk, ar, st, assess, wear, exBk] = await Promise.all([
         Storage.isOnboardingComplete(),
         Storage.getUserProfile(),
         Storage.getSessions(),
@@ -138,6 +141,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         Storage.getSettings(),
         Storage.getAssessments(),
         Storage.getWearableData(),
+        Storage.getExerciseBookmarks(),
       ]);
       setOnboardingComplete(ob);
       setProfile(prof);
@@ -150,6 +154,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSettings(st);
       setAssessments(assess);
       setWearableData(wear);
+      setExerciseBookmarks(exBk);
     } catch (e) {
       console.error('Failed to load data:', e);
     } finally {
@@ -272,6 +277,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProfile(prof);
   }, []);
 
+  const toggleExerciseBookmarkCb = useCallback(async (exerciseId: string) => {
+    await Storage.toggleExerciseBookmark(exerciseId);
+    setExerciseBookmarks(prev =>
+      prev.includes(exerciseId) ? prev.filter(id => id !== exerciseId) : [...prev, exerciseId]
+    );
+  }, []);
+
   const value = useMemo<AppContextValue>(() => ({
     isLoading,
     onboardingComplete,
@@ -281,6 +293,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     bodyMarks,
     goals,
     bookmarks,
+    exerciseBookmarks,
     articlesRead,
     settings,
     assessments,
@@ -309,15 +322,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addAssessment,
     addWearableData: addWearableDataCb,
     updateProfile,
+    toggleExerciseBookmark: toggleExerciseBookmarkCb,
     refresh: loadData,
   }), [
     isLoading, onboardingComplete, profile, sessions, checkins, bodyMarks, goals,
-    bookmarks, articlesRead, settings, assessments, wearableData, unlockedAchievements,
+    bookmarks, exerciseBookmarks, articlesRead, settings, assessments, wearableData, unlockedAchievements,
     totalSessions, totalMinutes, currentStreak, longestStreak, categoriesExplored,
     averageAwareness, maxAwareness, todayCheckedIn, todaySessionCount, advisorState,
     completeOnboarding, addSession, addCheckin, addBodyMark, clearBodyMarks,
     addGoal, updateGoals, toggleBookmark, markArticleRead, updateSettings,
-    addAssessment, addWearableDataCb, updateProfile, loadData,
+    addAssessment, addWearableDataCb, updateProfile, toggleExerciseBookmarkCb, loadData,
   ]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
