@@ -118,6 +118,7 @@ export default function OnboardingScreen() {
   const [currentPage, setCurrentPage] = useState(0);
   const [showSetup, setShowSetup] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const currentPageRef = useRef(0);
 
   const [name, setName] = useState('');
   const [level, setLevel] = useState('beginner');
@@ -129,6 +130,7 @@ export default function OnboardingScreen() {
 
   const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     if (viewableItems.length > 0 && viewableItems[0].index != null) {
+      currentPageRef.current = viewableItems[0].index;
       setCurrentPage(viewableItems[0].index);
     }
   }).current;
@@ -136,8 +138,12 @@ export default function OnboardingScreen() {
   const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
   const handleNext = () => {
-    if (currentPage < INTRO_PAGES.length - 1) {
-      flatListRef.current?.scrollToIndex({ index: currentPage + 1, animated: true });
+    const page = currentPageRef.current;
+    if (page < INTRO_PAGES.length - 1) {
+      const nextPage = page + 1;
+      currentPageRef.current = nextPage;
+      setCurrentPage(nextPage);
+      flatListRef.current?.scrollToIndex({ index: nextPage, animated: true });
     } else {
       setShowSetup(true);
     }
@@ -146,8 +152,14 @@ export default function OnboardingScreen() {
   const handleBack = () => {
     if (showSetup) {
       setShowSetup(false);
-    } else if (currentPage > 0) {
-      flatListRef.current?.scrollToIndex({ index: currentPage - 1, animated: true });
+    } else {
+      const page = currentPageRef.current;
+      if (page > 0) {
+        const prevPage = page - 1;
+        currentPageRef.current = prevPage;
+        setCurrentPage(prevPage);
+        flatListRef.current?.scrollToIndex({ index: prevPage, animated: true });
+      }
     }
   };
 
