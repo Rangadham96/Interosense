@@ -1,0 +1,171 @@
+Build InteroSense: A Comprehensive Mental Wellness Platform for Interoceptive Awareness
+
+OVERVIEW:
+InteroSense is a mobile-first web application that helps users develop interoceptive awareness - the ability to sense internal body signals like heartbeat, breathing, tension, and gut feelings. Research shows interoceptive training reduces anxiety by 30-40%, improves emotional regulation, and supports recovery from PTSD, eating disorders, and chronic pain.
+
+TECH STACK:
+React 18+ with TypeScript, React Router for navigation, Tailwind CSS for styling, shadcn/ui component library, Framer Motion for animations, Lucide React icons, Recharts for data visualization, localStorage for client-side data persistence, date-fns for date handling. Build as a Progressive Web App (PWA) with offline support.
+
+DESIGN SYSTEM:
+Colors: Primary Teal #00B4A6, Secondary Purple #6C5CE7, Accent Coral #FF6B6B, Success Mint #00D9A3, Warning Amber #F59E0B, Background Off-white #FAFAFA, Text Deep Navy #0A1929, Borders Light Gray #E5E7EB
+Typography: Headings bold 24-44pt, Body 16pt, Small text 12-14pt gray, Line height leading-relaxed
+Spacing: Consistent Tailwind scale, Cards p-6 rounded-xl shadow-sm, Sections space-y-6 or space-y-8
+Animations: Page transitions fade+slide 200ms, Card hovers subtle scale, Button smooth transitions, Success confetti/checkmark, Breathing guide expanding circle
+
+COMPREHENSIVE FEATURE SET:
+
+1. LANDING PAGE (/)
+Header: Logo, Nav (About, How It Works, Science, Pricing), "Start Free Trial" CTA
+Hero Section: "Tune Into Your Body. Transform Your Mind." with subheadline and primary/secondary CTAs, hero illustration
+Why Section: 3 cards explaining benefits (Reduce Anxiety, Emotional Regulation, Better Decisions) with icons and descriptions
+What Section: Interoception explanation with visual diagram showing body signals
+How It Works: 4-step timeline (Assessment → Personalized exercises → Daily practice → Track progress)
+Science Section: Research overview, study quotes, research institution logos
+Social Proof: Testimonials with user photos/quotes, star ratings, user count
+Pricing: Free tier (7 days, basic exercises), Premium (₹499/month or ₹4,999/year with all features), Enterprise (custom for therapists/clinics)
+Footer: Privacy Policy, Terms, Contact, FAQ, social media icons
+
+2. AUTHENTICATION
+Sign Up (/signup): Name, Email, Password, "I agree to Terms" checkbox, Social login (Google, Apple)
+Log In (/login): Email, Password, "Forgot Password?" link, "Sign Up" link
+Forgot Password (/forgot-password): Email input, "Send Reset Link" button
+Protected Routes: Wrap all post-onboarding pages, redirect to /login if not authenticated
+
+3. ONBOARDING FLOW
+Welcome Screen (/onboarding/welcome): "Let's personalize your experience", "This takes 2 minutes", Start button
+Step 1 (/onboarding/step1): "What brings you here today?" Multi-select checkboxes: Anxiety/worry, Stress management, Panic attacks, Better self-awareness, Emotional regulation, PTSD/trauma, Eating disorder recovery, Chronic pain, Sleep issues, Just curious, Other (text input). Progress 1/4
+Step 2 (/onboarding/step2): "How experienced are you with body awareness practices?" Radio buttons: Complete beginner, Some experience with meditation/yoga, Experienced with mindfulness, Advanced practitioner. Progress 2/4
+Step 3 (/onboarding/step3): "What's your daily practice goal?" Options with descriptions: 5 min (Just starting out), 10 min (Building a habit), 15 min (Committed to growth), 20+ min (Deep practice). Progress 3/4
+Step 4 (/onboarding/step4): "When would you like daily reminders?" Time pickers for Morning/Afternoon/Evening check-ins, "Enable notifications" toggle. Progress 4/4, "Finish Setup" button
+Complete Screen (/onboarding/complete): Success animation, "You're all set!", "Your personalized program is ready", "Start Your First Exercise" button
+
+4. HOME DASHBOARD (/home)
+Top Section: Time-based greeting "Good morning, [Name]", Current streak display with fire emoji, Daily progress bar (exercises + check-ins completed today)
+Quick Stats Cards Grid: Total Sessions, Hours Practiced, Current Awareness Score (0-100), Badges Earned
+Quick Action Cards: "Daily Check-In" (shows status: ready or completed), "Start an Exercise" (recommended exercise with duration), "Track Body Signal" (log sensation)
+Upcoming Section: "What's Next?" card showing next scheduled activity
+Insights Section: "Your Weekly Insight" with data-driven messages like "awareness score improved 12% this week" or "most consistent on Tuesdays"
+Crisis Access: Small always-visible "Need support now?" button linking to crisis page
+Bottom Navigation Bar: Home 🏠, Exercises 🧘, Progress 📊, Learn 📚, Profile 👤
+
+5. EXERCISES LIBRARY (/exercises)
+Header with search bar and filter button
+Filters (drawer): Category (All, Breathing, Heartbeat, Body Scanning, Tension, Gut Signals, Temperature, Movement, Interoceptive Exposure), Difficulty (Beginner, Intermediate, Advanced), Duration (Under 5min, 5-10min, 10-20min, 20+min), Target Condition (Anxiety, PTSD, Panic, Eating Disorders, Chronic Pain)
+Recommended Section: "Based on your profile" with 3-4 tailored exercise cards
+All Exercises Grid: Each card shows Title, Category badge, Difficulty badge (color-coded), Duration, Brief description (1 sentence), Completed count, "Start" button, Bookmark icon
+Exercise Details Modal: Full description, Benefits list, Instructions preview, Duration, Difficulty, Prerequisites, "Start Exercise" and "Mark as Favorite" buttons
+Populate with 20+ exercises: Heartbeat Detection, Heartbeat Tracking, Heartbeat & Emotion, Breath Awareness, Box Breathing, Breath Temperature, Quick Body Check, Progressive Body Scan, Tension Mapping, Hunger/Fullness Check, Gut Feeling Exploration, Digestive Awareness, Warmth & Coolness Scan, Temperature Regulation, Progressive Muscle Relaxation, Micro-tension Detection, Controlled Hyperventilation (advanced), Spinning Exposure (advanced), Straw Breathing, Slow Walking Awareness
+
+6. EXERCISE SESSION PAGE (/exercise/:id)
+Pre-Session Screen: Exercise title, Overview, Estimated duration, "What to expect", Preparation tips, "I'm Ready" button
+Active Session: Clean minimal interface, Large circular animated timer countdown, Current instruction (large readable text), Step indicator "Step X of Y", Pause button (bottom left), End session button (bottom right), Auto-advance through steps with smooth transitions, Optional background ambient sound, Optional haptic feedback
+Example flow for Heartbeat Detection: "Find comfortable position" (30s) → "Place fingers to find pulse" (30s) → "Count heartbeats for one minute" (60s countdown) → "Remove fingers, try to feel heartbeat" (60s) → "Notice: Can you feel it? Where?" (60s) → "Three deep breaths" (20s)
+Post-Session: "Great work!" celebration with confetti, "How did that feel?" 5-star rating, Quick tags (Calming, Challenging, Eye-opening, Difficult), Optional text note, Session summary (Duration, Total exercises, Streak), "What's next?" suggestions
+Save: exerciseId, timestamp, duration, rating, tags, notes, update streak
+
+7. DAILY CHECK-IN (/checkin)
+Three types: Morning, Afternoon, Evening. Header shows type and progress "Step 1 of 4", Back button saves progress
+Step 1 Overall Body Feeling: "How is your body feeling right now?" 5-point scale with emojis (😫 Very tense → 😐 Neutral → 😊 Very relaxed), Large tappable options
+Step 2 Body Sensations: "What sensations are you noticing?" Interactive body diagram (front view, tap areas), Common quick-tags (Tight chest, Tense shoulders, Butterflies, Warm face, Relaxed muscles, Racing heart, Shallow breathing, Other custom), Can select multiple
+Step 3 Awareness Score: "How connected to your body do you feel right now?" Slider 0 (Disconnected) to 10 (Fully aware), Visual feedback as slider moves
+Step 4 Context (optional): "Anything specific happening today?" Quick tags (Work stress, Good sleep, Poor sleep, Social event, Exercise, Deadline, Relationship issue, Just normal day, Other), Skip button
+Morning-Specific: "How did you sleep?" (1-5 stars), "Energy level?" (Low/Medium/High)
+Evening-Specific: "How was your day overall?" (1-5 stars), "Stress level?" (Low/Medium/High)
+Completion: "Check-in complete! ✓" Brief insight like "awareness score: 7/10 (+2 from yesterday)", Streak updated, "Done" button
+Save: timestamp, type, bodyFeeling, sensations, bodyMapData, awarenessScore, contextTags, sleep/energy/dayRating
+
+8. PROGRESS PAGE (/progress)
+Header with date range selector (This Week, This Month, All Time), Export button "Download Report"
+Overview Cards: Current Streak days, Total Sessions, Total Time hours, Awareness Trend percentage
+Weekly Progress Chart: Line graph of daily awareness scores (0-10), X-axis days, Y-axis scores, Smooth curve teal color using Recharts
+Activity Heatmap: Calendar view last 3 months, Color intensity = engagement (gray no activity, light/medium/dark teal for 1/2-3/4+ activities), Hover shows details
+Exercise Breakdown: Bar chart showing count by category, Click bar for details
+Trends & Insights: Auto-generated like "Most consistent on Mondays", "Morning exercises 20% higher completion", "Awareness peaks after breathing exercises"
+Personal Bests: Longest streak, Most productive day, Highest awareness score with dates
+Recent Activity Feed: Scrollable list of last 20 activities with timestamps
+
+9. ACHIEVEMENTS (/achievements)
+Tabs: Badges, Goals, Leaderboard
+Badges Tab: Grid of locked (grayscale) and unlocked (colored) badges. Categories: Getting Started (First Exercise, First Check-In), Consistency (7/30/100-Day Streak, Daily Warrior), Exploration (Body Explorer 5 types, Expert all categories, Curious Mind 10 articles), Mastery (10/50/100 Sessions, 5/20 Hours), Progress (Awareness Rising +20%, Breakthrough 8+ score, Consistent Growth 3 weeks). Click for detail modal with larger image, description, criteria/unlock date, rarity
+Goals Tab: Current and completed goals
+Leaderboard Tab (optional): Weekly top users by sessions/streak/improvement, User's rank, Anonymized or opt-in
+
+10. GOALS PAGE (/goals)
+"+ Create New Goal" button
+Active Goals Cards: Title, Progress bar with percentage, Deadline countdown, Edit/Delete icons
+Create/Edit Modal: Goal type dropdown (Exercise count week/month, Streak target days, Awareness score target, Check-in consistency %, Try new types, Custom), Target value, Timeframe (this week/month/custom date), "Save Goal" button
+Completed Goals: Collapsible section with past goals and completion dates, Success rate shown
+Suggested Goals (if none active): Pre-made options like "Complete 3 exercises this week" with "Set This Goal" buttons
+
+11. LEARN SECTION (/learn)
+Header with search bar
+Featured Article: Large hero card with image, category badge, title, excerpt, "Read More", reading time
+Categories: Tabs or sections (All, Getting Started, Science, Condition-Specific, Techniques, Success Stories)
+Article Grid: Cards with thumbnail, category badge, title, excerpt (2 lines), reading time, "Read" button
+Sample Articles: "What is Interoception?", "Neuroscience of Body Awareness", "Interoception and Anxiety", "PTSD and the Body", "Building Daily Practice", "Overcoming Panic Attacks", "Eating Disorders and Deficits", "Mind-Gut Connection", "Progressive Relaxation Guide", "FAQs"
+Article Page (/learn/:slug): Title, Author, Published date, Reading time, Share buttons, Content (Markdown/rich text), Related articles, CTA related exercise
+Condition Library (/learn/conditions): List with info pages for Anxiety, Panic Disorder, PTSD, Depression, Eating Disorders, Chronic Pain, Alexithymia, each with what it is, how interoception relates, recommended exercises, resources, disclaimers
+
+12. PROFILE HUB (/profile)
+Profile Card: Avatar (initials/uploaded photo), Name, Email, Member since, Account type Free/Premium
+Quick Stats: Total sessions, Current streak, Badges
+Menu: Personal Info (edit name/email/password/avatar), Settings, Goals, Achievements, Connect Wearable, Subscription (current plan, upgrade, billing), Support & Help (FAQs, contact, report bug), Legal (Privacy, Terms, Data), Log Out (confirmation modal)
+
+13. SETTINGS (/settings)
+Notifications: Daily reminders toggle, Time pickers for morning/afternoon/evening, Exercise/Streak/Achievement toggles, Email notifications
+Preferences: Dark mode toggle, Sound effects, Haptic feedback (mobile), Language selector, Measurement units
+Privacy: Data sharing consent, Analytics opt-out, Research participation
+Accessibility: Text size (S/M/L), High contrast mode, Reduce animations, Screen reader optimizations
+Account: Change email, Change password, Delete account (confirmation)
+Data: Export data (JSON download), Clear cache, Reset progress (confirmation)
+
+14. BODY MAP (/bodymap)
+Interactive SVG body diagram (front/back switchable)
+Tap areas to select, highlight in color, Multiple selections allowed
+Sensation Input: "What do you feel here?" Quick tags (Tension, Pain, Warmth, Tingling, Numbness, Relaxation, Tightness, Heaviness, Other custom), Intensity slider 1-10
+Color Coding: Tension/Pain red, Warmth orange, Tingling yellow, Relaxation green, Numbness blue, Custom purple
+"Save Body Map" button with timestamp and optional note
+History: "Past Maps" button showing previous snapshots, Compare over time, Visual timeline
+
+15. CRISIS PAGE (/crisis)
+CRITICAL: Disclaimers "Not substitute for professional help", "In emergency call 911"
+Immediate Resources (prominent top): National Crisis Hotline with click-to-call, Text Crisis Line, Emergency Services, Large red "Call Now" buttons
+Quick Grounding Techniques: 5-4-3-2-1 Sensory (interactive checklist), Box Breathing (animated visual), Cold Water Technique (instructions), Safe Space Visualization (guided script), Quick Progressive Relaxation (5min link)
+When to Seek Help: Warning signs list (self-harm thoughts, overwhelming panic, disconnection, unsafe urges), "If experiencing these, call hotline now"
+Additional Resources: Find therapist, Support groups, Self-harm prevention, Suicide prevention links
+
+16. EXPOSURE LIBRARY (/exposure)
+WARNING SCREEN (first visit): Explanation "exercises create anxiety-like sensations to reduce fear", "Not recommended without therapist", "Proceed with caution", Checkbox "I understand", Continue/Go Back buttons
+Exercise Grid: Cards with name, Sensation created, Difficulty, Duration, Safety rating, "Start" button
+Sample: Controlled Hyperventilation (dizziness/tingling 5min), Breath Holding (breathlessness 3min), Spinning (dizziness 5min), Straw Breathing (breathlessness 5min), Intense Activity (rapid heartbeat 10min), Head Between Legs (lightheadedness 3min)
+Safety Precautions before each: Medical conditions check, Stop if uncomfortable, Support person recommended, Not for everyone
+
+17. MEDITATIONS LIBRARY (/meditations)
+Grid: Cards with title, duration, category (Sleep/Stress/Anxiety), narrator, play button, favorite icon
+Categories: Body Scan, Breath-Focused, Loving-Kindness, Sleep, Quick Resets (<5min)
+Sample: "10-Min Body Scan", "Breath for Anxiety", "Heartbeat Meditation", "Progressive Relaxation", "Sleep Prep", "Quick Grounding 3min", "Gut Feeling", "Tension Release"
+Player Page: Minimalist interface, Large play/pause, Progress bar, Calming gradient background, Timer, Skip 15s back/forward, Volume, Transcript option
+Post-Meditation: "How do you feel?" rating, Save/Replay/Next options
+
+18. CONNECT WEARABLE (/connect-wearable)
+Supported Devices Cards: Apple Watch, Fitbit, Garmin, Oura Ring, Whoop, Google Fit, Other request. Each with logo, "Connect" or "Connected ✓" button
+Connection Flow: Select device → OAuth/API key → Permissions → Sync confirmation → Success
+Data Usage Explanation: What collected (HRV, resting HR, sleep, activity), How used (correlate awareness, personalize timing, identify patterns), Privacy (encrypted, not shared, user controls)
+Insights Unlocked: Heart Rate Trends widget, Sleep Quality Impact, Optimal Exercise Times recommendations
+
+19. SYMPTOM TRACKER (/symptom-tracker)
+Available Scales: GAD-7 (Anxiety 7Q 0-21 weekly), PHQ-9 (Depression 9Q 0-27 weekly), PCL-5 (PTSD 20Q 0-80 monthly), DERS (Emotion Regulation 36Q monthly), TAS-20 (Alexithymia 20Q monthly)
+Each Assessment: Explanation, "Start Assessment", Estimated time, Privacy note
+Assessment Flow: Questions one at a time, Progress indicator, Likert scale responses, Previous/Next buttons, Save and continue later option
+Results: Total score, Interpretation (e.g. "Mild anxiety"), Chart vs previous scores, Trend (improving/stable/worsening), Recommendation, "Share with Provider" PDF option
+Disclaimers: "Screening tools not diagnoses", "Only healthcare provider can diagnose", "Use to guide therapy conversations"
+
+ADDITIONAL FEATURES:
+Dark Mode: Full app support, Settings toggle, Auto-save preference, Smooth transitions, Adjusted color palette (Background #0A1929, Text #F5F5F5, Cards #1E293B, Borders #334155)
+Accessibility: Keyboard navigation, ARIA labels, Focus indicators, Skip to content, Alt text, Semantic HTML, High contrast option, Adjustable text size, Reduced motion (respects prefers-reduced-motion)
+Offline Support: Service worker, Cached exercise instructions, Local data persistence, Sync when online
+Data Export: JSON all user data, CSV for spreadsheets, PDF report with visualizations, "Export Data" in settings
+Gamification: Streaks with fire emoji, Badges/achievements, Progress bars, Level system optional, Daily challenges optional
+Notifications: Daily check-in reminders, Streak reminders, Achievement unlocked, Encouraging messages, Exercise suggestions by time
+
+Build this as a comprehensive, production-ready mental wellness platform. Every feature should work seamlessly. Make it beautiful, calming, professional, and fully functional.
