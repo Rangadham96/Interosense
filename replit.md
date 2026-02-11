@@ -78,7 +78,7 @@ lib/
 
 ## Recent Changes (Feb 2026)
 - Added personalization engine with reactive advisorState
-- Rebuilt home screen as intelligent advisor dashboard
+- Rebuilt home screen as intelligent advisor dashboard with daily insight quotes (32 science-backed quotes)
 - Added clinical assessments (GAD-7, PHQ-9, PCL-5) with full flow
 - Added 7-condition library with detail pages
 - Enhanced check-in with stress level and body area tracking (8 steps)
@@ -86,6 +86,13 @@ lib/
 - Added gut and movement exercise categories
 - Rebuilt onboarding with condition selection (4-step setup)
 - Added science metadata to exercise pre-start screens
+- Enhanced exercise completion with celebration animation, achievement unlock notifications, streak display, next exercise recommendation
+- Built premium landing page at port 5000 with animated hero, features, science section, testimonials, QR code
+- Rebuilt crisis toolkit with 6 guided exercises (box breathing, PMR, butterfly hug, safe place, cold water, body scan), condition-specific coping cards, tabbed interface
+- Built wearable integration screen with simulated health data, trend charts (react-native-svg), dynamic insights
+- Fixed all profile navigation - bookmarks.tsx, articles.tsx (with search/filters), about.tsx, wearable link
+- Implemented working data export in settings (JSON export via Share API / web download)
+- Enhanced body map with historical heatmap overlay (frequency-based coloring), Today/History tabs, region stats bar chart
 
 ## User Preferences
 - Design should look like professional multi-million dollar app (Headspace/Calm level)
