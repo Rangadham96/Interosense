@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { isToday, parseISO } from 'date-fns';
@@ -33,7 +33,12 @@ const SENSATIONS = [
   'pulsing', 'numbness', 'butterflies', 'pressure', 'pain', 'relaxation',
 ];
 
-const TOTAL_STEPS = 6;
+const BODY_AREAS = [
+  'head', 'neck', 'shoulders', 'chest', 'upper back', 'lower back',
+  'stomach', 'arms', 'hands', 'hips', 'legs', 'feet',
+];
+
+const TOTAL_STEPS = 8;
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
@@ -56,12 +61,15 @@ function ScaleSelector({
   onChange,
   leftLabel,
   rightLabel,
+  color,
 }: {
   value: number;
   onChange: (v: number) => void;
   leftLabel: string;
   rightLabel: string;
+  color?: string;
 }) {
+  const activeColor = color || Colors.primary;
   return (
     <View style={styles.scaleContainer}>
       <View style={styles.scaleRow}>
@@ -74,16 +82,11 @@ function ScaleSelector({
               onPress={() => onChange(num)}
               style={[
                 styles.scaleCircle,
-                selected && styles.scaleCircleSelected,
+                selected && [styles.scaleCircleSelected, { backgroundColor: activeColor, borderColor: activeColor }],
               ]}
               activeOpacity={0.7}
             >
-              <Text
-                style={[
-                  styles.scaleNumber,
-                  selected && styles.scaleNumberSelected,
-                ]}
-              >
+              <Text style={[styles.scaleNumber, selected && styles.scaleNumberSelected]}>
                 {num}
               </Text>
             </TouchableOpacity>
@@ -107,8 +110,10 @@ export default function CheckinScreen() {
   const [awareness, setAwareness] = useState(5);
   const [energy, setEnergy] = useState(5);
   const [sleep, setSleep] = useState(5);
+  const [stress, setStress] = useState(5);
   const [selectedMood, setSelectedMood] = useState('');
   const [selectedSensations, setSelectedSensations] = useState<string[]>([]);
+  const [selectedBodyAreas, setSelectedBodyAreas] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [showAlreadyCheckedIn, setShowAlreadyCheckedIn] = useState(true);
@@ -122,8 +127,10 @@ export default function CheckinScreen() {
     setAwareness(5);
     setEnergy(5);
     setSleep(5);
+    setStress(5);
     setSelectedMood('');
     setSelectedSensations([]);
+    setSelectedBodyAreas([]);
     setNotes('');
     setSubmitted(false);
     setShowAlreadyCheckedIn(true);
@@ -136,8 +143,10 @@ export default function CheckinScreen() {
       awarenessScore: awareness,
       energyLevel: energy,
       sleepQuality: sleep,
+      stressLevel: stress,
       mood: selectedMood,
       sensations: selectedSensations,
+      bodyAreas: selectedBodyAreas,
       notes: notes,
     });
     setSubmitted(true);
@@ -149,18 +158,40 @@ export default function CheckinScreen() {
     );
   };
 
+  const toggleBodyArea = (a: string) => {
+    setSelectedBodyAreas(prev =>
+      prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]
+    );
+  };
+
   const canNext = () => {
-    if (step === 3 && !selectedMood) return false;
+    if (step === 4 && !selectedMood) return false;
     return true;
+  };
+
+  const getStepTitle = () => {
+    const titles = [
+      'Body Awareness',
+      'Energy Level',
+      'Sleep Quality',
+      'Stress Level',
+      'Current Mood',
+      'Body Sensations',
+      'Body Areas',
+      'Additional Notes',
+    ];
+    return titles[step] || 'Check-In';
+  };
+
+  const getStepIcon = (): string => {
+    const icons = ['activity', 'battery-charging', 'moon', 'alert-circle', 'smile', 'thermometer', 'user', 'edit-3'];
+    return icons[step] || 'check';
   };
 
   if (todayCheckedIn && showAlreadyCheckedIn && !submitted) {
     return (
       <View style={[styles.container, { paddingTop: topPad }]}>
-        <ScrollView
-          contentContainerStyle={styles.alreadyCheckedInContent}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView contentContainerStyle={styles.alreadyCheckedInContent} showsVerticalScrollIndicator={false}>
           <View style={styles.alreadyCheckedInCard}>
             <View style={styles.checkIconContainer}>
               <Feather name="check-circle" size={56} color={Colors.success} />
@@ -169,27 +200,25 @@ export default function CheckinScreen() {
             <Text style={styles.alreadySubtitle}>
               You have already completed your daily check-in. Here is a summary:
             </Text>
-
             {todayCheckin && (
               <View style={styles.summaryCard}>
                 <SummaryRow label="Awareness" value={`${todayCheckin.awarenessScore}/10`} />
                 <SummaryRow label="Energy" value={`${todayCheckin.energyLevel}/10`} />
                 <SummaryRow label="Sleep" value={`${todayCheckin.sleepQuality}/10`} />
+                {todayCheckin.stressLevel !== undefined && (
+                  <SummaryRow label="Stress" value={`${todayCheckin.stressLevel}/10`} />
+                )}
                 <SummaryRow label="Mood" value={todayCheckin.mood ? todayCheckin.mood.charAt(0).toUpperCase() + todayCheckin.mood.slice(1) : '-'} />
                 {todayCheckin.sensations.length > 0 && (
                   <SummaryRow label="Sensations" value={todayCheckin.sensations.join(', ')} />
                 )}
-                {todayCheckin.notes ? (
-                  <SummaryRow label="Notes" value={todayCheckin.notes} />
-                ) : null}
+                {todayCheckin.bodyAreas && todayCheckin.bodyAreas.length > 0 && (
+                  <SummaryRow label="Body Areas" value={todayCheckin.bodyAreas.join(', ')} />
+                )}
+                {todayCheckin.notes ? <SummaryRow label="Notes" value={todayCheckin.notes} /> : null}
               </View>
             )}
-
-            <TouchableOpacity
-              style={styles.checkInAgainButton}
-              onPress={() => setShowAlreadyCheckedIn(false)}
-              activeOpacity={0.8}
-            >
+            <TouchableOpacity style={styles.checkInAgainButton} onPress={() => setShowAlreadyCheckedIn(false)} activeOpacity={0.8}>
               <Feather name="refresh-cw" size={18} color={Colors.primary} />
               <Text style={styles.checkInAgainText}>Check In Again</Text>
             </TouchableOpacity>
@@ -207,24 +236,18 @@ export default function CheckinScreen() {
             <Feather name="check-circle" size={64} color={Colors.success} />
           </View>
           <Text style={styles.successTitle}>Check-in Complete</Text>
-          <Text style={styles.successSubtitle}>Your daily check-in has been recorded.</Text>
-
+          <Text style={styles.successSubtitle}>Your daily check-in has been recorded. This data helps personalize your recommendations.</Text>
           <View style={styles.summaryCard}>
             <SummaryRow label="Awareness" value={`${awareness}/10`} />
             <SummaryRow label="Energy" value={`${energy}/10`} />
             <SummaryRow label="Sleep" value={`${sleep}/10`} />
+            <SummaryRow label="Stress" value={`${stress}/10`} />
             <SummaryRow label="Mood" value={selectedMood ? selectedMood.charAt(0).toUpperCase() + selectedMood.slice(1) : '-'} />
-            {selectedSensations.length > 0 && (
-              <SummaryRow label="Sensations" value={selectedSensations.join(', ')} />
-            )}
+            {selectedSensations.length > 0 && <SummaryRow label="Sensations" value={selectedSensations.join(', ')} />}
+            {selectedBodyAreas.length > 0 && <SummaryRow label="Body Areas" value={selectedBodyAreas.join(', ')} />}
             {notes ? <SummaryRow label="Notes" value={notes} /> : null}
           </View>
-
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={resetForm}
-            activeOpacity={0.8}
-          >
+          <TouchableOpacity style={styles.primaryButton} onPress={resetForm} activeOpacity={0.8}>
             <Text style={styles.primaryButtonText}>Done</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -241,50 +264,47 @@ export default function CheckinScreen() {
       >
         <StepIndicator current={step} total={TOTAL_STEPS} />
 
-        {step === 0 && (
-          <View style={styles.stepContent}>
-            <Text style={styles.mainTitle}>Daily Check-In</Text>
-            <Text style={styles.stepQuestion}>
-              How connected to your body do you feel right now?
-            </Text>
-            <ScaleSelector
-              value={awareness}
-              onChange={setAwareness}
-              leftLabel="Disconnected"
-              rightLabel="Fully Aware"
-            />
+        <View style={styles.stepHeader}>
+          <View style={styles.stepIconWrap}>
+            <Feather name={getStepIcon() as any} size={18} color={Colors.primary} />
           </View>
+          <Text style={styles.stepHeaderLabel}>{getStepTitle()}</Text>
+        </View>
+
+        {step === 0 && (
+          <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
+            <Text style={styles.stepQuestion}>How connected to your body do you feel right now?</Text>
+            <Text style={styles.stepHint}>Interoceptive awareness is your ability to sense internal body signals like heartbeat, breathing, and tension.</Text>
+            <ScaleSelector value={awareness} onChange={setAwareness} leftLabel="Disconnected" rightLabel="Fully Aware" />
+          </Animated.View>
         )}
 
         {step === 1 && (
-          <View style={styles.stepContent}>
-            <Text style={styles.mainTitle}>Daily Check-In</Text>
+          <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepQuestion}>What is your energy level?</Text>
-            <ScaleSelector
-              value={energy}
-              onChange={setEnergy}
-              leftLabel="Depleted"
-              rightLabel="Energized"
-            />
-          </View>
+            <Text style={styles.stepHint}>Notice how energy manifests physically - heaviness in limbs, alertness, desire to move.</Text>
+            <ScaleSelector value={energy} onChange={setEnergy} leftLabel="Depleted" rightLabel="Energized" color={Colors.secondary} />
+          </Animated.View>
         )}
 
         {step === 2 && (
-          <View style={styles.stepContent}>
-            <Text style={styles.mainTitle}>Daily Check-In</Text>
+          <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepQuestion}>How was your sleep?</Text>
-            <ScaleSelector
-              value={sleep}
-              onChange={setSleep}
-              leftLabel="Very Poor"
-              rightLabel="Excellent"
-            />
-          </View>
+            <Text style={styles.stepHint}>Sleep quality directly impacts interoceptive sensitivity and emotional regulation.</Text>
+            <ScaleSelector value={sleep} onChange={setSleep} leftLabel="Very Poor" rightLabel="Excellent" color="#5A6FB5" />
+          </Animated.View>
         )}
 
         {step === 3 && (
-          <View style={styles.stepContent}>
-            <Text style={styles.mainTitle}>Daily Check-In</Text>
+          <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
+            <Text style={styles.stepQuestion}>What is your current stress level?</Text>
+            <Text style={styles.stepHint}>Stress activates the autonomic nervous system. Notice physical cues: jaw tension, shallow breathing, elevated heart rate.</Text>
+            <ScaleSelector value={stress} onChange={setStress} leftLabel="Very Calm" rightLabel="Very Stressed" color="#E07A5F" />
+          </Animated.View>
+        )}
+
+        {step === 4 && (
+          <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepQuestion}>What best describes your mood?</Text>
             <View style={styles.moodGrid}>
               {MOODS.map(mood => {
@@ -296,30 +316,19 @@ export default function CheckinScreen() {
                     onPress={() => setSelectedMood(mood.key)}
                     activeOpacity={0.7}
                   >
-                    <Feather
-                      name={mood.icon}
-                      size={24}
-                      color={isSelected ? Colors.primary : Colors.textSecondary}
-                    />
-                    <Text
-                      style={[
-                        styles.moodLabel,
-                        isSelected && styles.moodLabelSelected,
-                      ]}
-                    >
-                      {mood.label}
-                    </Text>
+                    <Feather name={mood.icon} size={24} color={isSelected ? Colors.primary : Colors.textSecondary} />
+                    <Text style={[styles.moodLabel, isSelected && styles.moodLabelSelected]}>{mood.label}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
-          </View>
+          </Animated.View>
         )}
 
-        {step === 4 && (
-          <View style={styles.stepContent}>
-            <Text style={styles.mainTitle}>Daily Check-In</Text>
+        {step === 5 && (
+          <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepQuestion}>What sensations are you noticing?</Text>
+            <Text style={styles.stepHint}>Select all that apply. Building awareness of sensations is a core interoceptive skill.</Text>
             <View style={styles.sensationContainer}>
               {SENSATIONS.map(s => {
                 const isSelected = selectedSensations.includes(s);
@@ -330,25 +339,44 @@ export default function CheckinScreen() {
                     onPress={() => toggleSensation(s)}
                     activeOpacity={0.7}
                   >
-                    <Text
-                      style={[
-                        styles.sensationText,
-                        isSelected && styles.sensationTextSelected,
-                      ]}
-                    >
+                    <Text style={[styles.sensationText, isSelected && styles.sensationTextSelected]}>
                       {s.charAt(0).toUpperCase() + s.slice(1)}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
-          </View>
+          </Animated.View>
         )}
 
-        {step === 5 && (
-          <View style={styles.stepContent}>
-            <Text style={styles.mainTitle}>Daily Check-In</Text>
+        {step === 6 && (
+          <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
+            <Text style={styles.stepQuestion}>Where in your body do you notice these sensations?</Text>
+            <Text style={styles.stepHint}>Mapping sensations to body regions improves interoceptive accuracy over time.</Text>
+            <View style={styles.sensationContainer}>
+              {BODY_AREAS.map(a => {
+                const isSelected = selectedBodyAreas.includes(a);
+                return (
+                  <TouchableOpacity
+                    key={a}
+                    style={[styles.sensationChip, isSelected && styles.bodyAreaChipSelected]}
+                    onPress={() => toggleBodyArea(a)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.sensationText, isSelected && styles.bodyAreaTextSelected]}>
+                      {a.charAt(0).toUpperCase() + a.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </Animated.View>
+        )}
+
+        {step === 7 && (
+          <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepQuestion}>Any additional notes?</Text>
+            <Text style={styles.stepHint}>Record patterns, triggers, or anything noteworthy about your body awareness today.</Text>
             <TextInput
               style={styles.notesInput}
               multiline
@@ -359,16 +387,12 @@ export default function CheckinScreen() {
               onChangeText={setNotes}
               textAlignVertical="top"
             />
-          </View>
+          </Animated.View>
         )}
 
         <View style={styles.buttonRow}>
           {step > 0 && (
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => setStep(s => s - 1)}
-              activeOpacity={0.8}
-            >
+            <TouchableOpacity style={styles.backButton} onPress={() => setStep(s => s - 1)} activeOpacity={0.8}>
               <Feather name="arrow-left" size={18} color={Colors.primary} />
               <Text style={styles.backButtonText}>Back</Text>
             </TouchableOpacity>
@@ -385,11 +409,7 @@ export default function CheckinScreen() {
               <Feather name="arrow-right" size={18} color={Colors.textInverse} />
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={handleSubmit}
-              activeOpacity={0.8}
-            >
+            <TouchableOpacity style={styles.primaryButton} onPress={handleSubmit} activeOpacity={0.8}>
               <Text style={styles.primaryButtonText}>Submit</Text>
               <Feather name="check" size={18} color={Colors.textInverse} />
             </TouchableOpacity>
@@ -413,316 +433,85 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CIRCLE_SIZE = Math.min(32, (SCREEN_WIDTH - 80) / 10 - 4);
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-  },
-  stepIndicator: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  stepDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.border,
-  },
-  stepDotActive: {
-    backgroundColor: Colors.primary,
-    width: 24,
-    borderRadius: 4,
-  },
-  stepDotCompleted: {
-    backgroundColor: Colors.primaryLight,
-  },
-  stepContent: {
-    marginTop: 16,
-  },
-  mainTitle: {
-    fontSize: 28,
-    fontFamily: 'Nunito_700Bold',
-    color: Colors.text,
-    marginBottom: 8,
-  },
-  stepQuestion: {
-    fontSize: 17,
-    fontFamily: 'Nunito_500Medium',
-    color: Colors.textSecondary,
-    marginBottom: 32,
-    lineHeight: 24,
-  },
-  scaleContainer: {
-    marginTop: 8,
-  },
-  scaleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-  },
+  container: { flex: 1, backgroundColor: Colors.background },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 40 },
+  stepIndicator: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5, marginTop: 16, marginBottom: 8 },
+  stepDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.border },
+  stepDotActive: { backgroundColor: Colors.primary, width: 20, borderRadius: 3 },
+  stepDotCompleted: { backgroundColor: Colors.primaryLight },
+  stepHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12, marginBottom: 4 },
+  stepIconWrap: { width: 32, height: 32, borderRadius: 10, backgroundColor: Colors.primary + '15', alignItems: 'center', justifyContent: 'center' },
+  stepHeaderLabel: { fontFamily: 'Nunito_700Bold', fontSize: 20, color: Colors.text },
+  stepContent: { marginTop: 8 },
+  stepQuestion: { fontSize: 16, fontFamily: 'Nunito_600SemiBold', color: Colors.text, marginBottom: 8, lineHeight: 24 },
+  stepHint: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.textTertiary, marginBottom: 24, lineHeight: 19 },
+  scaleContainer: { marginTop: 8 },
+  scaleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 4 },
   scaleCircle: {
-    width: CIRCLE_SIZE,
-    height: CIRCLE_SIZE,
-    borderRadius: CIRCLE_SIZE / 2,
-    borderWidth: 2,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.surface,
+    width: CIRCLE_SIZE, height: CIRCLE_SIZE, borderRadius: CIRCLE_SIZE / 2,
+    borderWidth: 2, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.surface,
   },
-  scaleCircleSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  scaleNumber: {
-    fontSize: 13,
-    fontFamily: 'Nunito_600SemiBold',
-    color: Colors.textSecondary,
-  },
-  scaleNumberSelected: {
-    color: Colors.textInverse,
-  },
-  scaleLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    paddingHorizontal: 4,
-  },
-  scaleLabelText: {
-    fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
-    color: Colors.textTertiary,
-  },
-  moodGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
+  scaleCircleSelected: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  scaleNumber: { fontSize: 13, fontFamily: 'Nunito_600SemiBold', color: Colors.textSecondary },
+  scaleNumberSelected: { color: Colors.textInverse },
+  scaleLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, paddingHorizontal: 4 },
+  scaleLabelText: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.textTertiary },
+  moodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   moodCard: {
-    width: (SCREEN_WIDTH - 48 - 24) / 3,
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: Colors.border,
-    shadowColor: Colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 2,
+    width: (SCREEN_WIDTH - 48 - 24) / 3, backgroundColor: Colors.surface, borderRadius: 16,
+    paddingVertical: 16, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: Colors.border,
   },
-  moodCardSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: '#F5F2FA',
-  },
-  moodLabel: {
-    fontSize: 13,
-    fontFamily: 'Nunito_500Medium',
-    color: Colors.textSecondary,
-    marginTop: 8,
-  },
-  moodLabelSelected: {
-    color: Colors.primary,
-    fontFamily: 'Nunito_600SemiBold',
-  },
-  sensationContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
+  moodCardSelected: { borderColor: Colors.primary, backgroundColor: '#F5F2FA' },
+  moodLabel: { fontSize: 13, fontFamily: 'Nunito_500Medium', color: Colors.textSecondary, marginTop: 8 },
+  moodLabelSelected: { color: Colors.primary, fontFamily: 'Nunito_600SemiBold' },
+  sensationContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   sensationChip: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 24,
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
+    paddingHorizontal: 18, paddingVertical: 10, borderRadius: 24,
+    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border,
   },
-  sensationChipSelected: {
-    backgroundColor: Colors.secondary,
-    borderColor: Colors.secondary,
-  },
-  sensationText: {
-    fontSize: 14,
-    fontFamily: 'Nunito_500Medium',
-    color: Colors.textSecondary,
-  },
-  sensationTextSelected: {
-    color: Colors.textInverse,
-    fontFamily: 'Nunito_600SemiBold',
-  },
+  sensationChipSelected: { backgroundColor: Colors.secondary, borderColor: Colors.secondary },
+  sensationText: { fontSize: 14, fontFamily: 'Nunito_500Medium', color: Colors.textSecondary },
+  sensationTextSelected: { color: Colors.textInverse, fontFamily: 'Nunito_600SemiBold' },
+  bodyAreaChipSelected: { backgroundColor: Colors.accent, borderColor: Colors.accent },
+  bodyAreaTextSelected: { color: '#6B3A3E', fontFamily: 'Nunito_600SemiBold' },
   notesInput: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    padding: 16,
-    fontSize: 15,
-    fontFamily: 'Nunito_400Regular',
-    color: Colors.text,
-    minHeight: 120,
-    textAlignVertical: 'top',
+    backgroundColor: Colors.surface, borderRadius: 16, borderWidth: 1.5, borderColor: Colors.border,
+    padding: 16, fontSize: 15, fontFamily: 'Nunito_400Regular', color: Colors.text, minHeight: 120, textAlignVertical: 'top',
   },
-  buttonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 40,
-    gap: 12,
-  },
+  buttonRow: { flexDirection: 'row', alignItems: 'center', marginTop: 40, gap: 12 },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 16,
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 14, paddingHorizontal: 20, borderRadius: 16,
+    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border,
   },
-  backButtonText: {
-    fontSize: 15,
-    fontFamily: 'Nunito_600SemiBold',
-    color: Colors.primary,
-  },
+  backButtonText: { fontSize: 15, fontFamily: 'Nunito_600SemiBold', color: Colors.primary },
   primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    borderRadius: 16,
-    backgroundColor: Colors.primary,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingVertical: 14, paddingHorizontal: 28, borderRadius: 16, backgroundColor: Colors.primary,
   },
-  primaryButtonDisabled: {
-    opacity: 0.5,
-  },
-  primaryButtonText: {
-    fontSize: 15,
-    fontFamily: 'Nunito_700Bold',
-    color: Colors.textInverse,
-  },
-  alreadyCheckedInContent: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 40,
-  },
-  alreadyCheckedInCard: {
-    alignItems: 'center',
-  },
-  checkIconContainer: {
-    marginBottom: 20,
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#F0F9EC',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  alreadyTitle: {
-    fontSize: 24,
-    fontFamily: 'Nunito_700Bold',
-    color: Colors.text,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  alreadySubtitle: {
-    fontSize: 15,
-    fontFamily: 'Nunito_400Regular',
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 22,
-    paddingHorizontal: 16,
-  },
+  primaryButtonDisabled: { opacity: 0.5 },
+  primaryButtonText: { fontSize: 15, fontFamily: 'Nunito_700Bold', color: Colors.textInverse },
+  alreadyCheckedInContent: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 40 },
+  alreadyCheckedInCard: { alignItems: 'center' },
+  checkIconContainer: { marginBottom: 20, width: 96, height: 96, borderRadius: 48, backgroundColor: '#F0F9EC', alignItems: 'center', justifyContent: 'center' },
+  alreadyTitle: { fontSize: 24, fontFamily: 'Nunito_700Bold', color: Colors.text, marginBottom: 8, textAlign: 'center' },
+  alreadySubtitle: { fontSize: 15, fontFamily: 'Nunito_400Regular', color: Colors.textSecondary, textAlign: 'center', marginBottom: 24, lineHeight: 22, paddingHorizontal: 16 },
   checkInAgainButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    borderRadius: 16,
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.primary,
-    marginTop: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingVertical: 14, paddingHorizontal: 28, borderRadius: 16,
+    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.primary, marginTop: 16,
   },
-  checkInAgainText: {
-    fontSize: 15,
-    fontFamily: 'Nunito_600SemiBold',
-    color: Colors.primary,
-  },
-  successContainer: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
-    alignItems: 'center',
-  },
-  successIconWrap: {
-    marginBottom: 20,
-    width: 104,
-    height: 104,
-    borderRadius: 52,
-    backgroundColor: '#F0F9EC',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  successTitle: {
-    fontSize: 26,
-    fontFamily: 'Nunito_700Bold',
-    color: Colors.text,
-    marginBottom: 8,
-  },
-  successSubtitle: {
-    fontSize: 15,
-    fontFamily: 'Nunito_400Regular',
-    color: Colors.textSecondary,
-    marginBottom: 28,
-    textAlign: 'center',
-  },
+  checkInAgainText: { fontSize: 15, fontFamily: 'Nunito_600SemiBold', color: Colors.primary },
+  successContainer: { flex: 1, paddingHorizontal: 24, paddingTop: 40, alignItems: 'center' },
+  successIconWrap: { marginBottom: 20, width: 104, height: 104, borderRadius: 52, backgroundColor: '#F0F9EC', alignItems: 'center', justifyContent: 'center' },
+  successTitle: { fontSize: 26, fontFamily: 'Nunito_700Bold', color: Colors.text, marginBottom: 8 },
+  successSubtitle: { fontSize: 15, fontFamily: 'Nunito_400Regular', color: Colors.textSecondary, marginBottom: 28, textAlign: 'center', lineHeight: 22 },
   summaryCard: {
-    width: '100%',
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    shadowColor: Colors.cardShadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 12,
-    elevation: 3,
+    width: '100%', backgroundColor: Colors.surface, borderRadius: 16, padding: 20, marginBottom: 24,
+    borderWidth: 1, borderColor: Colors.borderLight,
   },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    fontFamily: 'Nunito_600SemiBold',
-    color: Colors.textSecondary,
-    flex: 1,
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontFamily: 'Nunito_500Medium',
-    color: Colors.text,
-    flex: 2,
-    textAlign: 'right',
-  },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
+  summaryLabel: { fontSize: 14, fontFamily: 'Nunito_600SemiBold', color: Colors.textSecondary, flex: 1 },
+  summaryValue: { fontSize: 14, fontFamily: 'Nunito_500Medium', color: Colors.text, flex: 2, textAlign: 'right' },
 });
