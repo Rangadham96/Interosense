@@ -1,0 +1,59 @@
+Build InteroSense: A comprehensive mental wellness platform for interoceptive awareness training. Users learn to sense internal body signals (heartbeat, breathing, tension, gut feelings) to reduce anxiety and improve emotional regulation.
+
+TECH STACK: React + TypeScript, Tailwind CSS, shadcn/ui, Framer Motion, Recharts, Node.js + Express backend, PostgreSQL database, JWT auth, WebSocket for real-time features, cloud storage, full CI/CD deployment.
+
+DESIGN: Teal #00B4A6 (primary), Purple #6C5CE7 (secondary), Coral #FF6B6B (accent). Calming aesthetic with soft shadows, rounded corners, generous white space. Dark mode support.
+
+DATABASE: Users (auth, preferences, subscription), Exercises (content, difficulty, categories), Sessions (tracking, ratings), CheckIns (body awareness scores, sensations), Badges, Goals, BodyMaps, SymptomAssessments (GAD7, PHQ9, PCL5), WearableData, DailySummaries.
+
+FEATURES:
+
+1. LANDING: Marketing page with hero, features, science section, pricing (Free/Premium/Enterprise), testimonials.
+
+2. AUTH: Email/password, OAuth (Google, Apple), 2FA, session management, password reset.
+
+3. ONBOARDING: Multi-step flow collecting concerns (anxiety, PTSD, etc.), experience level, daily goals, notification preferences. Save to user profile.
+
+4. DASHBOARD: Greeting, streak counter, daily progress, quick actions (check-in, exercise, track sensation), stats (sessions, hours, awareness score), insights, bottom nav.
+
+5. EXERCISES LIBRARY: 20+ exercises across categories (Heartbeat, Breathing, Body Scanning, Gut Signals, Tension, Temperature, Interoceptive Exposure). Filter by difficulty, duration, category. Each exercise: title, description, benefits, step-by-step instructions, audio guidance. Examples: Heartbeat Detection (5min), Box Breathing (8min), Progressive Body Scan (15min), Tension Release (12min).
+
+6. EXERCISE SESSION: Full-screen immersive interface, circular timer, auto-advancing instructions, pause/end controls. Post-session: rating, tags, notes. Track completion, update stats.
+
+7. DAILY CHECK-INS: Morning/afternoon/evening prompts. Collect: sleep quality, energy, body feeling (1-5 scale), sensations (multi-select tags), interactive body diagram, awareness score (0-10 slider), stress level, context. Save timestamped data, calculate trends.
+
+8. PROGRESS: Charts showing awareness trends (line/bar charts), activity heatmap calendar, stats (streak, total sessions, hours), insights ("most consistent on Mondays"), personal bests, activity feed. Export reports.
+
+9. BODY MAP: Interactive SVG body diagram (front/back views), tap to mark sensations, log intensity (1-10), timestamp snapshots, compare history, color-coded by sensation type.
+
+10. SYMPTOM TRACKER: Validated scales - GAD-7 (anxiety), PHQ-9 (depression), PCL-5 (PTSD), DERS (emotion regulation), TAS-20 (alexithymia). One question per screen, scoring, interpretation, trend charts, PDF export for therapists.
+
+11. CRISIS PAGE: Immediate hotline access (click-to-call), grounding techniques (5-4-3-2-1 sensory, box breathing with animation, cold water, safe space visualization), when to seek help section, resource links. High contrast, always accessible.
+
+12. LEARNING CENTER: 20+ articles on interoception science, techniques, conditions (anxiety, PTSD, eating disorders, chronic pain). Categories: Getting Started, Science, Condition-Specific, Techniques, Success Stories. Full article pages with sharing, related content.
+
+13. PROFILE: Avatar, stats, settings menu, subscription management, wearable connections, support/help, legal/privacy, data export, account deletion.
+
+14. SETTINGS: Notifications (daily reminders, achievements), display (dark mode, text size, language), audio/sound, privacy (data collection toggles), accessibility (high contrast, reduce motion), security (2FA, active sessions), data management (export, reset).
+
+15. GOALS: Create custom goals (exercise count, streak, awareness score, check-ins, time-based). Track progress with visual bars, deadlines, notifications. Suggest smart goals based on user patterns. Celebrate completions.
+
+16. ACHIEVEMENTS: Badge system - Getting Started, Consistency (streaks), Exploration (categories), Mastery (sessions/hours), Progress (improvement), Special. Show locked/unlocked, unlock criteria, rarity levels.
+
+17. WEARABLE INTEGRATION: Connect Apple Watch, Fitbit, Garmin, Oura, Whoop. Sync heart rate, HRV, sleep, activity. Correlate with awareness scores, personalize recommendations.
+
+18. EXPOSURE LIBRARY: Advanced interoceptive exposure exercises (hyperventilation, spinning, breath-holding) with safety warnings, contraindications, therapist consultation prompts.
+
+19. MEDITATIONS: Guided audio meditations (body scan, breath-focused, loving-kindness). Player with progress bar, skip controls, transcripts.
+
+DISCLAIMERS: "For educational purposes only", "Not medical advice", "Consult healthcare provider", Crisis hotline prominent. Display on landing, onboarding, crisis page.
+
+ACCESSIBILITY: Keyboard navigation, ARIA labels, semantic HTML, high contrast mode, screen reader support, reduced motion option, focus indicators.
+
+DATA PERSISTENCE: localStorage for offline capability, sync to backend when online. Real-time updates via WebSocket. Encrypted data storage. HIPAA considerations for health data.
+
+ANALYTICS: User behavior tracking, session recording, conversion funnels, A/B testing, performance monitoring, error tracking, uptime monitoring.
+
+MOBILE-FIRST: Responsive design, touch-optimized, works offline, progressive web app, native app wrapper potential.
+
+Build complete, production-ready platform with all features functional, proper error handling, loading states, form validation, secure authentication, scalable architecture.
