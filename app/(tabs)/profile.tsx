@@ -82,16 +82,17 @@ export default function ProfileScreen() {
     { icon: 'target', iconBg: Colors.primary, title: 'My Goals', onPress: () => router.push('/goals') },
     { icon: 'award', iconBg: Colors.warning, title: 'Achievements', onPress: () => router.push('/achievements'), badge: unlockedAchievements.length },
     { icon: 'map', iconBg: Colors.secondary, title: 'Body Map', onPress: () => router.push('/bodymap') },
+    { icon: 'heart', iconBg: Colors.error, title: 'Health Data', onPress: () => router.push('/wearable') },
   ];
 
   const learnItems: MenuItem[] = [
-    { icon: 'book-open', iconBg: Colors.accent, title: 'Articles', onPress: () => router.push('/article/what-is-interoception') },
-    { icon: 'bookmark', iconBg: Colors.primaryLight, title: 'Bookmarks', onPress: () => {} },
+    { icon: 'book-open', iconBg: Colors.accent, title: 'Articles', onPress: () => router.push('/articles') },
+    { icon: 'bookmark', iconBg: Colors.primaryLight, title: 'Bookmarks', onPress: () => router.push('/bookmarks') },
   ];
 
   const appItems: MenuItem[] = [
     { icon: 'settings', iconBg: Colors.textSecondary, title: 'Settings', onPress: () => router.push('/settings') },
-    { icon: 'info', iconBg: Colors.secondaryDark, title: 'About Interosense', onPress: () => {} },
+    { icon: 'info', iconBg: Colors.secondaryDark, title: 'About Interosense', onPress: () => router.push('/about') },
   ];
 
   return (

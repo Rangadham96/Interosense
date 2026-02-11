@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,8 +14,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withDelay,
+  withSequence,
+  Easing,
+  runOnJS,
+} from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
-import { getExerciseById } from '@/constants/exercises';
+import { getExerciseById, EXERCISES, CATEGORY_INFO } from '@/constants/exercises';
 import { useApp } from '@/contexts/AppContext';
 
 type SessionPhase = 'prestart' | 'active' | 'complete';
@@ -36,7 +47,7 @@ export default function ExerciseSessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { addSession } = useApp();
+  const { addSession, sessions, totalSessions, currentStreak, unlockedAchievements } = useApp();
   const exercise = getExerciseById(id);
 
   const [phase, setPhase] = useState<SessionPhase>('prestart');
@@ -46,7 +57,48 @@ export default function ExerciseSessionScreen() {
   const [selectedRating, setSelectedRating] = useState(0);
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [prevAchievementCount] = useState(unlockedAchievements.length);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const celebrationScale = useSharedValue(0);
+  const celebrationOpacity = useSharedValue(0);
+  const confettiPieces = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      x: Math.random() * SCREEN_WIDTH,
+      delay: Math.random() * 600,
+      color: [Colors.primary, Colors.secondary, Colors.accent, Colors.warning, Colors.success][i % 5],
+      size: 6 + Math.random() * 6,
+    }));
+  }, []);
+
+  useEffect(() => {
+    if (phase === 'complete') {
+      celebrationScale.value = withSpring(1, { damping: 12 });
+      celebrationOpacity.value = withTiming(1, { duration: 400 });
+      if (Platform.OS !== 'web') {
+        try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+      }
+    }
+  }, [phase]);
+
+  const celebrationStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: celebrationScale.value }],
+    opacity: celebrationOpacity.value,
+  }));
+
+  const nextExercise = useMemo(() => {
+    if (!exercise) return null;
+    const sameCategory = EXERCISES.filter(e => e.category === exercise.category && e.id !== exercise.id);
+    if (sameCategory.length > 0) return sameCategory[Math.floor(Math.random() * sameCategory.length)];
+    return EXERCISES[Math.floor(Math.random() * EXERCISES.length)];
+  }, [exercise]);
+
+  const newAchievements = useMemo(() => {
+    if (!saved) return [];
+    return unlockedAchievements.slice(prevAchievementCount);
+  }, [saved, unlockedAchievements, prevAchievementCount]);
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
@@ -122,12 +174,15 @@ export default function ExerciseSessionScreen() {
         rating: selectedRating,
         notes: notes,
       });
-      router.back();
+      setSaved(true);
+      if (Platform.OS !== 'web') {
+        try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+      }
     } catch (e) {
       console.error('Failed to save session:', e);
       setIsSaving(false);
     }
-  }, [exercise, addSession, selectedRating, notes, isSaving, router]);
+  }, [exercise, addSession, selectedRating, notes, isSaving]);
 
   if (!exercise) {
     return (
@@ -250,6 +305,85 @@ export default function ExerciseSessionScreen() {
   }
 
   if (phase === 'complete') {
+    if (saved) {
+      const catInfo = CATEGORY_INFO[exercise.category as keyof typeof CATEGORY_INFO];
+      return (
+        <LinearGradient colors={[Colors.primary, '#3D2F6B']} style={styles.container}>
+          <ScrollView
+            style={styles.scrollFill}
+            contentContainerStyle={[styles.completeContent, { paddingTop: topInset + 24, paddingBottom: bottomInset + 24 }]}
+            showsVerticalScrollIndicator={false}
+          >
+            <Animated.View style={[styles.celebrationWrap, celebrationStyle]}>
+              <View style={styles.celebrationRing3} />
+              <View style={styles.celebrationRing2} />
+              <View style={styles.celebrationRing1}>
+                <Feather name="check" size={40} color="#fff" />
+              </View>
+            </Animated.View>
+
+            <Text style={styles.completeTitle}>Session Complete</Text>
+            <Text style={styles.completeSubtitle}>You finished {exercise.title}</Text>
+
+            <View style={styles.statsRow}>
+              <View style={styles.statBox}>
+                <Text style={styles.statValue}>{exercise.durationMinutes}</Text>
+                <Text style={styles.statLabel}>Minutes</Text>
+              </View>
+              <View style={styles.statBox}>
+                <Text style={styles.statValue}>{totalSessions}</Text>
+                <Text style={styles.statLabel}>Total Sessions</Text>
+              </View>
+              <View style={styles.statBox}>
+                <Text style={styles.statValue}>{currentStreak}</Text>
+                <Text style={styles.statLabel}>Day Streak</Text>
+              </View>
+            </View>
+
+            {newAchievements.length > 0 && (
+              <View style={styles.achievementUnlock}>
+                <Feather name="award" size={20} color={Colors.warning} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.achievementUnlockTitle}>Achievement Unlocked</Text>
+                  <Text style={styles.achievementUnlockText}>
+                    You earned {newAchievements.length} new badge{newAchievements.length > 1 ? 's' : ''}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {nextExercise && (
+              <View style={styles.nextUpSection}>
+                <Text style={styles.nextUpLabel}>Up Next</Text>
+                <TouchableOpacity
+                  style={styles.nextExerciseCard}
+                  onPress={() => router.replace(`/exercise/${nextExercise.id}`)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.nextExerciseIcon, { backgroundColor: (CATEGORY_INFO[nextExercise.category as keyof typeof CATEGORY_INFO]?.color || Colors.primary) + '30' }]}>
+                    <Feather name={nextExercise.iconName as any} size={18} color={CATEGORY_INFO[nextExercise.category as keyof typeof CATEGORY_INFO]?.color || Colors.primary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.nextExerciseTitle}>{nextExercise.title}</Text>
+                    <Text style={styles.nextExerciseMeta}>{nextExercise.durationMinutes} min  {nextExercise.difficulty}</Text>
+                  </View>
+                  <Feather name="chevron-right" size={18} color="rgba(255,255,255,0.5)" />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={styles.doneButton}
+              onPress={() => router.back()}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.doneButtonText}>Done</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </LinearGradient>
+      );
+    }
+
     return (
       <LinearGradient colors={[Colors.primary, Colors.secondaryDark]} style={styles.container}>
         <ScrollView
@@ -258,9 +392,9 @@ export default function ExerciseSessionScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.completeIconCircle}>
+          <Animated.View style={[styles.completeIconCircle, celebrationStyle]}>
             <Feather name="check" size={48} color={Colors.success} />
-          </View>
+          </Animated.View>
           <Text style={styles.completeTitle}>Well Done</Text>
           <Text style={styles.completeSubtitle}>You completed {exercise.title}</Text>
 
@@ -315,7 +449,7 @@ export default function ExerciseSessionScreen() {
             disabled={isSaving}
           >
             <Feather name="check-circle" size={20} color={Colors.primary} />
-            <Text style={styles.saveButtonText}>{isSaving ? 'Saving...' : 'Save & Close'}</Text>
+            <Text style={styles.saveButtonText}>{isSaving ? 'Saving...' : 'Save Session'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -733,5 +867,115 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_500Medium',
     fontSize: 14,
     color: 'rgba(255,255,255,0.6)',
+  },
+
+  celebrationWrap: {
+    width: 120,
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  celebrationRing1: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.success,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+  },
+  celebrationRing2: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: Colors.success + '40',
+    position: 'absolute',
+  },
+  celebrationRing3: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 1,
+    borderColor: Colors.success + '20',
+    position: 'absolute',
+  },
+  achievementUnlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(240,192,90,0.15)',
+    borderRadius: 14,
+    padding: 16,
+    width: '100%',
+    gap: 12,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(240,192,90,0.3)',
+  },
+  achievementUnlockTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 14,
+    color: Colors.warning,
+  },
+  achievementUnlockText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 2,
+  },
+  nextUpSection: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  nextUpLabel: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.5)',
+    textTransform: 'uppercase' as const,
+    letterSpacing: 1,
+    marginBottom: 10,
+  },
+  nextExerciseCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 14,
+    padding: 14,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  nextExerciseIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  nextExerciseTitle: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 15,
+    color: '#fff',
+  },
+  nextExerciseMeta: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+  doneButton: {
+    backgroundColor: '#fff',
+    paddingVertical: 16,
+    paddingHorizontal: 48,
+    borderRadius: 30,
+    width: '100%',
+    maxWidth: 300,
+    alignItems: 'center',
+  },
+  doneButtonText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 16,
+    color: Colors.primary,
   },
 });

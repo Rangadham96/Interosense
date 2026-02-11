@@ -1,0 +1,324 @@
+import React, { useState, useMemo } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Platform,
+} from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { useApp } from '@/contexts/AppContext';
+import { ARTICLES, ARTICLE_CATEGORIES, ArticleCategory } from '@/constants/articles';
+import Colors from '@/constants/colors';
+
+const CATEGORY_KEYS: ArticleCategory[] = ['getting-started', 'science', 'conditions', 'techniques', 'wellness'];
+
+export default function ArticlesScreen() {
+  const insets = useSafeAreaInsets();
+  const { bookmarks, toggleBookmark } = useApp();
+  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+
+  const [selectedCategory, setSelectedCategory] = useState<ArticleCategory | 'all'>('all');
+  const [search, setSearch] = useState('');
+
+  const filteredArticles = useMemo(() => {
+    let result = ARTICLES;
+    if (selectedCategory !== 'all') {
+      result = result.filter(a => a.category === selectedCategory);
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase().trim();
+      result = result.filter(
+        a => a.title.toLowerCase().includes(q) || a.subtitle.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [selectedCategory, search]);
+
+  return (
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[Colors.primary, Colors.primaryDark]}
+        style={[styles.header, { paddingTop: topPadding + 16 }]}
+      >
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Feather name="arrow-left" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Articles</Text>
+          <View style={{ width: 40 }} />
+        </View>
+      </LinearGradient>
+
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBar}>
+          <Feather name="search" size={18} color={Colors.textTertiary} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search articles..."
+            placeholderTextColor={Colors.textTertiary}
+            value={search}
+            onChangeText={setSearch}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')}>
+              <Feather name="x" size={18} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.pillsWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.pillsContent}
+        >
+          <TouchableOpacity
+            style={[styles.pill, selectedCategory === 'all' && styles.pillActive]}
+            onPress={() => setSelectedCategory('all')}
+          >
+            <Text style={[styles.pillText, selectedCategory === 'all' && styles.pillTextActive]}>All</Text>
+          </TouchableOpacity>
+          {CATEGORY_KEYS.map((key) => (
+            <TouchableOpacity
+              key={key}
+              style={[styles.pill, selectedCategory === key && styles.pillActive]}
+              onPress={() => setSelectedCategory(key)}
+            >
+              <Text style={[styles.pillText, selectedCategory === key && styles.pillTextActive]}>
+                {ARTICLE_CATEGORIES[key].label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {filteredArticles.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Feather name="search" size={36} color={Colors.textTertiary} />
+            <Text style={styles.emptyText}>No articles found</Text>
+          </View>
+        ) : (
+          filteredArticles.map((article) => {
+            const catMeta = ARTICLE_CATEGORIES[article.category];
+            const isBookmarked = bookmarks.includes(article.id);
+            return (
+              <TouchableOpacity
+                key={article.id}
+                style={styles.card}
+                activeOpacity={0.7}
+                onPress={() => router.push(`/article/${article.id}`)}
+              >
+                <View style={styles.cardIconCircle}>
+                  <Feather name={article.iconName as any} size={20} color={Colors.primary} />
+                </View>
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle} numberOfLines={1}>{article.title}</Text>
+                  <Text style={styles.cardSubtitle} numberOfLines={1}>{article.subtitle}</Text>
+                  <View style={styles.cardMeta}>
+                    <View style={styles.categoryBadge}>
+                      <Text style={styles.categoryBadgeText}>{catMeta.label}</Text>
+                    </View>
+                    <Feather name="clock" size={12} color={Colors.textTertiary} />
+                    <Text style={styles.readTime}>{article.readTimeMinutes} min</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  onPress={() => toggleBookmark(article.id)}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
+                  <Feather
+                    name={isBookmarked ? 'bookmark' : 'bookmark'}
+                    size={22}
+                    color={isBookmarked ? Colors.primary : Colors.textTertiary}
+                  />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            );
+          })
+        )}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  header: {
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 20,
+    color: '#FFFFFF',
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 4,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 44,
+    ...Platform.select({
+      web: { boxShadow: '0 2px 8px rgba(107,91,149,0.08)' } as any,
+      default: {
+        shadowColor: Colors.cardShadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 8,
+        elevation: 2,
+      },
+    }),
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 15,
+    color: Colors.text,
+    marginLeft: 10,
+    marginRight: 8,
+  },
+  pillsWrapper: {
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  pillsContent: {
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  pill: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  pillActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  pillText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  pillTextActive: {
+    color: '#FFFFFF',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 100,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingTop: 60,
+  },
+  emptyText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: Colors.textSecondary,
+    marginTop: 12,
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    ...Platform.select({
+      web: { boxShadow: '0 2px 8px rgba(107,91,149,0.08)' } as any,
+      default: {
+        shadowColor: Colors.cardShadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 8,
+        elevation: 3,
+      },
+    }),
+  },
+  cardIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: `${Colors.primary}12`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  cardContent: {
+    flex: 1,
+    marginRight: 10,
+  },
+  cardTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 15,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  cardSubtitle: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 6,
+  },
+  cardMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  categoryBadge: {
+    backgroundColor: `${Colors.primary}14`,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginRight: 4,
+  },
+  categoryBadgeText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 11,
+    color: Colors.primary,
+  },
+  readTime: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 12,
+    color: Colors.textTertiary,
+  },
+});

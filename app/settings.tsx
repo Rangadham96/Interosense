@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,13 @@ import {
   Switch,
   Alert,
   Platform,
+  Share,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
@@ -25,7 +27,51 @@ const FONT_SIZE_OPTIONS: Array<{ label: string; value: 'small' | 'medium' | 'lar
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const topPadding = Platform.OS === 'web' ? 67 : insets.top;
-  const { settings, updateSettings } = useApp();
+  const { settings, updateSettings, profile, sessions, checkins, assessments, bodyMarks, goals, bookmarks, wearableData } = useApp();
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        appVersion: '1.0.0',
+        profile,
+        sessions,
+        checkins,
+        assessments,
+        bodyMarks,
+        goals,
+        bookmarks,
+        wearableData,
+        settings,
+      };
+      const jsonString = JSON.stringify(exportData, null, 2);
+
+      if (Platform.OS === 'web') {
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `interosense-export-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        const fileUri = FileSystem.documentDirectory + `interosense-export-${new Date().toISOString().slice(0, 10)}.json`;
+        await FileSystem.writeAsStringAsync(fileUri, jsonString);
+        await Share.share({
+          title: 'InteroSense Data Export',
+          url: fileUri,
+          message: Platform.OS === 'android' ? jsonString : undefined,
+        });
+      }
+      Alert.alert('Export Complete', 'Your data has been exported successfully.');
+    } catch (e) {
+      Alert.alert('Export Failed', 'There was an error exporting your data. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleClearData = () => {
     Alert.alert(
@@ -162,8 +208,12 @@ export default function SettingsScreen() {
           {renderRow(
             'download',
             'Export Data',
-            <Text style={styles.comingSoon}>Coming soon</Text>,
-            undefined,
+            isExporting ? (
+              <Text style={styles.rowValue}>Exporting...</Text>
+            ) : (
+              <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
+            ),
+            handleExportData,
             false
           )}
           {renderRow(
@@ -188,7 +238,7 @@ export default function SettingsScreen() {
             'heart',
             'About Interosense',
             <Feather name="chevron-right" size={18} color={Colors.textTertiary} />,
-            undefined,
+            () => router.push('/about'),
             false
           )}
           <View style={styles.aboutText}>
