@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,20 @@ import { BodyMark } from '@/lib/storage';
 
 const SENSATIONS = ['tension', 'tingling', 'warmth', 'coolness', 'heaviness', 'pulsing', 'pain', 'numbness'] as const;
 
+const HEATMAP_COLORS = {
+  none: Colors.primaryLight,
+  low: '#A5CC94',
+  medium: '#F0C05A',
+  high: '#E85D5D',
+};
+
+function getHeatmapColor(count: number): string {
+  if (count === 0) return HEATMAP_COLORS.none;
+  if (count <= 2) return HEATMAP_COLORS.low;
+  if (count <= 5) return HEATMAP_COLORS.medium;
+  return HEATMAP_COLORS.high;
+}
+
 const BODY_PARTS: { key: string; label: string; style: object; dotX: number; dotY: number }[] = [
   { key: 'head', label: 'Head', style: { position: 'absolute' as const, top: 0, left: 75, width: 50, height: 50, borderRadius: 25, backgroundColor: Colors.primaryLight, borderWidth: 2, borderColor: Colors.primary }, dotX: 100, dotY: 25 },
   { key: 'neck', label: 'Neck', style: { position: 'absolute' as const, top: 48, left: 90, width: 20, height: 18, backgroundColor: Colors.primaryLight, borderWidth: 2, borderColor: Colors.primary, borderTopWidth: 0 }, dotX: 100, dotY: 57 },
@@ -31,6 +45,27 @@ const BODY_PARTS: { key: string; label: string; style: object; dotX: number; dot
 
 const INTENSITY_COLORS = [Colors.success, Colors.secondaryDark, Colors.warning, Colors.accentDark, Colors.error];
 
+function isToday(dateStr: string): boolean {
+  const d = new Date(dateStr);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+}
+
+function getDateKey(dateStr: string): string {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export default function BodyMapScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -39,6 +74,7 @@ export default function BodyMapScreen() {
   const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
   const [currentView, setCurrentView] = useState<'front' | 'back'>('front');
+  const [activeTab, setActiveTab] = useState<'today' | 'history'>('today');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState('');
   const [selectedDotX, setSelectedDotX] = useState(0);
@@ -81,7 +117,55 @@ export default function BodyMapScreen() {
     }
   };
 
-  const viewMarks = bodyMarks.filter(m => m.view === currentView);
+  const regionCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    BODY_PARTS.forEach(p => { counts[p.label] = 0; });
+    bodyMarks.forEach(m => {
+      counts[m.region] = (counts[m.region] || 0) + 1;
+    });
+    return counts;
+  }, [bodyMarks]);
+
+  const regionStatsSorted = useMemo(() => {
+    return Object.entries(regionCounts)
+      .sort((a, b) => b[1] - a[1]);
+  }, [regionCounts]);
+
+  const maxRegionCount = useMemo(() => {
+    return Math.max(1, ...Object.values(regionCounts));
+  }, [regionCounts]);
+
+  const viewMarks = useMemo(() => {
+    return bodyMarks.filter(m => m.view === currentView);
+  }, [bodyMarks, currentView]);
+
+  const todayMarks = useMemo(() => {
+    return viewMarks.filter(m => isToday(m.createdAt));
+  }, [viewMarks]);
+
+  const historyGrouped = useMemo(() => {
+    const groups: Record<string, BodyMark[]> = {};
+    const sorted = [...viewMarks].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    sorted.forEach(m => {
+      const key = getDateKey(m.createdAt);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(m);
+    });
+    return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
+  }, [viewMarks]);
+
+  const displayMarks = activeTab === 'today' ? todayMarks : viewMarks;
+
+  const bodyPartsWithHeatmap = useMemo(() => {
+    return BODY_PARTS.map(part => {
+      const count = regionCounts[part.label] || 0;
+      const color = getHeatmapColor(count);
+      return {
+        ...part,
+        style: { ...part.style, backgroundColor: color },
+      };
+    });
+  }, [regionCounts]);
 
   return (
     <View style={[styles.container, { paddingTop: topInset }]}>
@@ -112,14 +196,14 @@ export default function BodyMapScreen() {
 
       <View style={styles.bodyContainer}>
         <View style={styles.bodyFigure}>
-          {BODY_PARTS.map(part => (
+          {bodyPartsWithHeatmap.map(part => (
             <Pressable
               key={part.key}
               style={part.style}
               onPress={() => handleBodyPartPress(part)}
             />
           ))}
-          {viewMarks.map(mark => (
+          {displayMarks.map(mark => (
             <View
               key={mark.id}
               style={[
@@ -133,23 +217,111 @@ export default function BodyMapScreen() {
             />
           ))}
         </View>
+        <View style={styles.heatmapLegend}>
+          <Text style={styles.legendLabel}>Activity:</Text>
+          <View style={[styles.legendSwatch, { backgroundColor: HEATMAP_COLORS.none }]} />
+          <Text style={styles.legendText}>None</Text>
+          <View style={[styles.legendSwatch, { backgroundColor: HEATMAP_COLORS.low }]} />
+          <Text style={styles.legendText}>Low</Text>
+          <View style={[styles.legendSwatch, { backgroundColor: HEATMAP_COLORS.medium }]} />
+          <Text style={styles.legendText}>Med</Text>
+          <View style={[styles.legendSwatch, { backgroundColor: HEATMAP_COLORS.high }]} />
+          <Text style={styles.legendText}>High</Text>
+        </View>
         <Text style={styles.tapHint}>Tap a body region to record a sensation</Text>
       </View>
 
-      {viewMarks.length > 0 && (
-        <ScrollView style={styles.marksList} contentContainerStyle={{ paddingBottom: bottomInset + 12 }}>
-          <Text style={styles.marksTitle}>Recorded Sensations</Text>
-          {viewMarks.map(mark => (
-            <View key={mark.id} style={styles.markCard}>
-              <View style={[styles.markIndicator, { backgroundColor: INTENSITY_COLORS[Math.min(mark.intensity - 1, 4)] }]} />
-              <View style={styles.markInfo}>
-                <Text style={styles.markRegion}>{mark.region}</Text>
-                <Text style={styles.markDetail}>{mark.sensation} - Intensity {mark.intensity}/5</Text>
+      <View style={styles.tabRow}>
+        <Pressable
+          style={[styles.tabBtn, activeTab === 'today' && styles.tabBtnActive]}
+          onPress={() => setActiveTab('today')}
+        >
+          <Feather name="sun" size={14} color={activeTab === 'today' ? Colors.primary : Colors.textTertiary} />
+          <Text style={[styles.tabText, activeTab === 'today' && styles.tabTextActive]}>Today</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.tabBtn, activeTab === 'history' && styles.tabBtnActive]}
+          onPress={() => setActiveTab('history')}
+        >
+          <Feather name="clock" size={14} color={activeTab === 'history' ? Colors.primary : Colors.textTertiary} />
+          <Text style={[styles.tabText, activeTab === 'history' && styles.tabTextActive]}>History</Text>
+        </Pressable>
+      </View>
+
+      <ScrollView style={styles.marksList} contentContainerStyle={{ paddingBottom: bottomInset + 12 }}>
+        {activeTab === 'today' && (
+          <>
+            {todayMarks.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Feather name="activity" size={28} color={Colors.textTertiary} />
+                <Text style={styles.emptyText}>No sensations recorded today</Text>
               </View>
-            </View>
-          ))}
-        </ScrollView>
-      )}
+            ) : (
+              <>
+                <Text style={styles.marksTitle}>Today's Sensations</Text>
+                {todayMarks.map(mark => (
+                  <View key={mark.id} style={styles.markCard}>
+                    <View style={[styles.markIndicator, { backgroundColor: INTENSITY_COLORS[Math.min(mark.intensity - 1, 4)] }]} />
+                    <View style={styles.markInfo}>
+                      <Text style={styles.markRegion}>{mark.region}</Text>
+                      <Text style={styles.markDetail}>{mark.sensation} - Intensity {mark.intensity}/5</Text>
+                    </View>
+                  </View>
+                ))}
+              </>
+            )}
+          </>
+        )}
+
+        {activeTab === 'history' && (
+          <>
+            {historyGrouped.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Feather name="inbox" size={28} color={Colors.textTertiary} />
+                <Text style={styles.emptyText}>No recorded sensations yet</Text>
+              </View>
+            ) : (
+              historyGrouped.map(([dateKey, marks]) => (
+                <View key={dateKey} style={styles.dateGroup}>
+                  <Text style={styles.dateGroupTitle}>{formatDate(marks[0].createdAt)}</Text>
+                  {marks.map(mark => (
+                    <View key={mark.id} style={styles.markCard}>
+                      <View style={[styles.markIndicator, { backgroundColor: INTENSITY_COLORS[Math.min(mark.intensity - 1, 4)] }]} />
+                      <View style={styles.markInfo}>
+                        <Text style={styles.markRegion}>{mark.region}</Text>
+                        <Text style={styles.markDetail}>{mark.sensation} - Intensity {mark.intensity}/5</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              ))
+            )}
+          </>
+        )}
+
+        {bodyMarks.length > 0 && (
+          <View style={styles.regionStatsSection}>
+            <Text style={styles.regionStatsTitle}>Region Activity</Text>
+            {regionStatsSorted.map(([region, count]) => (
+              <View key={region} style={styles.statRow}>
+                <Text style={styles.statLabel}>{region}</Text>
+                <View style={styles.statBarContainer}>
+                  <View
+                    style={[
+                      styles.statBar,
+                      {
+                        width: `${(count / maxRegionCount) * 100}%`,
+                        backgroundColor: getHeatmapColor(count),
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.statCount}>{count}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
 
       <Modal visible={modalVisible} transparent animationType="slide">
         <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
@@ -251,11 +423,23 @@ const styles = StyleSheet.create({
   },
   toggleBtnActive: {
     backgroundColor: Colors.surface,
-    shadowColor: Colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.cardShadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        shadowColor: Colors.cardShadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 4,
+      },
+    }),
   },
   toggleText: {
     fontFamily: 'Nunito_600SemiBold',
@@ -274,11 +458,36 @@ const styles = StyleSheet.create({
     height: 330,
     position: 'relative',
   },
+  heatmapLegend: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 4,
+  },
+  legendLabel: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginRight: 4,
+  },
+  legendSwatch: {
+    width: 12,
+    height: 12,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  legendText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 10,
+    color: Colors.textTertiary,
+    marginRight: 6,
+  },
   tapHint: {
     fontFamily: 'Nunito_400Regular',
     fontSize: 13,
     color: Colors.textTertiary,
-    marginTop: 10,
+    marginTop: 6,
   },
   markDot: {
     position: 'absolute',
@@ -288,6 +497,34 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Colors.surface,
     zIndex: 10,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    marginHorizontal: 20,
+    marginBottom: 8,
+    gap: 8,
+  },
+  tabBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: Colors.backgroundSecondary,
+    gap: 6,
+  },
+  tabBtnActive: {
+    backgroundColor: Colors.primaryLight + '25',
+    borderWidth: 1,
+    borderColor: Colors.primary + '40',
+  },
+  tabText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 13,
+    color: Colors.textTertiary,
+  },
+  tabTextActive: {
+    color: Colors.primary,
   },
   marksList: {
     flex: 1,
@@ -326,6 +563,88 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     marginTop: 2,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 28,
+    gap: 10,
+  },
+  emptyText: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 14,
+    color: Colors.textTertiary,
+  },
+  dateGroup: {
+    marginBottom: 16,
+  },
+  dateGroupTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 14,
+    color: Colors.primary,
+    marginBottom: 8,
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  regionStatsSection: {
+    marginTop: 16,
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.cardShadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        shadowColor: Colors.cardShadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 6,
+      },
+    }),
+  },
+  regionStatsTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 15,
+    color: Colors.text,
+    marginBottom: 14,
+  },
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  statLabel: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 13,
+    color: Colors.textSecondary,
+    width: 80,
+  },
+  statBarContainer: {
+    flex: 1,
+    height: 8,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: 4,
+    marginHorizontal: 8,
+    overflow: 'hidden',
+  },
+  statBar: {
+    height: 8,
+    borderRadius: 4,
+    minWidth: 0,
+  },
+  statCount: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 13,
+    color: Colors.text,
+    width: 28,
+    textAlign: 'right',
   },
   modalOverlay: {
     flex: 1,

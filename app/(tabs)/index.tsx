@@ -22,6 +22,41 @@ import type { Recommendation, InsightCard } from '@/lib/personalization-engine';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+const DAILY_QUOTES: { text: string; source: string }[] = [
+  { text: "Interoception is the sense that allows us to answer the question, 'How do I feel?' It is the foundation of self-awareness.", source: "A.D. Craig, Neuroscientist" },
+  { text: "The body keeps the score. If the memory of trauma is encoded in the viscera, in heartbreaking and gut-wrenching emotions, then the pathway to recovery is found through the body.", source: "Bessel van der Kolk, MD" },
+  { text: "Awareness of internal bodily signals is a key component of emotional experience and regulation.", source: "Lisa Feldman Barrett, PhD" },
+  { text: "Mindfulness is paying attention, on purpose, in the present moment, non-judgmentally, as if your life depended on it.", source: "Jon Kabat-Zinn, PhD" },
+  { text: "The capacity to notice what you are feeling at any given moment is the cornerstone of emotional intelligence.", source: "Daniel Goleman, PhD" },
+  { text: "Between stimulus and response there is a space. In that space is our freedom and power to choose our response.", source: "Viktor Frankl, MD, PhD" },
+  { text: "People with greater interoceptive accuracy tend to experience emotions more intensely and make more intuitive decisions.", source: "Hugo Critchley, Neuroscientist" },
+  { text: "Resilience is not about bouncing back. It is about learning to move forward with a deeper understanding of yourself.", source: "Ann Masten, PhD" },
+  { text: "The mind and body are not separate entities. What affects one profoundly affects the other.", source: "Candace Pert, PhD" },
+  { text: "Your heartbeat is a constant companion. Learning to listen to it is the first step in body awareness.", source: "Sarah Garfinkel, PhD" },
+  { text: "Feelings are not just the shady side of reason; they are the foundation upon which it is built.", source: "Antonio Damasio, MD, PhD" },
+  { text: "The greatest weapon against stress is our ability to choose one thought over another, grounded in bodily awareness.", source: "William James, Psychologist" },
+  { text: "Interoceptive awareness acts as a bridge between the conscious mind and the body's physiological state.", source: "Sahib Khalsa, MD, PhD" },
+  { text: "Every cell in your body is eavesdropping on your thoughts. Awareness of this connection is empowerment.", source: "Deepak Chopra, MD" },
+  { text: "Self-regulation begins with body regulation. You cannot manage what you cannot feel.", source: "Stephen Porges, PhD" },
+  { text: "The breath is the intersection of biology and psychology, the bridge between the conscious and unconscious.", source: "Herbert Benson, MD" },
+  { text: "Tuning into the body's signals is not a luxury. It is a fundamental requirement for psychological well-being.", source: "Peter Levine, PhD" },
+  { text: "Our bodies communicate to us clearly and specifically, if we are willing to listen.", source: "Shakti Gawain, Author" },
+  { text: "Neuroplasticity means your brain is always changing. Each moment of mindful attention reshapes neural pathways.", source: "Richard Davidson, PhD" },
+  { text: "The quality of our breath expresses our inner feelings. Conscious breathing calms the autonomic nervous system.", source: "Tich Nhat Hanh" },
+  { text: "Emotions are not mental states that happen to have bodily expressions. They are bodily states that happen to be mentally interpreted.", source: "Lisa Feldman Barrett, PhD" },
+  { text: "Chronic stress rewires the brain. Interoceptive practice helps restore the balance between alertness and calm.", source: "Bruce McEwen, PhD" },
+  { text: "When we pay attention to our bodies, we discover a wealth of intelligence that the thinking mind alone cannot access.", source: "Jon Kabat-Zinn, PhD" },
+  { text: "The vagus nerve is the body's superhighway for calming signals. Practices that engage it build resilience over time.", source: "Stephen Porges, PhD" },
+  { text: "Mindful awareness of the body is the doorway to understanding the patterns that shape our lives.", source: "Daniel Siegel, MD" },
+  { text: "Heart rate variability reflects the flexibility of our autonomic nervous system. Greater flexibility means greater resilience.", source: "Fred Shaffer, PhD" },
+  { text: "Somatic awareness is not about fixing the body. It is about listening to what the body already knows.", source: "Thomas Hanna, PhD" },
+  { text: "The interoceptive system provides a moment-by-moment map of the body's internal landscape, essential for homeostasis.", source: "A.D. Craig, Neuroscientist" },
+  { text: "Compassion for oneself begins with noticing the body's distress without judgment and responding with care.", source: "Kristin Neff, PhD" },
+  { text: "Each time you notice a sensation and stay with it, you strengthen the neural circuits of self-awareness.", source: "Norman Farb, PhD" },
+  { text: "The body is not something we have. It is something we are. Reconnecting with it is reconnecting with ourselves.", source: "Maurice Merleau-Ponty, Philosopher" },
+  { text: "Attention to interoceptive signals can reduce alexithymia and improve one's capacity to identify and describe emotions.", source: "Olga Pollatos, PhD" },
+];
+
 function ProgressRing({ progress, size = 100, strokeWidth = 8 }: { progress: number; size?: number; strokeWidth?: number }) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -92,6 +127,11 @@ export default function HomeScreen() {
   }, [isLoading, onboardingComplete]);
 
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
+
+  const dailyQuote = useMemo(() => {
+    const dayIndex = Math.floor(Date.now() / 86400000) % DAILY_QUOTES.length;
+    return DAILY_QUOTES[dayIndex];
+  }, []);
 
   const dailyTarget = profile?.dailyMinutes ? Math.max(Math.ceil(profile.dailyMinutes / 10), 1) : 3;
   const dailyProgress = dailyTarget > 0 ? todaySessionCount / dailyTarget : 0;
@@ -266,6 +306,20 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Daily Insight</Text>
+          <View style={styles.dailyInsightCard}>
+            <View style={styles.dailyInsightAccent} />
+            <View style={styles.dailyInsightContent}>
+              <View style={styles.dailyInsightIconRow}>
+                <Feather name="compass" size={16} color={Colors.primary} />
+              </View>
+              <Text style={styles.dailyInsightQuote}>{dailyQuote.text}</Text>
+              <Text style={styles.dailyInsightSource}>{dailyQuote.source}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Today's Progress</Text>
           <View style={styles.progressCard}>
             <ProgressRing progress={dailyProgress} size={90} strokeWidth={7} />
@@ -396,4 +450,39 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundSecondary, borderRadius: 12, padding: 12, marginBottom: 8,
   },
   crisisFooterText: { fontFamily: 'Nunito_500Medium', fontSize: 12, color: Colors.textTertiary, flex: 1 },
+  dailyInsightCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 18,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    shadowColor: Colors.cardShadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  dailyInsightAccent: {
+    width: 4,
+    backgroundColor: Colors.accent,
+  },
+  dailyInsightContent: {
+    flex: 1,
+    padding: 18,
+  },
+  dailyInsightIconRow: {
+    marginBottom: 10,
+  },
+  dailyInsightQuote: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 14,
+    color: Colors.text,
+    fontStyle: 'italic' as const,
+    lineHeight: 22,
+    marginBottom: 10,
+  },
+  dailyInsightSource: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 12,
+    color: Colors.textTertiary,
+  },
 });
