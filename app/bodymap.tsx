@@ -1,0 +1,434 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Modal,
+  ScrollView,
+  Platform,
+  Dimensions,
+  Alert,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
+import Colors from '@/constants/colors';
+import { useApp } from '@/contexts/AppContext';
+import { BodyMark } from '@/lib/storage';
+
+const SENSATIONS = ['tension', 'tingling', 'warmth', 'coolness', 'heaviness', 'pulsing', 'pain', 'numbness'] as const;
+
+const BODY_PARTS: { key: string; label: string; style: object; dotX: number; dotY: number }[] = [
+  { key: 'head', label: 'Head', style: { position: 'absolute' as const, top: 0, left: 75, width: 50, height: 50, borderRadius: 25, backgroundColor: Colors.primaryLight, borderWidth: 2, borderColor: Colors.primary }, dotX: 100, dotY: 25 },
+  { key: 'neck', label: 'Neck', style: { position: 'absolute' as const, top: 48, left: 90, width: 20, height: 18, backgroundColor: Colors.primaryLight, borderWidth: 2, borderColor: Colors.primary, borderTopWidth: 0 }, dotX: 100, dotY: 57 },
+  { key: 'torso', label: 'Torso', style: { position: 'absolute' as const, top: 64, left: 60, width: 80, height: 120, borderRadius: 16, backgroundColor: Colors.primaryLight, borderWidth: 2, borderColor: Colors.primary }, dotX: 100, dotY: 124 },
+  { key: 'leftArm', label: 'Left Arm', style: { position: 'absolute' as const, top: 72, left: 22, width: 30, height: 110, borderRadius: 12, backgroundColor: Colors.primaryLight, borderWidth: 2, borderColor: Colors.primary, transform: [{ rotate: '8deg' }] }, dotX: 37, dotY: 127 },
+  { key: 'rightArm', label: 'Right Arm', style: { position: 'absolute' as const, top: 72, right: 22, width: 30, height: 110, borderRadius: 12, backgroundColor: Colors.primaryLight, borderWidth: 2, borderColor: Colors.primary, transform: [{ rotate: '-8deg' }] }, dotX: 163, dotY: 127 },
+  { key: 'leftLeg', label: 'Left Leg', style: { position: 'absolute' as const, top: 180, left: 58, width: 36, height: 140, borderRadius: 14, backgroundColor: Colors.primaryLight, borderWidth: 2, borderColor: Colors.primary, transform: [{ rotate: '2deg' }] }, dotX: 76, dotY: 250 },
+  { key: 'rightLeg', label: 'Right Leg', style: { position: 'absolute' as const, top: 180, right: 58, width: 36, height: 140, borderRadius: 14, backgroundColor: Colors.primaryLight, borderWidth: 2, borderColor: Colors.primary, transform: [{ rotate: '-2deg' }] }, dotX: 124, dotY: 250 },
+];
+
+const INTENSITY_COLORS = [Colors.success, Colors.secondaryDark, Colors.warning, Colors.accentDark, Colors.error];
+
+export default function BodyMapScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { bodyMarks, addBodyMark, clearBodyMarks } = useApp();
+  const topInset = Platform.OS === 'web' ? 67 : insets.top;
+  const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
+
+  const [currentView, setCurrentView] = useState<'front' | 'back'>('front');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [selectedDotX, setSelectedDotX] = useState(0);
+  const [selectedDotY, setSelectedDotY] = useState(0);
+  const [intensity, setIntensity] = useState(3);
+  const [sensation, setSensation] = useState('tension');
+
+  const handleBodyPartPress = (part: typeof BODY_PARTS[0]) => {
+    setSelectedRegion(part.label);
+    setSelectedDotX(part.dotX);
+    setSelectedDotY(part.dotY);
+    setIntensity(3);
+    setSensation('tension');
+    setModalVisible(true);
+  };
+
+  const handleSave = async () => {
+    const mark: BodyMark = {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      x: selectedDotX,
+      y: selectedDotY,
+      region: selectedRegion,
+      intensity,
+      sensation,
+      createdAt: new Date().toISOString(),
+      view: currentView,
+    };
+    await addBodyMark(mark);
+    setModalVisible(false);
+  };
+
+  const handleClearAll = () => {
+    if (Platform.OS === 'web') {
+      clearBodyMarks();
+    } else {
+      Alert.alert('Clear All Marks', 'Are you sure you want to remove all body marks?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Clear', style: 'destructive', onPress: () => clearBodyMarks() },
+      ]);
+    }
+  };
+
+  const viewMarks = bodyMarks.filter(m => m.view === currentView);
+
+  return (
+    <View style={[styles.container, { paddingTop: topInset }]}>
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
+          <Feather name="arrow-left" size={24} color={Colors.text} />
+        </Pressable>
+        <Text style={styles.headerTitle}>Body Map</Text>
+        <Pressable onPress={handleClearAll} hitSlop={8}>
+          <Text style={styles.clearText}>Clear All</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.toggleRow}>
+        <Pressable
+          style={[styles.toggleBtn, currentView === 'front' && styles.toggleBtnActive]}
+          onPress={() => setCurrentView('front')}
+        >
+          <Text style={[styles.toggleText, currentView === 'front' && styles.toggleTextActive]}>Front</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.toggleBtn, currentView === 'back' && styles.toggleBtnActive]}
+          onPress={() => setCurrentView('back')}
+        >
+          <Text style={[styles.toggleText, currentView === 'back' && styles.toggleTextActive]}>Back</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.bodyContainer}>
+        <View style={styles.bodyFigure}>
+          {BODY_PARTS.map(part => (
+            <Pressable
+              key={part.key}
+              style={part.style}
+              onPress={() => handleBodyPartPress(part)}
+            />
+          ))}
+          {viewMarks.map(mark => (
+            <View
+              key={mark.id}
+              style={[
+                styles.markDot,
+                {
+                  left: mark.x - 6,
+                  top: mark.y - 6,
+                  backgroundColor: INTENSITY_COLORS[Math.min(mark.intensity - 1, 4)],
+                },
+              ]}
+            />
+          ))}
+        </View>
+        <Text style={styles.tapHint}>Tap a body region to record a sensation</Text>
+      </View>
+
+      {viewMarks.length > 0 && (
+        <ScrollView style={styles.marksList} contentContainerStyle={{ paddingBottom: bottomInset + 12 }}>
+          <Text style={styles.marksTitle}>Recorded Sensations</Text>
+          {viewMarks.map(mark => (
+            <View key={mark.id} style={styles.markCard}>
+              <View style={[styles.markIndicator, { backgroundColor: INTENSITY_COLORS[Math.min(mark.intensity - 1, 4)] }]} />
+              <View style={styles.markInfo}>
+                <Text style={styles.markRegion}>{mark.region}</Text>
+                <Text style={styles.markDetail}>{mark.sensation} - Intensity {mark.intensity}/5</Text>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+      )}
+
+      <Modal visible={modalVisible} transparent animationType="slide">
+        <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+          <Pressable style={[styles.modalContent, { paddingBottom: bottomInset + 24 }]} onPress={() => {}}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Record Sensation</Text>
+            <Text style={styles.modalLabel}>Region</Text>
+            <View style={styles.regionBadge}>
+              <Feather name="map-pin" size={14} color={Colors.primary} />
+              <Text style={styles.regionText}>{selectedRegion}</Text>
+            </View>
+
+            <Text style={styles.modalLabel}>Intensity</Text>
+            <View style={styles.intensityRow}>
+              {[1, 2, 3, 4, 5].map(i => (
+                <Pressable key={i} onPress={() => setIntensity(i)} style={styles.intensityItem}>
+                  <View
+                    style={[
+                      styles.intensityCircle,
+                      {
+                        backgroundColor: i <= intensity ? INTENSITY_COLORS[i - 1] : Colors.borderLight,
+                        width: 28 + i * 4,
+                        height: 28 + i * 4,
+                        borderRadius: (28 + i * 4) / 2,
+                      },
+                    ]}
+                  />
+                  <Text style={styles.intensityNum}>{i}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Text style={styles.modalLabel}>Sensation Type</Text>
+            <View style={styles.sensationGrid}>
+              {SENSATIONS.map(s => (
+                <Pressable
+                  key={s}
+                  style={[styles.sensationChip, sensation === s && styles.sensationChipActive]}
+                  onPress={() => setSensation(s)}
+                >
+                  <Text style={[styles.sensationChipText, sensation === s && styles.sensationChipTextActive]}>
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Pressable style={styles.saveBtn} onPress={handleSave}>
+              <Text style={styles.saveBtnText}>Save</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 20,
+    color: Colors.text,
+  },
+  clearText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 14,
+    color: Colors.error,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    marginHorizontal: 20,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 12,
+  },
+  toggleBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  toggleBtnActive: {
+    backgroundColor: Colors.surface,
+    shadowColor: Colors.cardShadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  toggleText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  toggleTextActive: {
+    color: Colors.primary,
+  },
+  bodyContainer: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  bodyFigure: {
+    width: 200,
+    height: 330,
+    position: 'relative',
+  },
+  tapHint: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: Colors.textTertiary,
+    marginTop: 10,
+  },
+  markDot: {
+    position: 'absolute',
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: Colors.surface,
+    zIndex: 10,
+  },
+  marksList: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  marksTitle: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 15,
+    color: Colors.textSecondary,
+    marginBottom: 8,
+  },
+  markCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+  },
+  markIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 12,
+  },
+  markInfo: {
+    flex: 1,
+  },
+  markRegion: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 14,
+    color: Colors.text,
+  },
+  markDetail: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: Colors.overlay,
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.border,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 20,
+    color: Colors.text,
+    marginBottom: 20,
+  },
+  modalLabel: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  regionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.backgroundSecondary,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginBottom: 20,
+    alignSelf: 'flex-start',
+    gap: 6,
+  },
+  regionText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 15,
+    color: Colors.text,
+  },
+  intensityRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    marginBottom: 20,
+  },
+  intensityItem: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  intensityCircle: {},
+  intensityNum: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  sensationGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 24,
+  },
+  sensationChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: Colors.backgroundSecondary,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  sensationChipActive: {
+    backgroundColor: Colors.primaryLight + '20',
+    borderColor: Colors.primary,
+  },
+  sensationChipText: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  sensationChipTextActive: {
+    color: Colors.primary,
+    fontFamily: 'Nunito_600SemiBold',
+  },
+  saveBtn: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  saveBtnText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 16,
+    color: Colors.textInverse,
+  },
+});

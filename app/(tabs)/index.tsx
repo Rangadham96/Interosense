@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -86,7 +86,15 @@ export default function HomeScreen() {
     currentStreak,
     averageAwareness,
     todaySessionCount,
+    onboardingComplete,
+    isLoading,
   } = useApp();
+
+  useEffect(() => {
+    if (!isLoading && !onboardingComplete) {
+      router.replace('/onboarding');
+    }
+  }, [isLoading, onboardingComplete]);
 
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
 
