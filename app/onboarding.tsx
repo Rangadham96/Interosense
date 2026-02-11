@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,36 +8,43 @@ import {
   TextInput,
   Platform,
   Dimensions,
-  FlatList,
-  ViewToken,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import Animated, {
+  FadeIn,
+  FadeOut,
+  SlideInRight,
+  SlideOutLeft,
+} from 'react-native-reanimated';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const INTRO_PAGES = [
   {
     icon: 'activity' as const,
-    title: 'Welcome to Interosense',
-    subtitle: "Discover the power of interoceptive awareness - your ability to sense and understand your body's internal signals.",
-    gradientColors: [Colors.primary, Colors.primaryDark] as [string, string],
+    title: 'Welcome to\nInterosense',
+    subtitle: "Discover interoceptive awareness - your ability to sense and understand your body's internal signals.",
+    gradientColors: ['#6B5B95', '#3D2F6B'] as [string, string],
+    decorColor: 'rgba(139,125,181,0.3)',
   },
   {
     icon: 'heart' as const,
-    title: 'What is Interoception?',
-    subtitle: "It's your hidden eighth sense - the ability to feel your heartbeat, sense your breath, notice tension, and detect emotions in your body before your mind catches up.",
-    gradientColors: [Colors.secondary, Colors.secondaryDark] as [string, string],
+    title: 'Your Hidden\nEighth Sense',
+    subtitle: "Feel your heartbeat, sense your breath, notice tension, and detect emotions in your body before your mind catches up.",
+    gradientColors: ['#5A9EA0', '#3A7578'] as [string, string],
+    decorColor: 'rgba(136,179,181,0.3)',
   },
   {
-    icon: 'trending-up' as const,
-    title: 'Build Awareness',
-    subtitle: "Through guided exercises, daily check-ins, and body mapping, you'll develop a deeper connection with your body and unlock better emotional regulation.",
-    gradientColors: [Colors.accent, Colors.accentDark] as [string, string],
+    icon: 'sunrise' as const,
+    title: 'Transform\nYour Wellbeing',
+    subtitle: "Through guided exercises, daily check-ins, and body mapping, build a deeper connection with yourself.",
+    gradientColors: ['#C4848A', '#9B5A60'] as [string, string],
+    decorColor: 'rgba(232,180,184,0.3)',
     benefits: [
       'Reduce anxiety and stress',
       'Improve emotional intelligence',
@@ -63,104 +70,32 @@ const FOCUS_AREAS = [
   'Mindfulness',
 ];
 
-function DotIndicators({ total, current }: { total: number; current: number }) {
-  return (
-    <View style={styles.dotsRow}>
-      {Array.from({ length: total }).map((_, i) => (
-        <View
-          key={i}
-          style={[
-            styles.dot,
-            i === current ? styles.dotActive : styles.dotInactive,
-          ]}
-        />
-      ))}
-    </View>
-  );
-}
-
-function IntroPage({ page, index }: { page: typeof INTRO_PAGES[0]; index: number }) {
-  const insets = useSafeAreaInsets();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
-
-  return (
-    <LinearGradient
-      colors={page.gradientColors}
-      style={[styles.introPage, { width: SCREEN_WIDTH }]}
-    >
-      <View style={[styles.introContent, { paddingTop: topPadding + 60 }]}>
-        <View style={styles.iconCircle}>
-          <Feather name={page.icon} size={80} color="#FFFFFF" />
-        </View>
-        <Text style={styles.introTitle}>{page.title}</Text>
-        <Text style={styles.introSubtitle}>{page.subtitle}</Text>
-        {page.benefits && (
-          <View style={styles.benefitsList}>
-            {page.benefits.map((benefit, i) => (
-              <View key={i} style={styles.benefitRow}>
-                <Feather name="check" size={20} color="#FFFFFF" />
-                <Text style={styles.benefitText}>{benefit}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-    </LinearGradient>
-  );
-}
-
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
-  const bottomPadding = Platform.OS === 'web' ? 34 : insets.bottom;
+  const topInset = Platform.OS === 'web' ? 67 : insets.top;
+  const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
   const { completeOnboarding } = useApp();
 
-  const [currentPage, setCurrentPage] = useState(0);
-  const [showSetup, setShowSetup] = useState(false);
-  const flatListRef = useRef<FlatList>(null);
-  const currentPageRef = useRef(0);
-
+  const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [level, setLevel] = useState('beginner');
   const [dailyMinutes, setDailyMinutes] = useState(10);
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const totalPages = INTRO_PAGES.length + 1;
-
-  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems.length > 0 && viewableItems[0].index != null) {
-      currentPageRef.current = viewableItems[0].index;
-      setCurrentPage(viewableItems[0].index);
-    }
-  }).current;
-
-  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
+  const totalSteps = INTRO_PAGES.length + 1;
+  const isSetupStep = step >= INTRO_PAGES.length;
 
   const handleNext = () => {
-    const page = currentPageRef.current;
-    if (page < INTRO_PAGES.length - 1) {
-      const nextPage = page + 1;
-      currentPageRef.current = nextPage;
-      setCurrentPage(nextPage);
-      flatListRef.current?.scrollToIndex({ index: nextPage, animated: true });
-    } else {
-      setShowSetup(true);
-    }
+    setStep(prev => Math.min(prev + 1, totalSteps - 1));
   };
 
   const handleBack = () => {
-    if (showSetup) {
-      setShowSetup(false);
-    } else {
-      const page = currentPageRef.current;
-      if (page > 0) {
-        const prevPage = page - 1;
-        currentPageRef.current = prevPage;
-        setCurrentPage(prevPage);
-        flatListRef.current?.scrollToIndex({ index: prevPage, animated: true });
-      }
-    }
+    setStep(prev => Math.max(prev - 1, 0));
+  };
+
+  const handleSkip = () => {
+    setStep(INTRO_PAGES.length);
   };
 
   const toggleGoal = (goal: string) => {
@@ -187,21 +122,28 @@ export default function OnboardingScreen() {
     }
   };
 
-  if (showSetup) {
+  if (isSetupStep) {
     return (
-      <View style={[styles.setupContainer, { paddingTop: topPadding + 20 }]}>
+      <View style={[styles.setupContainer]}>
+        <LinearGradient
+          colors={[Colors.primary, Colors.primaryLight, Colors.background]}
+          style={[styles.setupHeader, { paddingTop: topInset + 12 }]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+        >
+          <TouchableOpacity style={styles.setupBackBtn} onPress={handleBack} activeOpacity={0.7}>
+            <Feather name="arrow-left" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.setupHeaderTitle}>Create Your Profile</Text>
+          <Text style={styles.setupHeaderSub}>Personalize your experience</Text>
+        </LinearGradient>
+
         <ScrollView
           style={styles.setupScroll}
-          contentContainerStyle={[styles.setupContent, { paddingBottom: bottomPadding + 100 }]}
+          contentContainerStyle={[styles.setupContent, { paddingBottom: bottomInset + 100 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <TouchableOpacity style={styles.backButton} onPress={handleBack} activeOpacity={0.7}>
-            <Feather name="arrow-left" size={24} color={Colors.text} />
-          </TouchableOpacity>
-
-          <Text style={styles.setupTitle}>Let's Set Up Your Profile</Text>
-
           <View style={styles.formSection}>
             <Text style={styles.formLabel}>What should we call you?</Text>
             <TextInput
@@ -301,7 +243,7 @@ export default function OnboardingScreen() {
           </View>
         </ScrollView>
 
-        <View style={[styles.setupFooter, { paddingBottom: bottomPadding + 16 }]}>
+        <View style={[styles.setupFooter, { paddingBottom: bottomInset + 16 }]}>
           <TouchableOpacity onPress={handleSubmit} activeOpacity={0.8} disabled={isSubmitting}>
             <LinearGradient
               colors={[Colors.primary, Colors.primaryDark]}
@@ -312,6 +254,7 @@ export default function OnboardingScreen() {
               <Text style={styles.getStartedText}>
                 {isSubmitting ? 'Setting up...' : 'Get Started'}
               </Text>
+              {!isSubmitting && <Feather name="arrow-right" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />}
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -319,160 +262,262 @@ export default function OnboardingScreen() {
     );
   }
 
+  const page = INTRO_PAGES[step];
+
   return (
-    <View style={styles.container}>
-      <FlatList
-        ref={flatListRef}
-        data={INTRO_PAGES}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(_, i) => i.toString()}
-        renderItem={({ item, index }) => <IntroPage page={item} index={index} />}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-        scrollEventThrottle={16}
-      />
-      <View style={[styles.bottomBar, { paddingBottom: bottomPadding + 16 }]}>
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={handleBack}
-          activeOpacity={0.7}
-          disabled={currentPage === 0}
-        >
-          {currentPage > 0 && (
-            <Text style={styles.navButtonText}>Back</Text>
+    <LinearGradient
+      colors={page.gradientColors}
+      style={styles.container}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0.3, y: 1 }}
+    >
+      <View style={styles.decorCircle1} />
+      <View style={styles.decorCircle2} />
+      <View style={[styles.decorCircle3, { backgroundColor: page.decorColor }]} />
+
+      <View style={[styles.topBar, { paddingTop: topInset + 8 }]}>
+        <View style={{ width: 60 }}>
+          {step > 0 && (
+            <TouchableOpacity onPress={handleBack} activeOpacity={0.7} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+              <Feather name="arrow-left" size={24} color="rgba(255,255,255,0.9)" />
+            </TouchableOpacity>
           )}
-        </TouchableOpacity>
-
-        <DotIndicators total={totalPages} current={showSetup ? INTRO_PAGES.length : currentPage} />
-
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={handleNext}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.navButtonText}>Next</Text>
+        </View>
+        <View style={styles.dotsRow}>
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                i === step ? styles.dotActive : styles.dotInactive,
+              ]}
+            />
+          ))}
+        </View>
+        <TouchableOpacity onPress={handleSkip} activeOpacity={0.7} style={{ width: 60, alignItems: 'flex-end' }}>
+          <Text style={styles.skipText}>Skip</Text>
         </TouchableOpacity>
       </View>
-    </View>
+
+      <View style={styles.pageContent}>
+        <Animated.View
+          key={step}
+          entering={FadeIn.duration(400)}
+          style={styles.pageInner}
+        >
+          <View style={styles.iconOuter}>
+            <View style={styles.iconInner}>
+              <Feather name={page.icon} size={48} color="#FFFFFF" />
+            </View>
+          </View>
+
+          <Text style={styles.pageTitle}>{page.title}</Text>
+          <Text style={styles.pageSubtitle}>{page.subtitle}</Text>
+
+          {page.benefits && (
+            <View style={styles.benefitsList}>
+              {page.benefits.map((benefit, i) => (
+                <View key={i} style={styles.benefitRow}>
+                  <View style={styles.checkBadge}>
+                    <Feather name="check" size={14} color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.benefitText}>{benefit}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </Animated.View>
+      </View>
+
+      <View style={[styles.bottomArea, { paddingBottom: bottomInset + 20 }]}>
+        <TouchableOpacity onPress={handleNext} activeOpacity={0.85}>
+          <View style={styles.nextButton}>
+            <Text style={styles.nextButtonText}>
+              {step === INTRO_PAGES.length - 1 ? "Let's Begin" : 'Continue'}
+            </Text>
+            <Feather name="arrow-right" size={20} color={page.gradientColors[0]} />
+          </View>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.primary,
   },
-  introPage: {
-    flex: 1,
-    height: SCREEN_HEIGHT,
+  decorCircle1: {
+    position: 'absolute',
+    top: -80,
+    right: -60,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
-  introContent: {
+  decorCircle2: {
+    position: 'absolute',
+    bottom: 120,
+    left: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  decorCircle3: {
+    position: 'absolute',
+    top: '40%' as any,
+    right: -40,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  skipText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.7)',
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'center',
+  },
+  dot: {
+    height: 6,
+    borderRadius: 3,
+  },
+  dotActive: {
+    backgroundColor: '#FFFFFF',
+    width: 28,
+  },
+  dotInactive: {
+    backgroundColor: 'rgba(255,255,255,0.35)',
+    width: 6,
+  },
+  pageContent: {
     flex: 1,
-    paddingHorizontal: 32,
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+  },
+  pageInner: {
+    alignItems: 'center',
+  },
+  iconOuter: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 32,
   },
-  iconCircle: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+  iconInner: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 40,
   },
-  introTitle: {
+  pageTitle: {
     fontFamily: 'Nunito_800ExtraBold',
-    fontSize: 32,
+    fontSize: 34,
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 16,
+    lineHeight: 42,
   },
-  introSubtitle: {
+  pageSubtitle: {
     fontFamily: 'Nunito_400Regular',
     fontSize: 16,
-    color: 'rgba(255,255,255,0.9)',
+    color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
     lineHeight: 24,
+    maxWidth: 320,
   },
   benefitsList: {
-    marginTop: 32,
+    marginTop: 28,
+    gap: 12,
     alignSelf: 'stretch',
-    gap: 14,
+    paddingHorizontal: 12,
   },
   benefitRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
+  checkBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   benefitText: {
     fontFamily: 'Nunito_600SemiBold',
-    fontSize: 16,
+    fontSize: 15,
     color: '#FFFFFF',
   },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 16,
+  bottomArea: {
+    paddingHorizontal: 28,
   },
-  navButton: {
-    width: 70,
-    alignItems: 'center',
-  },
-  navButtonText: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  dotsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  dotActive: {
+  nextButton: {
     backgroundColor: '#FFFFFF',
-    width: 24,
+    borderRadius: 30,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
-  dotInactive: {
-    backgroundColor: 'rgba(255,255,255,0.4)',
+  nextButtonText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 17,
+    color: '#3D2F6B',
   },
   setupContainer: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  setupHeader: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  setupBackBtn: {
+    marginBottom: 16,
+  },
+  setupHeaderTitle: {
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 28,
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  setupHeaderSub: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.8)',
   },
   setupScroll: {
     flex: 1,
   },
   setupContent: {
     paddingHorizontal: 24,
-  },
-  backButton: {
-    marginBottom: 16,
-  },
-  setupTitle: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 28,
-    color: Colors.text,
-    marginBottom: 28,
+    paddingTop: 24,
   },
   formSection: {
     marginBottom: 28,
   },
   formLabel: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 16,
     color: Colors.text,
     marginBottom: 12,
@@ -591,6 +636,7 @@ const styles = StyleSheet.create({
   getStartedButton: {
     borderRadius: 30,
     paddingVertical: 16,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
