@@ -93,6 +93,15 @@ lib/
 - Fixed all profile navigation - bookmarks.tsx, articles.tsx (with search/filters), about.tsx, wearable link
 - Implemented working data export in settings (JSON export via Share API / web download)
 - Enhanced body map with historical heatmap overlay (frequency-based coloring), Today/History tabs, region stats bar chart
+- Built edit-profile.tsx screen (edit name, gender, DOB, bio after onboarding)
+- Built edit-conditions.tsx screen (add/remove health conditions)
+- Built edit-preferences.tsx screen (change experience level, daily practice minutes)
+- Built session-history.tsx screen (view all past sessions grouped by date with stats)
+- Built global search screen (search across exercises, articles, conditions)
+- Added exercise bookmarking with toggle on exercise prestart screen
+- Enhanced profile tab with Personal section (Edit Profile, My Conditions, Preferences), Session History link, Search link
+- Extended UserProfile type with gender, dateOfBirth, bio, profileImage fields
+- Added exerciseBookmarks state to AppContext with persistence
 
 ## User Preferences
 - Design should look like professional multi-million dollar app (Headspace/Calm level)
