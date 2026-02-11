@@ -116,6 +116,7 @@ export default function OnboardingScreen() {
   const { completeOnboarding } = useApp();
 
   const [currentPage, setCurrentPage] = useState(0);
+  const [showSetup, setShowSetup] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const [name, setName] = useState('');
@@ -125,7 +126,6 @@ export default function OnboardingScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const totalPages = INTRO_PAGES.length + 1;
-  const showSetup = currentPage === INTRO_PAGES.length;
 
   const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     if (viewableItems.length > 0 && viewableItems[0].index != null) {
@@ -135,30 +135,19 @@ export default function OnboardingScreen() {
 
   const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
-  const goToPage = (page: number) => {
-    if (page >= 0 && page < INTRO_PAGES.length) {
-      flatListRef.current?.scrollToIndex({ index: page, animated: true });
-    } else if (page === INTRO_PAGES.length) {
-      setCurrentPage(page);
-    }
-  };
-
   const handleNext = () => {
     if (currentPage < INTRO_PAGES.length - 1) {
-      goToPage(currentPage + 1);
+      flatListRef.current?.scrollToIndex({ index: currentPage + 1, animated: true });
     } else {
-      setCurrentPage(INTRO_PAGES.length);
+      setShowSetup(true);
     }
   };
 
   const handleBack = () => {
     if (showSetup) {
-      setCurrentPage(INTRO_PAGES.length - 1);
-      setTimeout(() => {
-        flatListRef.current?.scrollToIndex({ index: INTRO_PAGES.length - 1, animated: false });
-      }, 50);
+      setShowSetup(false);
     } else if (currentPage > 0) {
-      goToPage(currentPage - 1);
+      flatListRef.current?.scrollToIndex({ index: currentPage - 1, animated: true });
     }
   };
 
@@ -344,7 +333,7 @@ export default function OnboardingScreen() {
           )}
         </TouchableOpacity>
 
-        <DotIndicators total={totalPages} current={currentPage} />
+        <DotIndicators total={totalPages} current={showSetup ? INTRO_PAGES.length : currentPage} />
 
         <TouchableOpacity
           style={styles.navButton}
