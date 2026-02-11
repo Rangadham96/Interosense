@@ -34,6 +34,11 @@ function RootLayoutNav() {
       <Stack.Screen name="conditions" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="condition/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="assessment/[id]" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="edit-profile" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="edit-conditions" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="edit-preferences" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="session-history" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="search" options={{ headerShown: false, animation: 'slide_from_right' }} />
     </Stack>
   );
 }
