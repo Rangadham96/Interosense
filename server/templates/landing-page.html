@@ -45,7 +45,7 @@
         padding: 16px 0; transition: all 0.3s ease;
       }
       .nav.scrolled {
-        background: rgba(255,255,255,0.88);
+        background: rgba(255,255,255,0.92);
         backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         box-shadow: 0 1px 20px rgba(107,91,149,0.08); padding: 10px 0;
       }
@@ -56,25 +56,29 @@
       .nav-logo {
         font-size: 22px; font-weight: 800; color: var(--white);
         text-decoration: none; letter-spacing: -0.5px; transition: color 0.3s;
+        flex-shrink: 0;
+        margin-right: 32px;
       }
       .nav.scrolled .nav-logo { color: var(--primary-dark); }
       .nav-links { display: flex; gap: 28px; list-style: none; align-items: center; }
       .nav-links a {
         color: rgba(255,255,255,0.85); text-decoration: none;
         font-weight: 600; font-size: 15px; transition: color 0.3s;
+        white-space: nowrap;
       }
       .nav.scrolled .nav-links a { color: var(--text-light); }
       .nav-links a:hover { color: var(--white); }
       .nav.scrolled .nav-links a:hover { color: var(--primary); }
       .nav-cta {
-        display: inline-block; padding: 8px 22px; background: rgba(255,255,255,0.15);
+        display: inline-block; padding: 8px 20px; background: rgba(255,255,255,0.15);
         border: 1px solid rgba(255,255,255,0.3); border-radius: 50px;
-        color: var(--white); font-weight: 700; font-size: 14px;
+        color: var(--white) !important; font-weight: 700; font-size: 14px;
         text-decoration: none; transition: all 0.3s;
+        white-space: nowrap;
       }
       .nav-cta:hover { background: rgba(255,255,255,0.25); }
       .nav.scrolled .nav-cta {
-        background: var(--primary); border-color: var(--primary); color: var(--white);
+        background: var(--primary); border-color: var(--primary); color: var(--white) !important;
       }
       .nav.scrolled .nav-cta:hover { background: var(--primary-dark); }
 
@@ -122,21 +126,6 @@
         width: 200px; height: 200px;
         background: radial-gradient(circle, rgba(168,156,200,0.35), transparent 70%);
         top: 25%; left: 8%; animation: orbFloat3 10s ease-in-out infinite;
-      }
-      .hero-orb-4 {
-        width: 280px; height: 280px;
-        background: radial-gradient(circle, rgba(232,180,184,0.2), transparent 70%);
-        bottom: 20%; right: 5%; animation: orbFloat1 14s ease-in-out infinite reverse;
-      }
-      .hero-orb-5 {
-        width: 160px; height: 160px;
-        background: radial-gradient(circle, rgba(136,179,181,0.25), transparent 70%);
-        top: 60%; left: 60%; animation: orbFloat2 11s ease-in-out infinite;
-      }
-      .hero-orb-6 {
-        width: 120px; height: 120px;
-        background: radial-gradient(circle, rgba(107,91,149,0.3), transparent 70%);
-        top: 15%; right: 30%; animation: orbFloat3 13s ease-in-out infinite reverse;
       }
       @keyframes orbFloat1 {
         0%, 100% { transform: translate(0, 0) scale(1); }
@@ -283,35 +272,47 @@
         max-width: 900px; margin: 0 auto;
       }
       .bodymap-svg-wrap {
-        position: relative; width: 200px; height: 400px;
-        filter: drop-shadow(0 0 20px rgba(107,91,149,0.15));
+        position: relative; width: 220px; height: 420px;
         animation: bodyGlow 4s ease-in-out infinite;
       }
       @keyframes bodyGlow {
         0%, 100% { filter: drop-shadow(0 0 20px rgba(107,91,149,0.15)); }
-        50% { filter: drop-shadow(0 0 35px rgba(107,91,149,0.25)); }
+        50% { filter: drop-shadow(0 0 35px rgba(107,91,149,0.3)); }
       }
       .bodymap-svg-wrap svg { width: 100%; height: 100%; }
       .body-region {
-        fill: rgba(168,156,200,0.15); stroke: var(--primary-light);
-        stroke-width: 1.5; cursor: pointer; transition: all 0.3s ease;
+        fill: rgba(168,156,200,0.12); stroke: var(--primary-light);
+        stroke-width: 1.2; cursor: pointer; transition: all 0.4s ease;
       }
-      .body-region:hover {
-        fill: rgba(107,91,149,0.3);
-        filter: drop-shadow(0 0 12px rgba(107,91,149,0.5));
+      .body-region:hover, .body-region.active {
+        fill: rgba(107,91,149,0.25);
+        stroke: var(--primary);
+        stroke-width: 2;
+        filter: drop-shadow(0 0 8px rgba(107,91,149,0.4));
       }
-      .bodymap-tooltip {
-        position: absolute; background: var(--white); padding: 14px 18px;
-        border-radius: var(--radius-sm); box-shadow: var(--shadow-md);
-        font-size: 14px; font-weight: 600; color: var(--text);
-        pointer-events: none; opacity: 0; transition: opacity 0.3s;
-        white-space: nowrap; z-index: 10; left: 110%; top: 50%;
-        transform: translateY(-50%);
+      .bodymap-info {
+        text-align: center; max-width: 340px;
+        min-height: 80px;
       }
-      .bodymap-tooltip.visible { opacity: 1; }
-      .bodymap-tooltip-desc { font-weight: 400; color: var(--text-light); font-size: 13px; margin-top: 2px; }
+      .bodymap-info-title {
+        font-size: 20px; font-weight: 700; color: var(--primary);
+        margin-bottom: 8px;
+        opacity: 0; transform: translateY(8px);
+        transition: all 0.4s ease;
+      }
+      .bodymap-info-desc {
+        font-size: 15px; color: var(--text-light); line-height: 1.6;
+        opacity: 0; transform: translateY(8px);
+        transition: all 0.4s ease 0.1s;
+      }
+      .bodymap-info-title.visible, .bodymap-info-desc.visible {
+        opacity: 1; transform: translateY(0);
+      }
+      .bodymap-default-text {
+        font-size: 16px; color: var(--text-light); font-weight: 500;
+        transition: opacity 0.3s;
+      }
       .bodymap-cta { text-align: center; margin-top: 12px; }
-      .bodymap-cta p { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 16px; }
       .bodymap-cta a {
         display: inline-block; padding: 12px 32px; background: var(--primary);
         color: var(--white); border-radius: 50px; text-decoration: none;
@@ -325,103 +326,24 @@
       .phone-container { display: flex; flex-direction: column; align-items: center; }
       .phone-frame {
         width: 280px; height: 560px; background: #1a1a2e;
-        border-radius: 40px; padding: 12px; position: relative;
+        border-radius: 40px; padding: 10px; position: relative;
         box-shadow: 0 30px 80px rgba(0,0,0,0.25), inset 0 0 0 2px rgba(255,255,255,0.1);
       }
       .phone-notch {
-        position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-        width: 120px; height: 28px; background: #1a1a2e;
+        position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+        width: 100px; height: 26px; background: #1a1a2e;
         border-radius: 0 0 16px 16px; z-index: 5;
       }
       .phone-screen {
         width: 100%; height: 100%; background: var(--bg);
-        border-radius: 30px; overflow: hidden; position: relative;
+        border-radius: 32px; overflow: hidden; position: relative;
       }
-      .phone-screen-content {
-        position: absolute; inset: 0; opacity: 0;
-        transition: opacity 0.6s ease; padding: 44px 16px 16px;
+      .phone-screen-img {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        object-fit: cover; object-position: top;
+        opacity: 0; transition: opacity 0.6s ease;
       }
-      .phone-screen-content.active { opacity: 1; }
-      .screen-header {
-        font-size: 11px; font-weight: 700; color: var(--text);
-        margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;
-      }
-
-      .screen-1 .greeting { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 14px; }
-      .screen-1 .insight-card {
-        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-        border-radius: 14px; padding: 14px; color: var(--white); margin-bottom: 12px;
-      }
-      .screen-1 .insight-card .insight-label { font-size: 10px; font-weight: 600; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
-      .screen-1 .insight-card .insight-text { font-size: 13px; font-weight: 600; margin-top: 4px; line-height: 1.4; }
-      .screen-1 .rec-card {
-        background: var(--white); border-radius: 12px; padding: 12px;
-        display: flex; gap: 10px; align-items: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      }
-      .screen-1 .rec-icon {
-        width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-        background: linear-gradient(135deg, var(--secondary), #6A9B9D);
-        display: flex; align-items: center; justify-content: center;
-      }
-      .screen-1 .rec-icon svg { width: 18px; height: 18px; color: var(--white); }
-      .screen-1 .rec-title { font-size: 12px; font-weight: 700; color: var(--text); }
-      .screen-1 .rec-sub { font-size: 10px; color: var(--text-light); }
-
-      .screen-2 .timer-circle {
-        width: 140px; height: 140px; border-radius: 50%; margin: 10px auto 16px;
-        border: 4px solid var(--primary-light); display: flex; flex-direction: column;
-        align-items: center; justify-content: center;
-        background: radial-gradient(circle, rgba(107,91,149,0.08), transparent);
-      }
-      .screen-2 .timer-time { font-size: 28px; font-weight: 800; color: var(--primary-dark); }
-      .screen-2 .timer-label { font-size: 10px; color: var(--text-light); font-weight: 600; text-transform: uppercase; }
-      .screen-2 .breathe-text {
-        text-align: center; font-size: 16px; font-weight: 700;
-        color: var(--secondary); margin-bottom: 16px;
-      }
-      .screen-2 .step-dots { display: flex; justify-content: center; gap: 6px; }
-      .screen-2 .step-dot {
-        width: 8px; height: 8px; border-radius: 50%; background: var(--primary-light);
-      }
-      .screen-2 .step-dot.filled { background: var(--primary); }
-
-      .screen-3 .checkin-label { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-      .screen-3 .slider-track {
-        height: 6px; background: rgba(107,91,149,0.12); border-radius: 3px;
-        margin-bottom: 18px; position: relative;
-      }
-      .screen-3 .slider-fill {
-        height: 100%; border-radius: 3px; position: absolute; left: 0; top: 0;
-      }
-      .screen-3 .slider-fill.mood { width: 65%; background: var(--primary); }
-      .screen-3 .slider-fill.energy { width: 45%; background: var(--secondary); }
-      .screen-3 .slider-fill.stress { width: 30%; background: var(--accent); }
-      .screen-3 .body-selector {
-        display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px;
-      }
-      .screen-3 .body-btn {
-        padding: 6px 4px; background: var(--white); border-radius: 8px;
-        font-size: 9px; font-weight: 600; color: var(--text-light);
-        text-align: center; border: 1px solid rgba(107,91,149,0.1);
-      }
-      .screen-3 .body-btn.selected { background: rgba(107,91,149,0.1); color: var(--primary); border-color: var(--primary-light); }
-
-      .screen-4 .chart-area { height: 100px; margin-bottom: 14px; position: relative; }
-      .screen-4 .chart-area svg { width: 100%; height: 100%; }
-      .screen-4 .streak-row { display: flex; gap: 10px; margin-bottom: 10px; }
-      .screen-4 .streak-card {
-        flex: 1; background: var(--white); padding: 10px; border-radius: 10px;
-        text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      }
-      .screen-4 .streak-num { font-size: 20px; font-weight: 800; color: var(--primary); }
-      .screen-4 .streak-label { font-size: 9px; color: var(--text-light); font-weight: 600; text-transform: uppercase; }
-      .screen-4 .badges-row { display: flex; gap: 8px; justify-content: center; }
-      .screen-4 .badge-circle {
-        width: 36px; height: 36px; border-radius: 50%; display: flex;
-        align-items: center; justify-content: center;
-      }
-      .screen-4 .badge-circle svg { width: 16px; height: 16px; color: var(--white); }
+      .phone-screen-img.active { opacity: 1; }
 
       .phone-dots { display: flex; gap: 8px; margin-top: 24px; }
       .phone-dot {
@@ -429,6 +351,10 @@
         background: var(--primary-light); transition: all 0.3s; cursor: pointer;
       }
       .phone-dot.active { background: var(--primary); width: 28px; border-radius: 5px; }
+      .phone-label {
+        margin-top: 12px; font-size: 15px; font-weight: 600; color: var(--text);
+        transition: opacity 0.3s; min-height: 24px;
+      }
 
       /* FEATURES */
       .features-section { background: var(--white); }
@@ -671,7 +597,6 @@
         .steps-flow { grid-template-columns: repeat(3, 1fr); gap: 24px; }
         .flow-step { flex-direction: column; text-align: center; align-items: center; }
         .bodymap-container { flex-direction: row; gap: 60px; }
-        .bodymap-tooltip { left: 110%; }
       }
       @media (min-width: 1024px) {
         .hero h1 { font-size: 62px; }
@@ -680,13 +605,13 @@
         .conditions-grid { grid-template-columns: repeat(4, 1fr); }
         .science-grid { grid-template-columns: repeat(3, 1fr); }
         .testimonials-grid { grid-template-columns: repeat(3, 1fr); }
-        .phone-frame { width: 320px; height: 640px; }
+        .phone-frame { width: 300px; height: 600px; }
         .final-cta h2 { font-size: 44px; }
       }
       @media (max-width: 639px) {
-        .nav-links { gap: 16px; }
+        .nav-links { gap: 14px; }
         .nav-links a { font-size: 13px; }
-        .bodymap-tooltip { left: 50%; top: auto; bottom: -60px; transform: translateX(-50%); }
+        .nav-logo { margin-right: 16px; }
       }
     </style>
   </head>
@@ -699,7 +624,7 @@
           <li><a href="#features">Features</a></li>
           <li><a href="#science">Science</a></li>
           <li><a href="#conditions">About</a></li>
-          <li><a href="BASE_URL_PLACEHOLDER/app" class="nav-cta">Try the App</a></li>
+          <li><a href="/app" class="nav-cta">Try the App</a></li>
         </ul>
       </div>
     </nav>
@@ -710,9 +635,6 @@
       <div class="hero-orb hero-orb-1"></div>
       <div class="hero-orb hero-orb-2"></div>
       <div class="hero-orb hero-orb-3"></div>
-      <div class="hero-orb hero-orb-4"></div>
-      <div class="hero-orb hero-orb-5"></div>
-      <div class="hero-orb hero-orb-6"></div>
       <div class="hero-content">
         <div class="hero-badge">BACKED BY NEUROSCIENCE</div>
         <h1>Your Body Knows More Than You Think</h1>
@@ -721,7 +643,7 @@
           <div class="heartbeat-ring"><div class="heartbeat-ring-inner"></div></div>
           <p class="heartbeat-text" id="heartbeatText">Can you feel your heartbeat right now?</p>
         </div>
-        <button class="hero-cta" onclick="startPortal()">Start Your Journey</button>
+        <a href="/app" class="hero-cta">Start Your Journey</a>
       </div>
       <div class="scroll-indicator">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -759,32 +681,35 @@
       </div>
       <div class="bodymap-container">
         <div class="bodymap-svg-wrap">
-          <svg viewBox="0 0 200 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 220 460" fill="none" xmlns="http://www.w3.org/2000/svg">
             <!-- Head -->
-            <ellipse class="body-region" data-region="head" data-title="Head" data-desc="67% of users report tension here during stress" cx="100" cy="42" rx="30" ry="36"/>
+            <ellipse class="body-region" data-region="head" data-title="Head & Mind" data-desc="67% of users report tension headaches during stress. Interoceptive training helps you notice early warning signs." cx="110" cy="45" rx="28" ry="34"/>
             <!-- Neck -->
-            <rect class="body-region" data-region="neck" data-title="Neck" data-desc="Muscle tightness often linked to anxiety" x="88" y="75" width="24" height="20" rx="8"/>
+            <path class="body-region" data-region="neck" data-title="Neck & Throat" data-desc="Tightness here often signals suppressed emotions. Learning to notice it can prevent anxiety spirals." d="M100,78 Q98,88 97,98 L123,98 Q122,88 120,78 Z"/>
+            <!-- Shoulders -->
+            <path class="body-region" data-region="shoulders" data-title="Shoulders" data-desc="The most common site for holding stress. Body scanning reveals tension you didn't know was there." d="M97,98 Q70,100 50,108 Q42,112 44,120 L56,118 Q68,110 97,108 Z"/>
+            <path class="body-region" data-region="shoulders" data-title="Shoulders" data-desc="The most common site for holding stress. Body scanning reveals tension you didn't know was there." d="M123,98 Q150,100 170,108 Q178,112 176,120 L164,118 Q152,110 123,108 Z"/>
             <!-- Chest -->
-            <ellipse class="body-region" data-region="chest" data-title="Chest" data-desc="Heart rate awareness is a core interoceptive signal" cx="100" cy="140" rx="45" ry="40"/>
-            <!-- Stomach -->
-            <ellipse class="body-region" data-region="stomach" data-title="Stomach" data-desc="Gut feelings are real interoceptive signals" cx="100" cy="210" rx="38" ry="30"/>
+            <path class="body-region" data-region="chest" data-title="Chest & Heart" data-desc="Heart rate awareness is the core interoceptive signal. Your heartbeat holds the key to emotional regulation." d="M97,108 Q80,112 72,130 Q68,148 70,170 Q72,185 80,195 L97,200 L123,200 L140,195 Q148,185 150,170 Q152,148 148,130 Q140,112 123,108 Z"/>
             <!-- Left Arm -->
-            <path class="body-region" data-region="arms" data-title="Hands & Arms" data-desc="Tingling and temperature shifts signal stress response" d="M52,110 Q30,140 25,200 Q22,230 30,260 L45,255 Q42,220 48,185 Q52,155 58,130 Z"/>
+            <path class="body-region" data-region="arms" data-title="Hands & Arms" data-desc="Tingling, sweating, and temperature shifts in your hands are early stress response signals." d="M56,118 Q42,128 32,155 Q24,185 22,215 Q20,240 24,260 L38,256 Q36,235 38,210 Q40,180 48,152 Q54,132 62,120 Z"/>
             <!-- Right Arm -->
-            <path class="body-region" data-region="arms" data-title="Hands & Arms" data-desc="Tingling and temperature shifts signal stress response" d="M148,110 Q170,140 175,200 Q178,230 170,260 L155,255 Q158,220 152,185 Q148,155 142,130 Z"/>
+            <path class="body-region" data-region="arms" data-title="Hands & Arms" data-desc="Tingling, sweating, and temperature shifts in your hands are early stress response signals." d="M164,118 Q178,128 188,155 Q196,185 198,215 Q200,240 196,260 L182,256 Q184,235 182,210 Q180,180 172,152 Q166,132 158,120 Z"/>
+            <!-- Stomach / Gut -->
+            <path class="body-region" data-region="stomach" data-title="Gut & Stomach" data-desc="'Gut feelings' are real interoceptive signals. The gut-brain axis directly influences mood and decision-making." d="M80,200 Q76,215 74,235 Q73,255 78,270 L100,275 L120,275 L142,270 Q147,255 146,235 Q144,215 140,200 Z"/>
             <!-- Left Leg -->
-            <path class="body-region" data-region="legs" data-title="Legs" data-desc="Restlessness and heaviness reflect emotional states" d="M75,240 Q70,290 68,340 Q66,380 70,410 L95,410 Q92,380 90,340 Q88,290 92,240 Z"/>
+            <path class="body-region" data-region="legs" data-title="Legs & Feet" data-desc="Restlessness, heaviness, and grounding sensations in your legs reflect your emotional state and arousal level." d="M78,270 Q72,310 70,350 Q68,390 72,420 Q74,440 80,455 L102,455 Q98,440 96,420 Q94,390 94,350 Q94,310 100,275 Z"/>
             <!-- Right Leg -->
-            <path class="body-region" data-region="legs" data-title="Legs" data-desc="Restlessness and heaviness reflect emotional states" d="M108,240 Q112,290 112,340 Q114,380 130,410 L105,410 Q108,380 110,340 Q112,290 108,240 Z"/>
+            <path class="body-region" data-region="legs" data-title="Legs & Feet" data-desc="Restlessness, heaviness, and grounding sensations in your legs reflect your emotional state and arousal level." d="M142,270 Q148,310 150,350 Q152,390 148,420 Q146,440 140,455 L118,455 Q122,440 124,420 Q126,390 126,350 Q126,310 120,275 Z"/>
           </svg>
-          <div class="bodymap-tooltip" id="bodymapTooltip">
-            <div id="tooltipTitle"></div>
-            <div class="bodymap-tooltip-desc" id="tooltipDesc"></div>
-          </div>
+        </div>
+        <div class="bodymap-info" id="bodymapInfo">
+          <p class="bodymap-default-text" id="bodymapDefault">Tap a body region to discover its signals</p>
+          <h3 class="bodymap-info-title" id="bodymapTitle"></h3>
+          <p class="bodymap-info-desc" id="bodymapDesc"></p>
         </div>
         <div class="bodymap-cta">
-          <p>Discover what your body is telling you</p>
-          <a href="BASE_URL_PLACEHOLDER/app">Explore Interosense</a>
+          <a href="/app">Explore Interosense</a>
         </div>
       </div>
     </section>
@@ -800,96 +725,10 @@
         <div class="phone-frame">
           <div class="phone-notch"></div>
           <div class="phone-screen">
-            <!-- Screen 1: Home Dashboard -->
-            <div class="phone-screen-content screen-1 active" data-screen="0">
-              <div class="screen-header">Home</div>
-              <div class="greeting">Good morning, Alex</div>
-              <div class="insight-card">
-                <div class="insight-label">Daily Insight</div>
-                <div class="insight-text">Your body awareness improved 23% this week. Keep exploring your signals.</div>
-              </div>
-              <div class="rec-card">
-                <div class="rec-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                </div>
-                <div>
-                  <div class="rec-title">Body Scan Meditation</div>
-                  <div class="rec-sub">Recommended - 10 min</div>
-                </div>
-              </div>
-            </div>
-            <!-- Screen 2: Exercise Session -->
-            <div class="phone-screen-content screen-2" data-screen="1">
-              <div class="screen-header">Exercise Session</div>
-              <div class="timer-circle">
-                <div class="timer-time">4:32</div>
-                <div class="timer-label">Remaining</div>
-              </div>
-              <div class="breathe-text">Breathe In...</div>
-              <div class="step-dots">
-                <div class="step-dot filled"></div>
-                <div class="step-dot filled"></div>
-                <div class="step-dot filled"></div>
-                <div class="step-dot"></div>
-                <div class="step-dot"></div>
-              </div>
-            </div>
-            <!-- Screen 3: Daily Check-in -->
-            <div class="phone-screen-content screen-3" data-screen="2">
-              <div class="screen-header">Daily Check-in</div>
-              <div class="checkin-label">Mood</div>
-              <div class="slider-track"><div class="slider-fill mood"></div></div>
-              <div class="checkin-label">Energy</div>
-              <div class="slider-track"><div class="slider-fill energy"></div></div>
-              <div class="checkin-label">Stress</div>
-              <div class="slider-track"><div class="slider-fill stress"></div></div>
-              <div class="checkin-label" style="margin-top:12px">Body Areas</div>
-              <div class="body-selector">
-                <div class="body-btn selected">Head</div>
-                <div class="body-btn">Chest</div>
-                <div class="body-btn selected">Stomach</div>
-                <div class="body-btn">Back</div>
-                <div class="body-btn">Hands</div>
-                <div class="body-btn">Legs</div>
-              </div>
-            </div>
-            <!-- Screen 4: Progress Analytics -->
-            <div class="phone-screen-content screen-4" data-screen="3">
-              <div class="screen-header">Progress</div>
-              <div class="chart-area">
-                <svg viewBox="0 0 240 90" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="rgba(107,91,149,0.3)"/>
-                      <stop offset="100%" stop-color="rgba(107,91,149,0)"/>
-                    </linearGradient>
-                  </defs>
-                  <path d="M0,70 Q30,65 60,50 T120,35 T180,25 T240,15" stroke="var(--primary)" stroke-width="2" fill="none"/>
-                  <path d="M0,70 Q30,65 60,50 T120,35 T180,25 T240,15 L240,90 L0,90 Z" fill="url(#chartGrad)"/>
-                </svg>
-              </div>
-              <div class="streak-row">
-                <div class="streak-card">
-                  <div class="streak-num">14</div>
-                  <div class="streak-label">Day Streak</div>
-                </div>
-                <div class="streak-card">
-                  <div class="streak-num">82</div>
-                  <div class="streak-label">Awareness Score</div>
-                </div>
-              </div>
-              <div class="badges-row">
-                <div class="badge-circle" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark))">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                </div>
-                <div class="badge-circle" style="background:linear-gradient(135deg,var(--secondary),#6A9B9D)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                </div>
-                <div class="badge-circle" style="background:linear-gradient(135deg,var(--accent),#D4949A)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                </div>
-              </div>
-            </div>
+            <img class="phone-screen-img active" data-screen="0" src="/landing-assets/screen-home.png" alt="Home Dashboard"/>
+            <img class="phone-screen-img" data-screen="1" src="/landing-assets/screen-exercise.png" alt="Exercise Session"/>
+            <img class="phone-screen-img" data-screen="2" src="/landing-assets/screen-checkin.png" alt="Daily Check-in"/>
+            <img class="phone-screen-img" data-screen="3" src="/landing-assets/screen-progress.png" alt="Progress Analytics"/>
           </div>
         </div>
         <div class="phone-dots">
@@ -898,6 +737,7 @@
           <div class="phone-dot" data-dot="2"></div>
           <div class="phone-dot" data-dot="3"></div>
         </div>
+        <div class="phone-label" id="phoneLabel">Home Dashboard</div>
       </div>
     </section>
 
@@ -1100,8 +940,8 @@
       <div class="final-cta-content reveal">
         <h2>Ready to Discover Your Hidden Sense?</h2>
         <p class="subtitle">Join thousands discovering the power of interoceptive awareness.</p>
-        <button class="final-cta-btn" onclick="startPortal()">Start Your Journey</button>
-        <a href="BASE_URL_PLACEHOLDER/app" class="explore-link">or <span>explore the app</span></a>
+        <a href="/app" class="final-cta-btn">Start Your Journey</a>
+        <a href="/app" class="explore-link">or <span>explore the app</span></a>
       </div>
     </section>
 
@@ -1120,7 +960,7 @@
       <div class="portal-ripple"></div>
       <div class="portal-text">
         <h2 id="portalHeading">Welcome to a space designed for you.</h2>
-        <a href="BASE_URL_PLACEHOLDER/app" class="portal-begin" id="portalBegin">Let's begin.</a>
+        <a href="/app" class="portal-begin" id="portalBegin">Let's begin.</a>
       </div>
     </div>
 
@@ -1176,7 +1016,6 @@
                 var target = parseInt(el.getAttribute('data-target'));
                 var suffix = el.getAttribute('data-suffix') || '';
                 var duration = 1500;
-                var start = 0;
                 var startTime = null;
                 function animate(ts) {
                   if (!startTime) startTime = ts;
@@ -1205,35 +1044,62 @@
         }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
         document.querySelectorAll('.reveal').forEach(function(el) { revealObserver.observe(el); });
 
-        // BODY MAP
-        var tooltip = document.getElementById('bodymapTooltip');
-        var tooltipTitle = document.getElementById('tooltipTitle');
-        var tooltipDesc = document.getElementById('tooltipDesc');
+        // BODY MAP - Interactive with info panel
+        var bodymapTitle = document.getElementById('bodymapTitle');
+        var bodymapDesc = document.getElementById('bodymapDesc');
+        var bodymapDefault = document.getElementById('bodymapDefault');
+        var activeRegion = null;
+
         document.querySelectorAll('.body-region').forEach(function(region) {
-          region.addEventListener('mouseenter', function() {
-            tooltipTitle.textContent = this.getAttribute('data-title');
-            tooltipDesc.textContent = this.getAttribute('data-desc');
-            tooltip.classList.add('visible');
+          function showRegion(el) {
+            document.querySelectorAll('.body-region').forEach(function(r) { r.classList.remove('active'); });
+            el.classList.add('active');
+            bodymapDefault.style.display = 'none';
+            bodymapTitle.textContent = el.getAttribute('data-title');
+            bodymapDesc.textContent = el.getAttribute('data-desc');
+            bodymapTitle.classList.add('visible');
+            bodymapDesc.classList.add('visible');
+            activeRegion = el;
+          }
+
+          region.addEventListener('mouseenter', function() { showRegion(this); });
+          region.addEventListener('mouseleave', function() {
+            this.classList.remove('active');
+            bodymapTitle.classList.remove('visible');
+            bodymapDesc.classList.remove('visible');
+            setTimeout(function() {
+              if (!document.querySelector('.body-region.active')) {
+                bodymapDefault.style.display = 'block';
+              }
+            }, 400);
+            activeRegion = null;
           });
-          region.addEventListener('mouseleave', function() { tooltip.classList.remove('visible'); });
           region.addEventListener('touchstart', function(e) {
             e.preventDefault();
-            tooltipTitle.textContent = this.getAttribute('data-title');
-            tooltipDesc.textContent = this.getAttribute('data-desc');
-            tooltip.classList.add('visible');
-            setTimeout(function() { tooltip.classList.remove('visible'); }, 2500);
+            showRegion(this);
+            var self = this;
+            setTimeout(function() {
+              self.classList.remove('active');
+              bodymapTitle.classList.remove('visible');
+              bodymapDesc.classList.remove('visible');
+              setTimeout(function() { bodymapDefault.style.display = 'block'; }, 400);
+            }, 3000);
           }, { passive: false });
         });
 
-        // PHONE MOCKUP CYCLING
-        var screens = document.querySelectorAll('.phone-screen-content');
+        // PHONE MOCKUP CYCLING WITH LABELS
+        var screenLabels = ['Home Dashboard', 'Exercise Session', 'Daily Check-in', 'Progress Analytics'];
+        var screens = document.querySelectorAll('.phone-screen-img');
         var dots = document.querySelectorAll('.phone-dot');
+        var phoneLabel = document.getElementById('phoneLabel');
         var currentScreen = 0;
+
         function showScreen(index) {
           screens.forEach(function(s) { s.classList.remove('active'); });
           dots.forEach(function(d) { d.classList.remove('active'); });
           screens[index].classList.add('active');
           dots[index].classList.add('active');
+          phoneLabel.textContent = screenLabels[index];
           currentScreen = index;
         }
         setInterval(function() { showScreen((currentScreen + 1) % screens.length); }, 4000);
@@ -1242,52 +1108,6 @@
             showScreen(parseInt(this.getAttribute('data-dot')));
           });
         });
-
-        // PORTAL TRANSITION
-        window.startPortal = function() {
-          var overlay = document.getElementById('portalOverlay');
-          var heading = document.getElementById('portalHeading');
-          var beginBtn = document.getElementById('portalBegin');
-          overlay.classList.add('active');
-
-          // Create portal particles
-          var pp = document.getElementById('portalParticles');
-          pp.innerHTML = '';
-          for (var i = 0; i < 30; i++) {
-            var dot = document.createElement('div');
-            dot.className = 'particle';
-            var s = Math.random() * 3 + 1;
-            dot.style.width = s + 'px';
-            dot.style.height = s + 'px';
-            dot.style.left = Math.random() * 100 + '%';
-            dot.style.bottom = '-5px';
-            dot.style.background = 'rgba(255,255,255,0.5)';
-            dot.style.setProperty('--dx', (Math.random() * 80 - 40) + 'px');
-            dot.style.animationDuration = (Math.random() * 10 + 8) + 's';
-            dot.style.animationDelay = (Math.random() * 3) + 's';
-            dot.style.boxShadow = '0 0 ' + (s * 2) + 'px rgba(255,255,255,0.3)';
-            pp.appendChild(dot);
-          }
-
-          setTimeout(function() {
-            heading.textContent = 'Welcome to a space designed for you.';
-            heading.classList.add('visible');
-          }, 500);
-
-          setTimeout(function() {
-            heading.style.transition = 'opacity 0.5s';
-            heading.style.opacity = '0';
-            setTimeout(function() {
-              heading.textContent = "Let's begin.";
-              heading.style.opacity = '1';
-              beginBtn.classList.add('visible');
-            }, 500);
-          }, 2000);
-
-          setTimeout(function() {
-            window.location.href = 'BASE_URL_PLACEHOLDER/app';
-          }, 3500);
-        };
 
         // SMOOTH SCROLL FOR NAV LINKS
         document.querySelectorAll('.nav-links a[href^="#"]').forEach(function(link) {
