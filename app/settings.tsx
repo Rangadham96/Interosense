@@ -14,7 +14,7 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as FileSystem from 'expo-file-system';
+import { File, Paths } from 'expo-file-system/next';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
@@ -57,11 +57,13 @@ export default function SettingsScreen() {
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        const fileUri = FileSystem.cacheDirectory + `interosense-export-${new Date().toISOString().slice(0, 10)}.json`;
-        await FileSystem.writeAsStringAsync(fileUri, jsonString);
+        const fileName = `interosense-export-${new Date().toISOString().slice(0, 10)}.json`;
+        const filePath = new File(Paths.cache, fileName);
+        filePath.create();
+        filePath.write(jsonString);
         await Share.share({
           title: 'InteroSense Data Export',
-          url: fileUri,
+          url: filePath.uri,
           message: Platform.OS === 'android' ? jsonString : undefined,
         });
       }
@@ -79,7 +81,7 @@ export default function SettingsScreen() {
       text: t,
       onPress: () => updateSettings({ ...settings, reminderTime: t }),
     }));
-    buttons.push({ text: 'Cancel', onPress: () => {} });
+    buttons.push({ text: 'Cancel', onPress: async () => {} });
     Alert.alert('Set Reminder Time', 'Choose when to receive your daily check-in reminder', buttons);
   };
 
