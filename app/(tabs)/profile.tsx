@@ -12,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Colors from '@/constants/colors';
 import { format, parseISO } from 'date-fns';
 
@@ -64,6 +65,7 @@ export default function ProfileScreen() {
     currentStreak,
     unlockedAchievements,
   } = useApp();
+  const { logout, user } = useAuth();
 
   const topPadding = Platform.OS === 'web' ? 67 : insets.top;
 
@@ -101,6 +103,7 @@ export default function ProfileScreen() {
   const appItems: MenuItem[] = [
     { icon: 'settings', iconBg: Colors.textSecondary, title: 'Settings', onPress: () => router.push('/settings') },
     { icon: 'info', iconBg: Colors.secondaryDark, title: 'About Interosense', onPress: () => router.push('/about') },
+    { icon: 'log-out', iconBg: '#E53935', title: 'Sign Out', onPress: () => logout() },
   ];
 
   return (
@@ -117,7 +120,10 @@ export default function ProfileScreen() {
           <View style={styles.avatarCircle}>
             <Text style={styles.avatarText}>{initial}</Text>
           </View>
-          <Text style={styles.userName}>{profile?.name || 'User'}</Text>
+          <Text style={styles.userName}>{profile?.name || user?.name || 'User'}</Text>
+          {user?.email && (
+            <Text style={styles.userEmail}>{user.email}</Text>
+          )}
           {profile?.experienceLevel && (
             <View style={styles.levelBadge}>
               <Text style={styles.levelBadgeText}>
@@ -214,6 +220,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     fontSize: 24,
     color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  userEmail: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
     marginBottom: 8,
   },
   levelBadge: {

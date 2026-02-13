@@ -1,0 +1,174 @@
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const API_BASE = Platform.OS === 'web'
+  ? (process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : 'http://localhost:5000')
+  : (process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : 'http://localhost:5000');
+
+interface AuthUser {
+  id: string;
+  email: string;
+  name: string | null;
+  provider: string | null;
+  profileImage: string | null;
+  conditions: string[] | null;
+  experienceLevel: string | null;
+  goals: string[] | null;
+  dailyMinutes: string | null;
+  gender: string | null;
+  dateOfBirth: string | null;
+  bio: string | null;
+  isPremium: boolean | null;
+  createdAt: string | null;
+}
+
+interface AuthContextValue {
+  user: AuthUser | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  register: (email: string, password: string, name: string) => Promise<{ success: boolean; message?: string }>;
+  logout: () => Promise<void>;
+  updateAuthProfile: (data: Partial<AuthUser>) => Promise<{ success: boolean; message?: string }>;
+  refreshUser: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+async function setToken(key: string, value: string) {
+  if (Platform.OS === 'web') {
+    await AsyncStorage.setItem(key, value);
+  } else {
+    await SecureStore.setItemAsync(key, value);
+  }
+}
+
+async function getToken(key: string): Promise<string | null> {
+  if (Platform.OS === 'web') {
+    return AsyncStorage.getItem(key);
+  } else {
+    return SecureStore.getItemAsync(key);
+  }
+}
+
+async function removeToken(key: string) {
+  if (Platform.OS === 'web') {
+    await AsyncStorage.removeItem(key);
+  } else {
+    await SecureStore.deleteItemAsync(key);
+  }
+}
+
+async function apiCall(path: string, options: RequestInit = {}) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+    credentials: 'include',
+  });
+  return response;
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const refreshUser = useCallback(async () => {
+    try {
+      const response = await apiCall('/api/auth/me');
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+    } catch {
+      setUser(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshUser().finally(() => setIsLoading(false));
+  }, [refreshUser]);
+
+  const login = useCallback(async (email: string, password: string) => {
+    try {
+      const response = await apiCall('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUser(data.user);
+        return { success: true };
+      }
+      return { success: false, message: data.message || 'Login failed' };
+    } catch {
+      return { success: false, message: 'Network error. Please check your connection.' };
+    }
+  }, []);
+
+  const register = useCallback(async (email: string, password: string, name: string) => {
+    try {
+      const response = await apiCall('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ email, password, name }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUser(data.user);
+        return { success: true };
+      }
+      return { success: false, message: data.message || 'Registration failed' };
+    } catch {
+      return { success: false, message: 'Network error. Please check your connection.' };
+    }
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await apiCall('/api/auth/logout', { method: 'POST' });
+    } catch {}
+    setUser(null);
+  }, []);
+
+  const updateAuthProfile = useCallback(async (data: Partial<AuthUser>) => {
+    try {
+      const response = await apiCall('/api/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setUser(result.user);
+        return { success: true };
+      }
+      return { success: false, message: result.message };
+    } catch {
+      return { success: false, message: 'Network error' };
+    }
+  }, []);
+
+  const value = useMemo<AuthContextValue>(() => ({
+    user,
+    isLoading,
+    isAuthenticated: !!user,
+    login,
+    register,
+    logout,
+    updateAuthProfile,
+    refreshUser,
+  }), [user, isLoading, login, register, logout, updateAuthProfile, refreshUser]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
+}
