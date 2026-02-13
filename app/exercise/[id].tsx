@@ -212,25 +212,27 @@ export default function ExerciseSessionScreen() {
           contentContainerStyle={[styles.prestartContent, { paddingTop: topInset + 16, paddingBottom: bottomInset + 24 }]}
           showsVerticalScrollIndicator={false}
         >
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => router.back()}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <Feather name="x-circle" size={28} color="rgba(255,255,255,0.8)" />
-          </TouchableOpacity>
+          <View style={styles.prestartTopBar}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => router.back()}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Feather name="x-circle" size={28} color="rgba(255,255,255,0.8)" />
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.bookmarkButton}
-            onPress={() => toggleExerciseBookmark(exercise.id)}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          >
-            <Feather
-              name="bookmark"
-              size={28}
-              color={exerciseBookmarks.includes(exercise.id) ? Colors.warning : 'rgba(255,255,255,0.8)'}
-            />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.bookmarkButton}
+              onPress={() => toggleExerciseBookmark(exercise.id)}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Feather
+                name="bookmark"
+                size={28}
+                color={exerciseBookmarks.includes(exercise.id) ? Colors.warning : 'rgba(255,255,255,0.8)'}
+              />
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.prestartHeader}>
             <View style={styles.iconCircle}>
@@ -578,17 +580,19 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
+  prestartTopBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 0,
+    marginBottom: 0,
+  },
   closeButton: {
-    position: 'absolute',
-    top: 0,
-    left: 20,
-    zIndex: 10,
+    padding: 4,
   },
   bookmarkButton: {
-    position: 'absolute',
-    top: 0,
-    right: 20,
-    zIndex: 10,
+    padding: 4,
   },
   prestartContent: {
     paddingHorizontal: 24,

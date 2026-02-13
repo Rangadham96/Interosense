@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
-  Dimensions,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,10 +16,8 @@ import Colors from '@/constants/colors';
 import { CATEGORY_INFO, ExerciseCategory } from '@/constants/exercises';
 import { CONDITIONS } from '@/constants/conditions';
 import { format, parseISO } from 'date-fns';
-import Svg, { Circle } from 'react-native-svg';
+import Svg from 'react-native-svg';
 import type { Recommendation, InsightCard } from '@/lib/personalization-engine';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const DAILY_QUOTES: { text: string; source: string }[] = [
   { text: "Interoception is the sense that allows us to answer the question, 'How do I feel?' It is the foundation of self-awareness.", source: "A.D. Craig, Neuroscientist" },
@@ -56,26 +53,6 @@ const DAILY_QUOTES: { text: string; source: string }[] = [
   { text: "The body is not something we have. It is something we are. Reconnecting with it is reconnecting with ourselves.", source: "Maurice Merleau-Ponty, Philosopher" },
   { text: "Attention to interoceptive signals can reduce alexithymia and improve one's capacity to identify and describe emotions.", source: "Olga Pollatos, PhD" },
 ];
-
-function ProgressRing({ progress, size = 100, strokeWidth = 8 }: { progress: number; size?: number; strokeWidth?: number }) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const clampedProgress = Math.min(Math.max(progress, 0), 1);
-  const strokeDashoffset = circumference * (1 - clampedProgress);
-
-  return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
-        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={Colors.borderLight} strokeWidth={strokeWidth} fill="none" />
-        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={Colors.primary} strokeWidth={strokeWidth} fill="none"
-          strokeDasharray={`${circumference}`} strokeDashoffset={strokeDashoffset} strokeLinecap="round" />
-      </Svg>
-      <View style={{ position: 'absolute', alignItems: 'center' }}>
-        <Text style={styles.progressPercent}>{Math.round(clampedProgress * 100)}%</Text>
-      </View>
-    </View>
-  );
-}
 
 function InsightCardView({ insight }: { insight: InsightCard }) {
   return (
@@ -132,9 +109,6 @@ export default function HomeScreen() {
     const dayIndex = Math.floor(Date.now() / 86400000) % DAILY_QUOTES.length;
     return DAILY_QUOTES[dayIndex];
   }, []);
-
-  const dailyTarget = profile?.dailyMinutes ? Math.max(Math.ceil(profile.dailyMinutes / 10), 1) : 3;
-  const dailyProgress = dailyTarget > 0 ? todaySessionCount / dailyTarget : 0;
 
   const topRecommendations = advisorState.recommendations.slice(0, 5);
   const topInsights = advisorState.insights.slice(0, 3);
@@ -306,7 +280,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Daily Insight</Text>
+          <Text style={styles.sectionTitle}>Insights</Text>
           <View style={styles.dailyInsightCard}>
             <View style={styles.dailyInsightAccent} />
             <View style={styles.dailyInsightContent}>
@@ -317,30 +291,11 @@ export default function HomeScreen() {
               <Text style={styles.dailyInsightSource}>{dailyQuote.source}</Text>
             </View>
           </View>
+          {topInsights.length > 0 && <View style={{ height: 12 }} />}
+          {topInsights.map(insight => (
+            <InsightCardView key={insight.id} insight={insight} />
+          ))}
         </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Today's Progress</Text>
-          <View style={styles.progressCard}>
-            <ProgressRing progress={dailyProgress} size={90} strokeWidth={7} />
-            <View style={styles.progressInfo}>
-              <Text style={styles.progressTitle}>Daily Goal</Text>
-              <Text style={styles.progressSubtitle}>{todaySessionCount} of {dailyTarget} sessions</Text>
-              <Text style={styles.progressHint}>
-                {dailyProgress >= 1 ? 'Goal reached! Neural pathways strengthening.' : `${dailyTarget - todaySessionCount} more to go`}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {topInsights.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Insights</Text>
-            {topInsights.map(insight => (
-              <InsightCardView key={insight.id} insight={insight} />
-            ))}
-          </View>
-        )}
 
         {topRecommendations.length > 0 && (
           <View style={styles.section}>
@@ -410,23 +365,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF', borderRadius: 14, paddingVertical: 12, marginTop: 16,
   },
   startButtonText: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: Colors.primary },
-  actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  actionsGrid: { flexDirection: 'row', flexWrap: 'nowrap', gap: 10 },
   actionCard: {
-    width: (SCREEN_WIDTH - 50) / 4 - 3, backgroundColor: Colors.surface, borderRadius: 14,
+    flex: 1, minWidth: 60, backgroundColor: Colors.surface, borderRadius: 14,
     paddingVertical: 14, alignItems: 'center', gap: 8,
     shadowColor: Colors.cardShadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 6, elevation: 2,
   },
   actionIcon: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   actionLabel: { fontFamily: 'Nunito_600SemiBold', fontSize: 10, color: Colors.text, textAlign: 'center' },
-  progressCard: {
-    backgroundColor: Colors.surface, borderRadius: 18, padding: 20, flexDirection: 'row', alignItems: 'center', gap: 20,
-    shadowColor: Colors.cardShadow, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 1, shadowRadius: 10, elevation: 3,
-  },
-  progressPercent: { fontFamily: 'Nunito_800ExtraBold', fontSize: 20, color: Colors.primary },
-  progressInfo: { flex: 1 },
-  progressTitle: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: Colors.text },
-  progressSubtitle: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: Colors.textSecondary, marginTop: 3 },
-  progressHint: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.textTertiary, marginTop: 3 },
   insightCard: {
     backgroundColor: Colors.surface, borderRadius: 14, padding: 16, marginBottom: 10,
     borderLeftWidth: 4,

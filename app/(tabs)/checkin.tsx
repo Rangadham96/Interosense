@@ -12,9 +12,54 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { isToday, parseISO } from 'date-fns';
+
+type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
+
+function getTimeOfDay(): TimeOfDay {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour <= 11) return 'morning';
+  if (hour >= 12 && hour <= 16) return 'afternoon';
+  if (hour >= 17 && hour <= 21) return 'evening';
+  return 'night';
+}
+
+const TIME_GREETINGS: Record<TimeOfDay, { greeting: string; icon: string; subtitle: string }> = {
+  morning: { greeting: 'Good Morning', icon: 'sun', subtitle: 'Start your day with awareness' },
+  afternoon: { greeting: 'Good Afternoon', icon: 'cloud', subtitle: 'Take a midday body check' },
+  evening: { greeting: 'Good Evening', icon: 'sunset', subtitle: 'Reflect on your body\'s signals today' },
+  night: { greeting: 'Good Night', icon: 'moon', subtitle: 'How is your body winding down?' },
+};
+
+const TIME_HINTS: Record<TimeOfDay, Record<number, string>> = {
+  morning: {
+    0: 'How connected to your body do you feel after waking up?',
+    1: 'How do you feel after waking up? Notice your body\'s natural energy.',
+    2: 'Reflect on last night\'s rest and how it affects your body now.',
+    3: 'Starting the day calm? Notice any anticipatory tension.',
+  },
+  afternoon: {
+    0: 'Pause and reconnect with your body at midday.',
+    1: 'How has your energy shifted since the morning?',
+    2: 'Is last night\'s sleep still affecting your afternoon?',
+    3: 'Has stress built up through the morning?',
+  },
+  evening: {
+    0: 'Wind down and tune into your body after a full day.',
+    1: 'How much energy do you have left at the end of the day?',
+    2: 'How is your body recovering from last night\'s sleep?',
+    3: 'How has stress accumulated through the day?',
+  },
+  night: {
+    0: 'Check in with your body as you prepare for rest.',
+    1: 'How depleted or restless does your body feel right now?',
+    2: 'Are you feeling ready for sleep tonight?',
+    3: 'Let go of the day\'s tension. Notice what remains.',
+  },
+};
 
 const MOODS = [
   { key: 'calm', label: 'Calm', icon: 'sun' as const },
@@ -117,6 +162,8 @@ export default function CheckinScreen() {
   const [notes, setNotes] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [showAlreadyCheckedIn, setShowAlreadyCheckedIn] = useState(true);
+  const timeOfDay = getTimeOfDay();
+  const greetingData = TIME_GREETINGS[timeOfDay];
 
   const todayCheckin = useMemo(() => {
     return checkins.find(c => isToday(parseISO(c.date)));
@@ -262,7 +309,19 @@ export default function CheckinScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        <LinearGradient
+          colors={[Colors.primary, Colors.primaryLight]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.greetingGradient}
+        >
+          <Feather name={greetingData.icon as any} size={28} color={Colors.textInverse} />
+          <Text style={styles.greetingText}>{greetingData.greeting}</Text>
+          <Text style={styles.greetingSubtitle}>{greetingData.subtitle}</Text>
+        </LinearGradient>
+
         <StepIndicator current={step} total={TOTAL_STEPS} />
+        <Text style={styles.stepCountText}>Step {step + 1} of {TOTAL_STEPS}</Text>
 
         <View style={styles.stepHeader}>
           <View style={styles.stepIconWrap}>
@@ -273,7 +332,7 @@ export default function CheckinScreen() {
 
         {step === 0 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>How connected to your body do you feel right now?</Text>
+            <Text style={styles.stepQuestion}>{TIME_HINTS[timeOfDay][0] || 'How connected to your body do you feel right now?'}</Text>
             <Text style={styles.stepHint}>Interoceptive awareness is your ability to sense internal body signals like heartbeat, breathing, and tension.</Text>
             <ScaleSelector value={awareness} onChange={setAwareness} leftLabel="Disconnected" rightLabel="Fully Aware" />
           </Animated.View>
@@ -282,7 +341,7 @@ export default function CheckinScreen() {
         {step === 1 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepQuestion}>What is your energy level?</Text>
-            <Text style={styles.stepHint}>Notice how energy manifests physically - heaviness in limbs, alertness, desire to move.</Text>
+            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][1] || 'Notice how energy manifests physically - heaviness in limbs, alertness, desire to move.'}</Text>
             <ScaleSelector value={energy} onChange={setEnergy} leftLabel="Depleted" rightLabel="Energized" color={Colors.secondary} />
           </Animated.View>
         )}
@@ -290,7 +349,7 @@ export default function CheckinScreen() {
         {step === 2 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepQuestion}>How was your sleep?</Text>
-            <Text style={styles.stepHint}>Sleep quality directly impacts interoceptive sensitivity and emotional regulation.</Text>
+            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][2] || 'Sleep quality directly impacts interoceptive sensitivity and emotional regulation.'}</Text>
             <ScaleSelector value={sleep} onChange={setSleep} leftLabel="Very Poor" rightLabel="Excellent" color="#5A6FB5" />
           </Animated.View>
         )}
@@ -298,7 +357,7 @@ export default function CheckinScreen() {
         {step === 3 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepQuestion}>What is your current stress level?</Text>
-            <Text style={styles.stepHint}>Stress activates the autonomic nervous system. Notice physical cues: jaw tension, shallow breathing, elevated heart rate.</Text>
+            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][3] || 'Stress activates the autonomic nervous system. Notice physical cues: jaw tension, shallow breathing, elevated heart rate.'}</Text>
             <ScaleSelector value={stress} onChange={setStress} leftLabel="Very Calm" rightLabel="Very Stressed" color="#E07A5F" />
           </Animated.View>
         )}
@@ -435,7 +494,19 @@ const CIRCLE_SIZE = Math.min(32, (SCREEN_WIDTH - 80) / 10 - 4);
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 40 },
-  stepIndicator: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5, marginTop: 16, marginBottom: 8 },
+  greetingGradient: {
+    borderRadius: 20, padding: 20, alignItems: 'center', marginBottom: 8, marginTop: 8,
+  },
+  greetingText: {
+    fontFamily: 'Nunito_700Bold', fontSize: 22, color: Colors.textInverse, marginTop: 8,
+  },
+  greetingSubtitle: {
+    fontFamily: 'Nunito_400Regular', fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: 4,
+  },
+  stepCountText: {
+    fontFamily: 'Nunito_500Medium', fontSize: 13, color: Colors.textTertiary, textAlign: 'center', marginBottom: 4,
+  },
+  stepIndicator: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5, marginTop: 16, marginBottom: 4 },
   stepDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.border },
   stepDotActive: { backgroundColor: Colors.primary, width: 20, borderRadius: 3 },
   stepDotCompleted: { backgroundColor: Colors.primaryLight },
