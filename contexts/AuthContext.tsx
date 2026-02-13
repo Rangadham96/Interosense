@@ -9,6 +9,9 @@ function getApiBase() {
     if (origin.includes('replit.app') || origin.includes('replit.dev') || window.location.port === '5000') {
       return '';
     }
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:5000';
+    }
   }
   return process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : 'http://localhost:5000';
 }
