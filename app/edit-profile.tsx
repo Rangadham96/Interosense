@@ -8,7 +8,9 @@ import {
   TextInput,
   Platform,
   Alert,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -33,8 +35,26 @@ export default function EditProfileScreen() {
   const [gender, setGender] = useState<GenderOption>(profile?.gender || '');
   const [dateOfBirth, setDateOfBirth] = useState(profile?.dateOfBirth || '');
   const [bio, setBio] = useState(profile?.bio || '');
+  const [profileImage, setProfileImage] = useState<string | null>(profile?.profileImage || null);
 
   const initial = name ? name.charAt(0).toUpperCase() : '?';
+
+  const handlePickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert('Permission Required', 'Please allow access to your photo library to change your profile picture.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setProfileImage(result.assets[0].uri);
+    }
+  };
 
   const handleSave = async () => {
     if (!profile) return;
@@ -48,6 +68,7 @@ export default function EditProfileScreen() {
       gender,
       dateOfBirth,
       bio: bio.trim(),
+      profileImage: profileImage || undefined,
     });
     router.back();
   };
@@ -78,12 +99,19 @@ export default function EditProfileScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.avatarSection}>
+        <TouchableOpacity style={styles.avatarSection} onPress={handlePickImage} activeOpacity={0.7}>
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>{initial}</Text>
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{initial}</Text>
+            )}
+            <View style={styles.cameraOverlay}>
+              <Feather name="camera" size={16} color="#FFFFFF" />
+            </View>
           </View>
-          <Text style={styles.avatarHint}>Profile Photo</Text>
-        </View>
+          <Text style={styles.avatarHint}>Tap to change photo</Text>
+        </TouchableOpacity>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Personal Information</Text>
@@ -237,6 +265,24 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_800ExtraBold',
     fontSize: 36,
     color: '#FFFFFF',
+  },
+  avatarImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+  },
+  cameraOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   avatarHint: {
     fontFamily: 'Nunito_500Medium',

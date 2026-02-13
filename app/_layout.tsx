@@ -21,19 +21,19 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerBackTitle: "Back" }}>
+    <Stack screenOptions={{ headerBackTitle: "Back", gestureEnabled: true, gestureDirection: 'horizontal' }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
-      <Stack.Screen name="exercise/[id]" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="exercise/[id]" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom', gestureDirection: 'vertical' }} />
       <Stack.Screen name="article/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
-      <Stack.Screen name="crisis" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="crisis" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom', gestureDirection: 'vertical' }} />
       <Stack.Screen name="bodymap" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="goals" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="achievements" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="settings" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="conditions" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="condition/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
-      <Stack.Screen name="assessment/[id]" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="assessment/[id]" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom', gestureDirection: 'vertical' }} />
       <Stack.Screen name="edit-profile" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="edit-conditions" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="edit-preferences" options={{ headerShown: false, animation: 'slide_from_right' }} />

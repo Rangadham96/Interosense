@@ -57,7 +57,7 @@ export default function SettingsScreen() {
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        const fileUri = FileSystem.documentDirectory + `interosense-export-${new Date().toISOString().slice(0, 10)}.json`;
+        const fileUri = FileSystem.cacheDirectory + `interosense-export-${new Date().toISOString().slice(0, 10)}.json`;
         await FileSystem.writeAsStringAsync(fileUri, jsonString);
         await Share.share({
           title: 'InteroSense Data Export',
@@ -71,6 +71,16 @@ export default function SettingsScreen() {
     } finally {
       setIsExporting(false);
     }
+  };
+
+  const handleReminderTime = () => {
+    const times = ['07:00', '08:00', '09:00', '10:00', '12:00', '18:00', '20:00', '21:00'];
+    const buttons = times.map(t => ({
+      text: t,
+      onPress: () => updateSettings({ ...settings, reminderTime: t }),
+    }));
+    buttons.push({ text: 'Cancel', onPress: () => {} });
+    Alert.alert('Set Reminder Time', 'Choose when to receive your daily check-in reminder', buttons);
   };
 
   const handleClearData = () => {
@@ -155,7 +165,7 @@ export default function SettingsScreen() {
               <Text style={styles.rowValue}>{settings.reminderTime}</Text>
               <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
             </View>,
-            undefined,
+            handleReminderTime,
             false
           )}
           {renderRow(
