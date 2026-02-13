@@ -101,6 +101,7 @@ export default function ProfileScreen() {
   ];
 
   const appItems: MenuItem[] = [
+    { icon: 'star', iconBg: '#F0C05A', title: 'Upgrade to Premium', onPress: () => router.push('/premium') },
     { icon: 'settings', iconBg: Colors.textSecondary, title: 'Settings', onPress: () => router.push('/settings') },
     { icon: 'info', iconBg: Colors.secondaryDark, title: 'About Interosense', onPress: () => router.push('/about') },
     { icon: 'log-out', iconBg: '#E53935', title: 'Sign Out', onPress: () => logout() },

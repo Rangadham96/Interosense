@@ -68,6 +68,7 @@ function AuthGate() {
       <Stack.Screen name="edit-preferences" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="session-history" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="search" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="premium" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom', gestureDirection: 'vertical' }} />
     </Stack>
   );
 }
