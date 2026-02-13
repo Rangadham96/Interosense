@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,6 +9,9 @@ import {
   Platform,
   Alert,
   Image,
+  Modal,
+  FlatList,
+  Dimensions,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Feather } from '@expo/vector-icons';
@@ -26,6 +29,18 @@ const GENDER_OPTIONS: { label: string; value: GenderOption }[] = [
   { label: 'Prefer not to say', value: 'prefer-not-to-say' },
 ];
 
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 100 }, (_, i) => currentYear - i);
+
+function getDaysInMonth(month: number, year: number) {
+  return new Date(year, month, 0).getDate();
+}
+
 export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
   const { profile, updateProfile } = useApp();
@@ -33,11 +48,38 @@ export default function EditProfileScreen() {
 
   const [name, setName] = useState(profile?.name || '');
   const [gender, setGender] = useState<GenderOption>(profile?.gender || '');
-  const [dateOfBirth, setDateOfBirth] = useState(profile?.dateOfBirth || '');
   const [bio, setBio] = useState(profile?.bio || '');
   const [profileImage, setProfileImage] = useState<string | null>(profile?.profileImage || null);
 
+  const parsedDate = profile?.dateOfBirth ? parseDateString(profile.dateOfBirth) : null;
+  const [selectedYear, setSelectedYear] = useState(parsedDate?.year || 1990);
+  const [selectedMonth, setSelectedMonth] = useState(parsedDate?.month || 1);
+  const [selectedDay, setSelectedDay] = useState(parsedDate?.day || 1);
+  const [hasSetDate, setHasSetDate] = useState(!!profile?.dateOfBirth);
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerStep, setDatePickerStep] = useState<'year' | 'month' | 'day'>('year');
+
+  const [tempYear, setTempYear] = useState(selectedYear);
+  const [tempMonth, setTempMonth] = useState(selectedMonth);
+
   const initial = name ? name.charAt(0).toUpperCase() : '?';
+
+  function parseDateString(s: string) {
+    const parts = s.split('-');
+    if (parts.length === 3) {
+      return { year: parseInt(parts[0]), month: parseInt(parts[1]), day: parseInt(parts[2]) };
+    }
+    return null;
+  }
+
+  function formatDate(y: number, m: number, d: number) {
+    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+
+  function formatDateDisplay(y: number, m: number, d: number) {
+    return `${MONTHS[m - 1]} ${d}, ${y}`;
+  }
 
   const handlePickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -56,12 +98,38 @@ export default function EditProfileScreen() {
     }
   };
 
+  const openDatePicker = () => {
+    setTempYear(selectedYear);
+    setTempMonth(selectedMonth);
+    setDatePickerStep('year');
+    setShowDatePicker(true);
+  };
+
+  const handleSelectYear = (year: number) => {
+    setTempYear(year);
+    setDatePickerStep('month');
+  };
+
+  const handleSelectMonth = (month: number) => {
+    setTempMonth(month);
+    setDatePickerStep('day');
+  };
+
+  const handleSelectDay = (day: number) => {
+    setSelectedYear(tempYear);
+    setSelectedMonth(tempMonth);
+    setSelectedDay(day);
+    setHasSetDate(true);
+    setShowDatePicker(false);
+  };
+
   const handleSave = async () => {
     if (!profile) return;
     if (!name.trim()) {
       Alert.alert('Required', 'Please enter your name.');
       return;
     }
+    const dateOfBirth = hasSetDate ? formatDate(selectedYear, selectedMonth, selectedDay) : undefined;
     await updateProfile({
       ...profile,
       name: name.trim(),
@@ -72,6 +140,9 @@ export default function EditProfileScreen() {
     });
     router.back();
   };
+
+  const daysInSelectedMonth = getDaysInMonth(tempMonth, tempYear);
+  const daysArray = Array.from({ length: daysInSelectedMonth }, (_, i) => i + 1);
 
   return (
     <View style={styles.container}>
@@ -130,18 +201,18 @@ export default function EditProfileScreen() {
 
             <View style={styles.fieldDivider} />
 
-            <View style={styles.fieldGroup}>
+            <TouchableOpacity style={styles.fieldGroup} onPress={openDatePicker} activeOpacity={0.6}>
               <Text style={styles.fieldLabel}>Date of Birth</Text>
-              <TextInput
-                style={styles.textInput}
-                value={dateOfBirth}
-                onChangeText={setDateOfBirth}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={Colors.textTertiary}
-                keyboardType="numbers-and-punctuation"
-                maxLength={10}
-              />
-            </View>
+              <View style={styles.dateRow}>
+                <Feather name="calendar" size={18} color={Colors.primary} style={{ marginRight: 10 }} />
+                <Text style={[styles.textInput, !hasSetDate && { color: Colors.textTertiary }]}>
+                  {hasSetDate
+                    ? formatDateDisplay(selectedYear, selectedMonth, selectedDay)
+                    : 'Tap to select date'}
+                </Text>
+                <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -207,9 +278,128 @@ export default function EditProfileScreen() {
 
         <View style={{ height: 60 }} />
       </ScrollView>
+
+      <Modal
+        visible={showDatePicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowDatePicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => {
+                if (datePickerStep === 'month') setDatePickerStep('year');
+                else if (datePickerStep === 'day') setDatePickerStep('month');
+                else setShowDatePicker(false);
+              }}>
+                <Feather
+                  name={datePickerStep === 'year' ? 'x' : 'arrow-left'}
+                  size={22}
+                  color={Colors.text}
+                />
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>
+                {datePickerStep === 'year' && 'Select Year'}
+                {datePickerStep === 'month' && `Select Month (${tempYear})`}
+                {datePickerStep === 'day' && `Select Day (${MONTHS[tempMonth - 1]} ${tempYear})`}
+              </Text>
+              <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                <Feather name="x" size={22} color={Colors.textTertiary} />
+              </TouchableOpacity>
+            </View>
+
+            {datePickerStep === 'year' && (
+              <FlatList
+                data={YEARS}
+                keyExtractor={(item) => item.toString()}
+                numColumns={4}
+                contentContainerStyle={styles.gridContent}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.gridItem,
+                      item === selectedYear && hasSetDate && styles.gridItemSelected,
+                    ]}
+                    onPress={() => handleSelectYear(item)}
+                    activeOpacity={0.6}
+                  >
+                    <Text
+                      style={[
+                        styles.gridItemText,
+                        item === selectedYear && hasSetDate && styles.gridItemTextSelected,
+                      ]}
+                    >
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+
+            {datePickerStep === 'month' && (
+              <FlatList
+                data={MONTHS.map((label, i) => ({ label, value: i + 1 }))}
+                keyExtractor={(item) => item.value.toString()}
+                numColumns={3}
+                contentContainerStyle={styles.gridContent}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.monthItem,
+                      item.value === selectedMonth && hasSetDate && styles.gridItemSelected,
+                    ]}
+                    onPress={() => handleSelectMonth(item.value)}
+                    activeOpacity={0.6}
+                  >
+                    <Text
+                      style={[
+                        styles.gridItemText,
+                        item.value === selectedMonth && hasSetDate && styles.gridItemTextSelected,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+
+            {datePickerStep === 'day' && (
+              <FlatList
+                data={daysArray}
+                keyExtractor={(item) => item.toString()}
+                numColumns={7}
+                contentContainerStyle={styles.gridContent}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.dayItem,
+                      item === selectedDay && hasSetDate && styles.gridItemSelected,
+                    ]}
+                    onPress={() => handleSelectDay(item)}
+                    activeOpacity={0.6}
+                  >
+                    <Text
+                      style={[
+                        styles.dayItemText,
+                        item === selectedDay && hasSetDate && styles.gridItemTextSelected,
+                      ]}
+                    >
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -260,6 +450,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 6,
+    overflow: 'hidden',
   },
   avatarText: {
     fontFamily: 'Nunito_800ExtraBold',
@@ -330,6 +521,10 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 0,
   },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   bioInput: {
     minHeight: 90,
     lineHeight: 22,
@@ -379,5 +574,79 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     backgroundColor: Colors.primary,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '70%',
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  modalTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 18,
+    color: Colors.text,
+  },
+  gridContent: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 20,
+  },
+  gridItem: {
+    flex: 1,
+    margin: 4,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: Colors.backgroundSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  monthItem: {
+    flex: 1,
+    margin: 4,
+    paddingVertical: 16,
+    borderRadius: 12,
+    backgroundColor: Colors.backgroundSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayItem: {
+    width: (screenWidth - 80) / 7,
+    margin: 2,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: Colors.backgroundSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayItemText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 15,
+    color: Colors.text,
+  },
+  gridItemSelected: {
+    backgroundColor: Colors.primary,
+  },
+  gridItemText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 15,
+    color: Colors.text,
+  },
+  gridItemTextSelected: {
+    color: '#FFFFFF',
   },
 });

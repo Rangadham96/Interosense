@@ -9,6 +9,8 @@ import {
   Alert,
   Platform,
   Share,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -24,11 +26,17 @@ const FONT_SIZE_OPTIONS: Array<{ label: string; value: 'small' | 'medium' | 'lar
   { label: 'Large', value: 'large' },
 ];
 
+const REMINDER_TIMES = [
+  '06:00', '07:00', '08:00', '09:00', '10:00',
+  '12:00', '14:00', '16:00', '18:00', '20:00', '21:00', '22:00',
+];
+
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const topPadding = Platform.OS === 'web' ? 67 : insets.top;
   const { settings, updateSettings, profile, sessions, checkins, assessments, bodyMarks, goals, bookmarks, wearableData } = useApp();
   const [isExporting, setIsExporting] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const handleExportData = async () => {
     setIsExporting(true);
@@ -75,14 +83,21 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleReminderTime = () => {
-    const times = ['07:00', '08:00', '09:00', '10:00', '12:00', '18:00', '20:00', '21:00'];
-    const buttons = times.map(t => ({
-      text: t,
-      onPress: () => updateSettings({ ...settings, reminderTime: t }),
-    }));
-    buttons.push({ text: 'Cancel', onPress: async () => {} });
-    Alert.alert('Set Reminder Time', 'Choose when to receive your daily check-in reminder', buttons);
+  const handleSelectReminderTime = (time: string) => {
+    updateSettings({ ...settings, reminderTime: time });
+    setShowTimePicker(false);
+  };
+
+  const handleToggleNotifications = (val: boolean) => {
+    updateSettings({ ...settings, notifications: val });
+  };
+
+  const handleToggleReducedMotion = (val: boolean) => {
+    updateSettings({ ...settings, reducedMotion: val });
+  };
+
+  const handleFontSizeChange = (val: 'small' | 'medium' | 'large') => {
+    updateSettings({ ...settings, fontSize: val });
   };
 
   const handleClearData = () => {
@@ -103,32 +118,6 @@ export default function SettingsScreen() {
     );
   };
 
-  const renderRow = (
-    icon: string,
-    label: string,
-    right: React.ReactNode,
-    onPress?: () => void,
-    isLast?: boolean
-  ) => (
-    <View key={label}>
-      <TouchableOpacity
-        style={styles.row}
-        onPress={onPress}
-        disabled={!onPress}
-        activeOpacity={onPress ? 0.6 : 1}
-      >
-        <View style={styles.rowLeft}>
-          <View style={styles.iconContainer}>
-            <Feather name={icon as any} size={18} color={Colors.primary} />
-          </View>
-          <Text style={styles.rowLabel}>{label}</Text>
-        </View>
-        <View style={styles.rowRight}>{right}</View>
-      </TouchableOpacity>
-      {!isLast && <View style={styles.divider} />}
-    </View>
-  );
-
   return (
     <View style={[styles.container, { paddingTop: topPadding }]}>
       <View style={styles.header}>
@@ -144,142 +133,275 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.sectionTitle}>PREFERENCES</Text>
+        <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
         <View style={styles.card}>
-          {renderRow(
-            'bell',
-            'Notifications',
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: `${Colors.primary}15` }]}>
+                <Feather name="bell" size={18} color={Colors.primary} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Daily Reminders</Text>
+                <Text style={styles.rowSubtext}>
+                  {settings.notifications ? 'On' : 'Off'}
+                </Text>
+              </View>
+            </View>
             <Switch
               value={settings.notifications}
-              onValueChange={(val) =>
-                updateSettings({ ...settings, notifications: val })
-              }
+              onValueChange={handleToggleNotifications}
               trackColor={{ false: Colors.border, true: Colors.primaryLight }}
-              thumbColor={settings.notifications ? Colors.primary : Colors.textTertiary}
-            />,
-            undefined,
-            false
-          )}
-          {renderRow(
-            'clock',
-            'Reminder Time',
+              thumbColor={settings.notifications ? Colors.primary : '#ccc'}
+            />
+          </View>
+          <View style={styles.divider} />
+          <TouchableOpacity
+            style={[styles.row, !settings.notifications && { opacity: 0.4 }]}
+            onPress={() => settings.notifications && setShowTimePicker(true)}
+            disabled={!settings.notifications}
+            activeOpacity={0.6}
+          >
+            <View style={styles.rowLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: `${Colors.secondary}15` }]}>
+                <Feather name="clock" size={18} color={Colors.secondary} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Reminder Time</Text>
+                <Text style={styles.rowSubtext}>Daily check-in reminder</Text>
+              </View>
+            </View>
             <View style={styles.rowValueContainer}>
-              <Text style={styles.rowValue}>{settings.reminderTime}</Text>
+              <Text style={styles.rowValueText}>{settings.reminderTime}</Text>
               <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
-            </View>,
-            handleReminderTime,
-            false
-          )}
-          {renderRow(
-            'type',
-            'Font Size',
-            <View style={styles.pillContainer}>
-              {FONT_SIZE_OPTIONS.map((opt) => (
-                <TouchableOpacity
-                  key={opt.value}
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.sectionTitle}>DISPLAY</Text>
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: `${Colors.accent}25` }]}>
+                <Feather name="type" size={18} color={Colors.accent} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Font Size</Text>
+                <Text style={styles.rowSubtext}>
+                  Currently: {settings.fontSize.charAt(0).toUpperCase() + settings.fontSize.slice(1)}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.fontSizeRow}>
+            {FONT_SIZE_OPTIONS.map((opt) => (
+              <TouchableOpacity
+                key={opt.value}
+                style={[
+                  styles.fontPill,
+                  settings.fontSize === opt.value && styles.fontPillActive,
+                ]}
+                onPress={() => handleFontSizeChange(opt.value)}
+                activeOpacity={0.6}
+              >
+                <Text
                   style={[
-                    styles.pill,
-                    settings.fontSize === opt.value && styles.pillActive,
+                    styles.fontPillSample,
+                    { fontSize: opt.value === 'small' ? 13 : opt.value === 'medium' ? 16 : 19 },
+                    settings.fontSize === opt.value && styles.fontPillTextActive,
                   ]}
-                  onPress={() =>
-                    updateSettings({ ...settings, fontSize: opt.value })
-                  }
                 >
-                  <Text
-                    style={[
-                      styles.pillText,
-                      settings.fontSize === opt.value && styles.pillTextActive,
-                    ]}
-                  >
-                    {opt.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>,
-            undefined,
-            false
-          )}
-          {renderRow(
-            'minimize-2',
-            'Reduced Motion',
+                  Aa
+                </Text>
+                <Text
+                  style={[
+                    styles.fontPillLabel,
+                    settings.fontSize === opt.value && styles.fontPillTextActive,
+                  ]}
+                >
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: `${Colors.secondary}15` }]}>
+                <Feather name="minimize-2" size={18} color={Colors.secondary} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Reduced Motion</Text>
+                <Text style={styles.rowSubtext}>
+                  {settings.reducedMotion ? 'Animations minimized' : 'Animations enabled'}
+                </Text>
+              </View>
+            </View>
             <Switch
               value={settings.reducedMotion}
-              onValueChange={(val) =>
-                updateSettings({ ...settings, reducedMotion: val })
-              }
+              onValueChange={handleToggleReducedMotion}
               trackColor={{ false: Colors.border, true: Colors.primaryLight }}
-              thumbColor={settings.reducedMotion ? Colors.primary : Colors.textTertiary}
-            />,
-            undefined,
-            true
-          )}
+              thumbColor={settings.reducedMotion ? Colors.primary : '#ccc'}
+            />
+          </View>
         </View>
 
         <Text style={styles.sectionTitle}>DATA</Text>
         <View style={styles.card}>
-          {renderRow(
-            'download',
-            'Export Data',
-            isExporting ? (
-              <Text style={styles.rowValue}>Exporting...</Text>
+          <TouchableOpacity
+            style={styles.row}
+            onPress={handleExportData}
+            disabled={isExporting}
+            activeOpacity={0.6}
+          >
+            <View style={styles.rowLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: `${Colors.primary}15` }]}>
+                <Feather name="download" size={18} color={Colors.primary} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Export Data</Text>
+                <Text style={styles.rowSubtext}>Download all your data as JSON</Text>
+              </View>
+            </View>
+            {isExporting ? (
+              <Text style={styles.exportingText}>Exporting...</Text>
             ) : (
               <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
-            ),
-            handleExportData,
-            false
-          )}
-          {renderRow(
-            'trash-2',
-            'Clear All Data',
-            <Feather name="chevron-right" size={18} color={Colors.error} />,
-            handleClearData,
-            true
-          )}
+            )}
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity
+            style={styles.row}
+            onPress={handleClearData}
+            activeOpacity={0.6}
+          >
+            <View style={styles.rowLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: '#FDE8E8' }]}>
+                <Feather name="trash-2" size={18} color={Colors.error} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={[styles.rowLabel, { color: Colors.error }]}>Clear All Data</Text>
+                <Text style={styles.rowSubtext}>Permanently delete all progress</Text>
+              </View>
+            </View>
+            <Feather name="chevron-right" size={18} color={Colors.error} />
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.sectionTitle}>ABOUT</Text>
         <View style={styles.card}>
-          {renderRow(
-            'info',
-            'Version',
-            <Text style={styles.rowValue}>1.0.0</Text>,
-            undefined,
-            false
-          )}
-          {renderRow(
-            'heart',
-            'About Interosense',
-            <Feather name="chevron-right" size={18} color={Colors.textTertiary} />,
-            () => router.push('/about'),
-            false
-          )}
-          <View style={styles.aboutText}>
-            <Text style={styles.aboutDescription}>
-              Interosense is a mental wellness app designed to help you develop
-              interoceptive awareness through guided exercises, body scanning,
-              and mindful check-ins. Track your progress, build healthy habits,
-              and deepen your mind-body connection.
-            </Text>
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: `${Colors.textSecondary}15` }]}>
+                <Feather name="info" size={18} color={Colors.textSecondary} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Version</Text>
+                <Text style={styles.rowSubtext}>1.0.0 (Beta)</Text>
+              </View>
+            </View>
           </View>
           <View style={styles.divider} />
-          {renderRow(
-            'shield',
-            'Privacy Policy',
-            <Feather name="chevron-right" size={18} color={Colors.textTertiary} />,
-            undefined,
-            false
-          )}
-          {renderRow(
-            'file-text',
-            'Terms of Service',
-            <Feather name="chevron-right" size={18} color={Colors.textTertiary} />,
-            undefined,
-            true
-          )}
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => router.push('/about')}
+            activeOpacity={0.6}
+          >
+            <View style={styles.rowLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: `${Colors.secondary}15` }]}>
+                <Feather name="heart" size={18} color={Colors.secondary} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>About Interosense</Text>
+                <Text style={styles.rowSubtext}>Learn about our mission</Text>
+              </View>
+            </View>
+            <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity style={styles.row} activeOpacity={0.6}>
+            <View style={styles.rowLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: `${Colors.primary}15` }]}>
+                <Feather name="shield" size={18} color={Colors.primary} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Privacy Policy</Text>
+              </View>
+            </View>
+            <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity style={styles.row} activeOpacity={0.6}>
+            <View style={styles.rowLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: `${Colors.accent}25` }]}>
+                <Feather name="file-text" size={18} color={Colors.accent} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Terms of Service</Text>
+              </View>
+            </View>
+            <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.footerNote}>
+          <Text style={styles.footerText}>
+            Interosense is designed to support your wellness journey.
+            It is not a replacement for professional medical care.
+          </Text>
         </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <Modal
+        visible={showTimePicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowTimePicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Set Reminder Time</Text>
+              <TouchableOpacity onPress={() => setShowTimePicker(false)}>
+                <Feather name="x" size={22} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={REMINDER_TIMES}
+              keyExtractor={(item) => item}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}
+              renderItem={({ item }) => {
+                const isSelected = settings.reminderTime === item;
+                const hour = parseInt(item.split(':')[0]);
+                const period = hour < 12 ? 'AM' : 'PM';
+                const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                const displayTime = `${displayHour}:${item.split(':')[1]} ${period}`;
+                return (
+                  <TouchableOpacity
+                    style={[styles.timeOption, isSelected && styles.timeOptionSelected]}
+                    onPress={() => handleSelectReminderTime(item)}
+                    activeOpacity={0.6}
+                  >
+                    <Feather
+                      name={hour < 12 ? 'sunrise' : hour < 18 ? 'sun' : 'moon'}
+                      size={18}
+                      color={isSelected ? '#FFFFFF' : Colors.textSecondary}
+                      style={{ marginRight: 12 }}
+                    />
+                    <Text style={[styles.timeOptionText, isSelected && styles.timeOptionTextSelected]}>
+                      {displayTime}
+                    </Text>
+                    {isSelected && (
+                      <Feather name="check" size={18} color="#FFFFFF" style={{ marginLeft: 'auto' }} />
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -331,6 +453,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 8,
     elevation: 3,
+    overflow: 'hidden',
   },
   row: {
     flexDirection: 'row',
@@ -338,82 +461,141 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    minHeight: 52,
+    minHeight: 56,
   },
   rowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    marginRight: 12,
+  },
+  rowTextWrap: {
+    flex: 1,
   },
   iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: Colors.backgroundSecondary,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   rowLabel: {
     fontSize: 15,
-    fontFamily: 'Nunito_500Medium',
+    fontFamily: 'Nunito_600SemiBold',
     color: Colors.text,
   },
-  rowRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  rowSubtext: {
+    fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
+    color: Colors.textTertiary,
+    marginTop: 1,
   },
   rowValueContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  rowValue: {
-    fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
-    color: Colors.textSecondary,
+  rowValueText: {
+    fontSize: 15,
+    fontFamily: 'Nunito_600SemiBold',
+    color: Colors.primary,
+  },
+  exportingText: {
+    fontSize: 13,
+    fontFamily: 'Nunito_500Medium',
+    color: Colors.primary,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: Colors.divider,
-    marginLeft: 60,
+    marginLeft: 62,
   },
-  pillContainer: {
+  fontSizeRow: {
     flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 10,
+  },
+  fontPill: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
     backgroundColor: Colors.backgroundSecondary,
-    borderRadius: 10,
-    padding: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  pill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  pillActive: {
+  fontPillActive: {
     backgroundColor: Colors.primary,
   },
-  pillText: {
-    fontSize: 12,
-    fontFamily: 'Nunito_600SemiBold',
+  fontPillSample: {
+    fontFamily: 'Nunito_700Bold',
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  fontPillLabel: {
+    fontSize: 11,
+    fontFamily: 'Nunito_500Medium',
     color: Colors.textSecondary,
   },
-  pillTextActive: {
-    color: Colors.textInverse,
+  fontPillTextActive: {
+    color: '#FFFFFF',
   },
-  comingSoon: {
+  footerNote: {
+    marginTop: 24,
+    paddingHorizontal: 8,
+  },
+  footerText: {
     fontSize: 13,
     fontFamily: 'Nunito_400Regular',
     color: Colors.textTertiary,
-    fontStyle: 'italic',
-  },
-  aboutText: {
-    paddingHorizontal: 16,
-    paddingBottom: 14,
-  },
-  aboutDescription: {
-    fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
-    color: Colors.textSecondary,
+    textAlign: 'center',
     lineHeight: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '60%',
+    paddingBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  modalTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 18,
+    color: Colors.text,
+  },
+  timeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginTop: 6,
+    backgroundColor: Colors.backgroundSecondary,
+  },
+  timeOptionSelected: {
+    backgroundColor: Colors.primary,
+  },
+  timeOptionText: {
+    fontSize: 16,
+    fontFamily: 'Nunito_600SemiBold',
+    color: Colors.text,
+  },
+  timeOptionTextSelected: {
+    color: '#FFFFFF',
   },
 });

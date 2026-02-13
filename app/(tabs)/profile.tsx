@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  Image,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -119,7 +120,11 @@ export default function ProfileScreen() {
           style={[styles.headerGradient, { paddingTop: topPadding + 24 }]}
         >
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>{initial}</Text>
+            {profile?.profileImage ? (
+              <Image source={{ uri: profile.profileImage }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{initial}</Text>
+            )}
           </View>
           <Text style={styles.userName}>{profile?.name || user?.name || 'User'}</Text>
           {user?.email && (
@@ -211,6 +216,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 3,
     borderColor: 'rgba(255,255,255,0.3)',
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   avatarText: {
     fontFamily: 'Nunito_800ExtraBold',
