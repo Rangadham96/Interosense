@@ -175,29 +175,22 @@ function configureExpoAndLanding(app: express.Application) {
 
   log("Serving static Expo files with dynamic manifest routing");
   if (hasWebBuild) {
-    log("Web build found at dist/ - serving web app at root");
+    log("Web build found at dist/ - serving web app under /app");
   }
 
-  app.get("/landing", (req: Request, res: Response) => {
+  app.get("/", (req: Request, res: Response) => {
+    const platform = req.header("expo-platform");
+    if (platform && (platform === "ios" || platform === "android")) {
+      return serveExpoManifest(platform, res);
+    }
     return serveLandingPage({ req, res, landingPageTemplate, appName });
   });
 
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.path.startsWith("/api")) {
-      return next();
-    }
-
-    if (req.path === "/pitch") {
-      return next();
-    }
-
+  app.get("/manifest", (req: Request, res: Response, next: NextFunction) => {
     const platform = req.header("expo-platform");
     if (platform && (platform === "ios" || platform === "android")) {
-      if (req.path === "/" || req.path === "/manifest") {
-        return serveExpoManifest(platform, res);
-      }
+      return serveExpoManifest(platform, res);
     }
-
     next();
   });
 
@@ -205,14 +198,10 @@ function configureExpoAndLanding(app: express.Application) {
   app.use(express.static(path.resolve(process.cwd(), "static-build")));
 
   if (hasWebBuild) {
-    app.use(express.static(webBuildPath));
+    app.use("/app", express.static(webBuildPath));
 
     app.use((req: Request, res: Response, next: NextFunction) => {
-      if (req.path.startsWith("/api") || req.path === "/pitch" || req.path === "/landing") {
-        return next();
-      }
-      const platform = req.header("expo-platform");
-      if (platform) {
+      if (!req.path.startsWith("/app")) {
         return next();
       }
       const indexPath = path.join(webBuildPath, "index.html");
@@ -223,7 +212,7 @@ function configureExpoAndLanding(app: express.Application) {
     });
   }
 
-  log("Expo routing: Checking expo-platform header on / and /manifest");
+  log("Routes: / = landing page, /app = web app, /pitch = pitch deck");
 }
 
 function setupErrorHandler(app: express.Application) {
