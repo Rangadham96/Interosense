@@ -636,7 +636,7 @@
           <li class="nav-text-link"><a href="#features">Features</a></li>
           <li class="nav-text-link"><a href="#science">Science</a></li>
           <li class="nav-text-link"><a href="#conditions">About</a></li>
-          <li><a href="/app" class="nav-cta">Try the App</a></li>
+          <li><a href="/app/auth/register" class="nav-cta">Try the App</a></li>
         </ul>
       </div>
     </nav>
@@ -655,7 +655,7 @@
           <div class="heartbeat-ring"><div class="heartbeat-ring-inner"></div></div>
           <p class="heartbeat-text" id="heartbeatText">Can you feel your heartbeat right now?</p>
         </div>
-        <a href="/app" class="hero-cta">Start Your Journey</a>
+        <a href="#" class="hero-cta" id="heroCta" onclick="startPortal(event)">Start Your Journey</a>
       </div>
       <div class="scroll-indicator">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -721,7 +721,7 @@
           <p class="bodymap-info-desc" id="bodymapDesc"></p>
         </div>
         <div class="bodymap-cta">
-          <a href="/app">Explore Interosense</a>
+          <a href="/app/auth/register">Explore Interosense</a>
         </div>
       </div>
     </section>
@@ -952,8 +952,8 @@
       <div class="final-cta-content reveal">
         <h2>Ready to Discover Your Hidden Sense?</h2>
         <p class="subtitle">Join thousands discovering the power of interoceptive awareness.</p>
-        <a href="/app" class="final-cta-btn">Start Your Journey</a>
-        <a href="/app" class="explore-link">or <span>explore the app</span></a>
+        <a href="#" class="final-cta-btn" onclick="startPortal(event)">Start Your Journey</a>
+        <a href="/app/auth/register" class="explore-link">or <span>sign up directly</span></a>
       </div>
     </section>
 
@@ -972,11 +972,43 @@
       <div class="portal-ripple"></div>
       <div class="portal-text">
         <h2 id="portalHeading">Welcome to a space designed for you.</h2>
-        <a href="/app" class="portal-begin" id="portalBegin">Let's begin.</a>
+        <a href="/app/auth/register" class="portal-begin" id="portalBegin">Let's begin.</a>
       </div>
     </div>
 
     <script>
+      function startPortal(e) {
+        if (e) e.preventDefault();
+        var overlay = document.getElementById('portalOverlay');
+        var heading = document.getElementById('portalHeading');
+        var beginBtn = document.getElementById('portalBegin');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        createParticles(document.getElementById('portalParticles'), 30);
+        setTimeout(function() { heading.classList.add('visible'); }, 600);
+        setTimeout(function() { beginBtn.classList.add('visible'); }, 1800);
+      }
+
+      function createParticles(container, count) {
+        if (container.childElementCount > 5) return;
+        var colors = ['rgba(255,255,255,0.6)', 'rgba(136,179,181,0.5)', 'rgba(232,180,184,0.5)'];
+        for (var i = 0; i < count; i++) {
+          var p = document.createElement('div');
+          p.className = 'particle';
+          var size = Math.random() * 4 + 2;
+          p.style.width = size + 'px';
+          p.style.height = size + 'px';
+          p.style.left = Math.random() * 100 + '%';
+          p.style.bottom = '-10px';
+          p.style.background = colors[Math.floor(Math.random() * colors.length)];
+          p.style.setProperty('--dx', (Math.random() * 100 - 50) + 'px');
+          p.style.animationDuration = (Math.random() * 15 + 10) + 's';
+          p.style.animationDelay = (Math.random() * 15) + 's';
+          p.style.boxShadow = '0 0 ' + (size * 2) + 'px ' + p.style.background;
+          container.appendChild(p);
+        }
+      }
+
       (function() {
         // NAV SCROLL
         var nav = document.getElementById('nav');
@@ -985,24 +1017,6 @@
         });
 
         // PARTICLES
-        function createParticles(container, count) {
-          var colors = ['rgba(255,255,255,0.6)', 'rgba(136,179,181,0.5)', 'rgba(232,180,184,0.5)'];
-          for (var i = 0; i < count; i++) {
-            var p = document.createElement('div');
-            p.className = 'particle';
-            var size = Math.random() * 4 + 2;
-            p.style.width = size + 'px';
-            p.style.height = size + 'px';
-            p.style.left = Math.random() * 100 + '%';
-            p.style.bottom = '-10px';
-            p.style.background = colors[Math.floor(Math.random() * colors.length)];
-            p.style.setProperty('--dx', (Math.random() * 100 - 50) + 'px');
-            p.style.animationDuration = (Math.random() * 15 + 10) + 's';
-            p.style.animationDelay = (Math.random() * 15) + 's';
-            p.style.boxShadow = '0 0 ' + (size * 2) + 'px ' + p.style.background;
-            container.appendChild(p);
-          }
-        }
         createParticles(document.getElementById('heroParticles'), 35);
         createParticles(document.getElementById('ctaParticles'), 20);
 
