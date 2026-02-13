@@ -129,7 +129,7 @@ export default function PremiumScreen() {
           </LinearGradient>
         </View>
 
-        <Text style={styles.headerTitle}>InteroSense Premium</Text>
+        <Text style={styles.headerTitle}>Interosense Premium</Text>
         <Text style={styles.headerSubtitle}>
           Unlock the full power of interoceptive awareness
         </Text>

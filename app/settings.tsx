@@ -62,7 +62,7 @@ export default function SettingsScreen() {
         filePath.create();
         filePath.write(jsonString);
         await Share.share({
-          title: 'InteroSense Data Export',
+          title: 'Interosense Data Export',
           url: filePath.uri,
           message: Platform.OS === 'android' ? jsonString : undefined,
         });

@@ -1,7 +1,7 @@
-# InteroSense - Mental Wellness Platform
+# Interosense - Mental Wellness Platform
 
 ## Overview
-InteroSense is an enterprise-grade mobile mental wellness platform teaching interoceptive awareness (sensing internal body signals) through guided exercises, clinical symptom tracking, condition-specific programs, AI-driven personalization, body tracking, progress analytics, and educational content.
+Interosense is an enterprise-grade mobile mental wellness platform teaching interoceptive awareness (sensing internal body signals) through guided exercises, clinical symptom tracking, condition-specific programs, AI-driven personalization, body tracking, progress analytics, and educational content.
 
 ## Architecture
 - **Frontend**: Expo React Native (React Native Web for browser, Expo Go for mobile)

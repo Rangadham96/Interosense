@@ -101,7 +101,7 @@ const defaultAdvisorState: AdvisorState = {
   recommendations: [],
   insights: [],
   nextExercise: null,
-  greeting: 'Welcome to InteroSense',
+  greeting: 'Welcome to Interosense',
   streakMessage: 'Start your journey today',
   todayFocus: 'Begin with a simple breathing exercise to build your foundation.',
 };

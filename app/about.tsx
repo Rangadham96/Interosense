@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  Image,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -62,13 +63,18 @@ export default function AboutScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.logoSection}>
-          <Text style={styles.logoText}>InteroSense</Text>
+          <Image
+            source={require('@/assets/images/icon.png')}
+            style={{ width: 80, height: 80, borderRadius: 20, marginBottom: 12 }}
+            resizeMode="contain"
+          />
+          <Text style={styles.logoText}>Interosense</Text>
           <Text style={styles.tagline}>Discover your body's hidden intelligence</Text>
         </View>
 
         <Section icon="heart" title="Our Mission">
           <Text style={styles.bodyText}>
-            InteroSense is built on the belief that understanding your body's internal signals is fundamental to mental wellness. We combine evidence-based interoceptive training with modern technology to make body awareness accessible to everyone.
+            Interosense is built on the belief that understanding your body's internal signals is fundamental to mental wellness. We combine evidence-based interoceptive training with modern technology to make body awareness accessible to everyone.
           </Text>
         </Section>
 
@@ -95,7 +101,7 @@ export default function AboutScreen() {
         <View style={styles.disclaimerContainer}>
           <Feather name="alert-circle" size={16} color={Colors.textTertiary} style={{ marginTop: 2 }} />
           <Text style={styles.disclaimerText}>
-            InteroSense is not a replacement for professional medical care. If you are experiencing a mental health crisis, please contact emergency services or a mental health professional.
+            Interosense is not a replacement for professional medical care. If you are experiencing a mental health crisis, please contact emergency services or a mental health professional.
           </Text>
         </View>
 

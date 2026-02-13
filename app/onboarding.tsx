@@ -23,7 +23,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const INTRO_PAGES = [
   {
     icon: 'activity' as const,
-    title: 'Welcome to\nInteroSense',
+    title: 'Welcome to\nInterosense',
     subtitle: "Discover interoceptive awareness - your ability to sense and understand your body's internal signals. Backed by clinical research.",
     gradientColors: ['#6B5B95', '#3D2F6B'] as [string, string],
     decorColor: 'rgba(139,125,181,0.3)',

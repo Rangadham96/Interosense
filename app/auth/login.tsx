@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -60,10 +61,12 @@ export default function LoginScreen() {
 
         <View style={styles.content}>
           <View style={styles.logoSection}>
-            <View style={styles.logoCircle}>
-              <Feather name="activity" size={36} color="#fff" />
-            </View>
-            <Text style={styles.appName}>InteroSense</Text>
+            <Image
+              source={require('@/assets/images/icon.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.appName}>Interosense</Text>
             <Text style={styles.tagline}>Sense your inner world</Text>
           </View>
 
@@ -161,10 +164,9 @@ const styles = StyleSheet.create({
   gradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 350 },
   content: { flex: 1, paddingHorizontal: 24, justifyContent: 'center' },
   logoSection: { alignItems: 'center', marginBottom: 32 },
-  logoCircle: {
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+  logoImage: {
+    width: 88, height: 88, borderRadius: 22,
+    marginBottom: 16,
   },
   appName: { fontSize: 32, fontFamily: 'Nunito_800ExtraBold', color: '#fff' },
   tagline: { fontSize: 15, fontFamily: 'Nunito_400Regular', color: 'rgba(255,255,255,0.8)', marginTop: 4 },
