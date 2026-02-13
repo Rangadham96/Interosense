@@ -52,15 +52,20 @@
       .nav-inner {
         max-width: 1200px; margin: 0 auto; padding: 0 24px;
         display: flex; align-items: center; justify-content: space-between;
+        overflow: hidden;
       }
       .nav-logo {
         font-size: 22px; font-weight: 800; color: var(--white);
         text-decoration: none; letter-spacing: -0.5px; transition: color 0.3s;
         flex-shrink: 0;
-        margin-right: 32px;
+        margin-right: 24px;
       }
       .nav.scrolled .nav-logo { color: var(--primary-dark); }
-      .nav-links { display: flex; gap: 28px; list-style: none; align-items: center; }
+      .nav-links {
+        display: flex; gap: 20px; list-style: none; align-items: center;
+        flex-shrink: 1; flex-wrap: nowrap; overflow: hidden;
+      }
+      .nav-links li { flex-shrink: 0; }
       .nav-links a {
         color: rgba(255,255,255,0.85); text-decoration: none;
         font-weight: 600; font-size: 15px; transition: color 0.3s;
@@ -70,7 +75,7 @@
       .nav-links a:hover { color: var(--white); }
       .nav.scrolled .nav-links a:hover { color: var(--primary); }
       .nav-cta {
-        display: inline-block; padding: 8px 20px; background: rgba(255,255,255,0.15);
+        display: inline-block; padding: 8px 16px; background: rgba(255,255,255,0.15);
         border: 1px solid rgba(255,255,255,0.3); border-radius: 50px;
         color: var(--white) !important; font-weight: 700; font-size: 14px;
         text-decoration: none; transition: all 0.3s;
@@ -609,9 +614,16 @@
         .final-cta h2 { font-size: 44px; }
       }
       @media (max-width: 639px) {
-        .nav-links { gap: 14px; }
-        .nav-links a { font-size: 13px; }
-        .nav-logo { margin-right: 16px; }
+        .nav-inner { padding: 0 16px; }
+        .nav-logo { font-size: 19px; margin-right: 12px; }
+        .nav-links { gap: 12px; }
+        .nav-links a { font-size: 12px; }
+        .nav-cta { padding: 6px 14px; font-size: 12px; }
+      }
+      @media (max-width: 420px) {
+        .nav-links .nav-text-link { display: none; }
+        .nav-links { gap: 0; }
+        .nav-cta { padding: 8px 18px; font-size: 13px; }
       }
     </style>
   </head>
@@ -621,9 +633,9 @@
       <div class="nav-inner">
         <a href="#" class="nav-logo">Interosense</a>
         <ul class="nav-links">
-          <li><a href="#features">Features</a></li>
-          <li><a href="#science">Science</a></li>
-          <li><a href="#conditions">About</a></li>
+          <li class="nav-text-link"><a href="#features">Features</a></li>
+          <li class="nav-text-link"><a href="#science">Science</a></li>
+          <li class="nav-text-link"><a href="#conditions">About</a></li>
           <li><a href="/app" class="nav-cta">Try the App</a></li>
         </ul>
       </div>
