@@ -3,9 +3,16 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE = Platform.OS === 'web'
-  ? (process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : 'http://localhost:5000')
-  : (process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : 'http://localhost:5000');
+function getApiBase() {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    if (origin.includes('replit.app') || origin.includes('replit.dev') || window.location.port === '5000') {
+      return '';
+    }
+  }
+  return process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : 'http://localhost:5000';
+}
+const API_BASE = getApiBase();
 
 interface AuthUser {
   id: string;

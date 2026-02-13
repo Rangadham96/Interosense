@@ -1,0 +1,1936 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>InteroSense - Investor Pitch Deck</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --primary: #6B5B95;
+        --primary-dark: #3D2F6B;
+        --primary-light: #A89CC8;
+        --secondary: #88B3B5;
+        --accent: #E8B4B8;
+        --bg: #F7F9FB;
+        --text: #2D2D3A;
+        --text-light: #6B6B7B;
+        --white: #FFFFFF;
+        --shadow-sm: 0 2px 8px rgba(107,91,149,0.08);
+        --shadow-md: 0 8px 30px rgba(107,91,149,0.12);
+        --shadow-lg: 0 20px 60px rgba(107,91,149,0.15);
+        --radius: 16px;
+        --radius-sm: 10px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        scroll-snap-type: y mandatory;
+      }
+
+      body {
+        font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.7;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .slide {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 40px;
+        position: relative;
+        scroll-snap-align: start;
+        overflow: hidden;
+      }
+
+      .slide-inner {
+        max-width: 960px;
+        width: 100%;
+        position: relative;
+        z-index: 2;
+      }
+
+      .slide-number {
+        position: absolute;
+        bottom: 24px;
+        right: 40px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-light);
+        opacity: 0.5;
+      }
+
+      .slide-dark .slide-number {
+        color: rgba(255,255,255,0.3);
+      }
+
+      /* NAV DOTS */
+      .nav-dots {
+        position: fixed;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .nav-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--primary-light);
+        opacity: 0.4;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        padding: 0;
+      }
+
+      .nav-dot:hover {
+        opacity: 0.7;
+        transform: scale(1.3);
+      }
+
+      .nav-dot.active {
+        opacity: 1;
+        background: var(--primary);
+        transform: scale(1.3);
+      }
+
+      /* DOWNLOAD BUTTON */
+      .download-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 10px 20px;
+        background: var(--primary);
+        color: var(--white);
+        border: none;
+        border-radius: 50px;
+        font-family: 'Nunito', sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-md);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .download-btn:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .download-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      /* SLIDE 1 - TITLE */
+      .slide-title {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, #2A1F4E 100%);
+        text-align: center;
+        color: var(--white);
+      }
+
+      .slide-title .watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-30deg);
+        font-size: 120px;
+        font-weight: 900;
+        color: rgba(255,255,255,0.03);
+        letter-spacing: 20px;
+        text-transform: uppercase;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .logo-text {
+        font-size: 64px;
+        font-weight: 900;
+        letter-spacing: -2px;
+        margin-bottom: 24px;
+        line-height: 1;
+      }
+
+      .tagline {
+        font-size: 24px;
+        font-weight: 400;
+        color: rgba(255,255,255,0.85);
+        max-width: 600px;
+        margin: 0 auto 20px;
+        line-height: 1.4;
+      }
+
+      .deck-subtitle {
+        font-size: 15px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.5);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      .title-orb {
+        position: absolute;
+        border-radius: 50%;
+        opacity: 0.1;
+        pointer-events: none;
+      }
+
+      .title-orb-1 {
+        width: 350px;
+        height: 350px;
+        background: var(--accent);
+        top: -80px;
+        right: -60px;
+      }
+
+      .title-orb-2 {
+        width: 250px;
+        height: 250px;
+        background: var(--secondary);
+        bottom: -50px;
+        left: -40px;
+      }
+
+      /* DARK SLIDES */
+      .slide-dark {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #2A1F4E 100%);
+        color: var(--white);
+      }
+
+      /* LIGHT SLIDES */
+      .slide-light {
+        background: var(--bg);
+      }
+
+      .slide-white {
+        background: var(--white);
+      }
+
+      /* TYPOGRAPHY */
+      .slide-heading {
+        font-size: 36px;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 40px;
+        letter-spacing: -0.5px;
+      }
+
+      .slide-light .slide-heading,
+      .slide-white .slide-heading {
+        color: var(--text);
+      }
+
+      .slide-dark .slide-heading {
+        color: var(--white);
+      }
+
+      .slide-heading .highlight {
+        color: var(--secondary);
+      }
+
+      .slide-light .slide-heading .highlight,
+      .slide-white .slide-heading .highlight {
+        color: var(--primary);
+      }
+
+      .slide-label {
+        display: inline-block;
+        padding: 6px 16px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        border-radius: 50px;
+        margin-bottom: 20px;
+      }
+
+      .slide-light .slide-label,
+      .slide-white .slide-label {
+        background: rgba(107,91,149,0.08);
+        color: var(--primary);
+      }
+
+      .slide-dark .slide-label {
+        background: rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.8);
+      }
+
+      /* CONTENT ELEMENTS */
+      .stat-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+
+      .stat-card {
+        padding: 24px;
+        border-radius: var(--radius);
+        text-align: center;
+      }
+
+      .slide-light .stat-card,
+      .slide-white .stat-card {
+        background: var(--white);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .slide-dark .stat-card {
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.1);
+      }
+
+      .stat-value {
+        font-size: 32px;
+        font-weight: 900;
+        line-height: 1.2;
+        margin-bottom: 6px;
+      }
+
+      .slide-light .stat-value,
+      .slide-white .stat-value {
+        color: var(--primary);
+      }
+
+      .slide-dark .stat-value {
+        color: var(--secondary);
+      }
+
+      .stat-desc {
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .slide-light .stat-desc,
+      .slide-white .stat-desc {
+        color: var(--text-light);
+      }
+
+      .slide-dark .stat-desc {
+        color: rgba(255,255,255,0.6);
+      }
+
+      .bullet-list {
+        list-style: none;
+        padding: 0;
+      }
+
+      .bullet-list li {
+        padding: 10px 0;
+        padding-left: 24px;
+        position: relative;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .bullet-list li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 18px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .slide-light .bullet-list li::before,
+      .slide-white .bullet-list li::before {
+        background: var(--primary);
+      }
+
+      .slide-dark .bullet-list li::before {
+        background: var(--secondary);
+      }
+
+      .slide-light .bullet-list li,
+      .slide-white .bullet-list li {
+        color: var(--text);
+        border-bottom: 1px solid rgba(107,91,149,0.06);
+      }
+
+      .slide-dark .bullet-list li {
+        color: rgba(255,255,255,0.85);
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+      }
+
+      .bullet-list li:last-child {
+        border-bottom: none;
+      }
+
+      .insight-box {
+        padding: 20px 28px;
+        border-radius: var(--radius);
+        margin-top: 24px;
+        font-size: 17px;
+        font-weight: 700;
+        font-style: italic;
+      }
+
+      .slide-light .insight-box,
+      .slide-white .insight-box {
+        background: rgba(107,91,149,0.06);
+        color: var(--primary-dark);
+        border-left: 4px solid var(--primary);
+      }
+
+      .slide-dark .insight-box {
+        background: rgba(255,255,255,0.06);
+        color: var(--accent);
+        border-left: 4px solid var(--accent);
+      }
+
+      /* TWO COLUMN LAYOUT */
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        align-items: start;
+      }
+
+      /* COMPARISON TABLE */
+      .comp-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
+
+      .comp-table th {
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .slide-light .comp-table th,
+      .slide-white .comp-table th {
+        background: rgba(107,91,149,0.06);
+        color: var(--text-light);
+        border-bottom: 2px solid rgba(107,91,149,0.1);
+      }
+
+      .comp-table td {
+        padding: 12px 16px;
+        vertical-align: top;
+      }
+
+      .slide-light .comp-table td,
+      .slide-white .comp-table td {
+        border-bottom: 1px solid rgba(107,91,149,0.06);
+        color: var(--text);
+      }
+
+      .comp-table tr.highlight-row td {
+        font-weight: 700;
+      }
+
+      .slide-light .comp-table tr.highlight-row td,
+      .slide-white .comp-table tr.highlight-row td {
+        background: rgba(107,91,149,0.04);
+        color: var(--primary-dark);
+        border-bottom: 2px solid var(--primary);
+      }
+
+      .check-mark {
+        color: var(--secondary);
+        font-weight: 700;
+      }
+
+      .x-mark {
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      /* FEATURE GRID */
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+
+      .feature-item {
+        padding: 20px;
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .slide-light .feature-item,
+      .slide-white .feature-item {
+        background: var(--white);
+        color: var(--text);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .slide-dark .feature-item {
+        background: rgba(255,255,255,0.08);
+        color: rgba(255,255,255,0.9);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .feature-item .feature-icon {
+        display: inline-block;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .feature-icon.purple { background: rgba(107,91,149,0.1); }
+      .feature-icon.teal { background: rgba(136,179,181,0.15); }
+      .feature-icon.rose { background: rgba(232,180,184,0.2); }
+
+      .feature-icon svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .slide-light .feature-icon svg,
+      .slide-white .feature-icon svg {
+        color: var(--primary);
+      }
+
+      .slide-dark .feature-icon svg {
+        color: var(--white);
+      }
+
+      /* TIER CARDS */
+      .tier-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 28px;
+      }
+
+      .tier-card {
+        padding: 28px 24px;
+        border-radius: var(--radius);
+        text-align: center;
+      }
+
+      .slide-light .tier-card,
+      .slide-white .tier-card {
+        background: var(--white);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid rgba(107,91,149,0.08);
+      }
+
+      .tier-card.featured {
+        border: 2px solid var(--primary);
+        position: relative;
+      }
+
+      .tier-card.featured::before {
+        content: 'CORE';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 2px 12px;
+        background: var(--primary);
+        color: var(--white);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        border-radius: 50px;
+      }
+
+      .tier-name {
+        font-size: 18px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        color: var(--text);
+      }
+
+      .tier-price {
+        font-size: 24px;
+        font-weight: 900;
+        color: var(--primary);
+        margin-bottom: 12px;
+      }
+
+      .tier-features {
+        list-style: none;
+        padding: 0;
+        font-size: 13px;
+        color: var(--text-light);
+      }
+
+      .tier-features li {
+        padding: 4px 0;
+      }
+
+      /* UNIT ECONOMICS */
+      .unit-econ {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 24px;
+      }
+
+      .econ-item {
+        text-align: center;
+        padding: 16px;
+        border-radius: var(--radius-sm);
+      }
+
+      .slide-light .econ-item,
+      .slide-white .econ-item {
+        background: rgba(107,91,149,0.04);
+      }
+
+      .econ-value {
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--primary);
+      }
+
+      .econ-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-light);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* TIMELINE */
+      .timeline {
+        position: relative;
+        padding-left: 40px;
+      }
+
+      .timeline::before {
+        content: '';
+        position: absolute;
+        left: 14px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+      }
+
+      .slide-light .timeline::before,
+      .slide-white .timeline::before {
+        background: rgba(107,91,149,0.15);
+      }
+
+      .slide-dark .timeline::before {
+        background: rgba(255,255,255,0.15);
+      }
+
+      .timeline-item {
+        position: relative;
+        margin-bottom: 28px;
+      }
+
+      .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -32px;
+        top: 6px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 3px solid;
+      }
+
+      .slide-light .timeline-item::before,
+      .slide-white .timeline-item::before {
+        background: var(--white);
+        border-color: var(--primary);
+      }
+
+      .slide-dark .timeline-item::before {
+        background: var(--primary-dark);
+        border-color: var(--secondary);
+      }
+
+      .timeline-phase {
+        font-size: 14px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+      }
+
+      .slide-light .timeline-phase,
+      .slide-white .timeline-phase {
+        color: var(--primary);
+      }
+
+      .slide-dark .timeline-phase {
+        color: var(--secondary);
+      }
+
+      .timeline-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+
+      .timeline-desc {
+        font-size: 14px;
+      }
+
+      .slide-light .timeline-desc,
+      .slide-white .timeline-desc {
+        color: var(--text-light);
+      }
+
+      .slide-dark .timeline-desc {
+        color: rgba(255,255,255,0.6);
+      }
+
+      /* TRACTION ITEMS */
+      .traction-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+
+      .traction-item {
+        padding: 16px 20px;
+        border-radius: var(--radius-sm);
+        font-size: 15px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .slide-dark .traction-item {
+        background: rgba(255,255,255,0.06);
+        color: rgba(255,255,255,0.9);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .traction-check {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .traction-check svg {
+        width: 14px;
+        height: 14px;
+        color: var(--white);
+      }
+
+      /* PROJECTION TABLE */
+      .proj-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+      }
+
+      .proj-table th {
+        padding: 14px 16px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .slide-light .proj-table th,
+      .slide-white .proj-table th {
+        background: var(--primary);
+        color: var(--white);
+      }
+
+      .proj-table th:first-child {
+        border-radius: var(--radius-sm) 0 0 0;
+        text-align: left;
+      }
+
+      .proj-table th:last-child {
+        border-radius: 0 var(--radius-sm) 0 0;
+      }
+
+      .proj-table td {
+        padding: 14px 16px;
+        text-align: center;
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .proj-table td:first-child {
+        text-align: left;
+      }
+
+      .slide-light .proj-table td,
+      .slide-white .proj-table td {
+        border-bottom: 1px solid rgba(107,91,149,0.08);
+        color: var(--text);
+      }
+
+      .slide-light .proj-table tr:last-child td,
+      .slide-white .proj-table tr:last-child td {
+        background: rgba(107,91,149,0.04);
+        font-weight: 800;
+        color: var(--primary-dark);
+      }
+
+      /* FUND ALLOCATION */
+      .fund-bar {
+        display: flex;
+        height: 32px;
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+
+      .fund-segment {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--white);
+      }
+
+      .fund-segment.product { background: var(--primary); }
+      .fund-segment.acquisition { background: var(--secondary); }
+      .fund-segment.team { background: var(--accent); }
+      .fund-segment.operations { background: var(--primary-light); }
+
+      .fund-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+
+      .fund-item {
+        padding: 20px;
+        border-radius: var(--radius-sm);
+        border-left: 4px solid;
+      }
+
+      .slide-dark .fund-item {
+        background: rgba(255,255,255,0.06);
+      }
+
+      .fund-item.product { border-left-color: var(--primary); }
+      .fund-item.acquisition { border-left-color: var(--secondary); }
+      .fund-item.team { border-left-color: var(--accent); }
+      .fund-item.operations { border-left-color: var(--primary-light); }
+
+      .fund-pct {
+        font-size: 24px;
+        font-weight: 900;
+        margin-bottom: 4px;
+      }
+
+      .slide-dark .fund-pct {
+        color: var(--white);
+      }
+
+      .fund-name {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .slide-dark .fund-name {
+        color: rgba(255,255,255,0.9);
+      }
+
+      .fund-desc {
+        font-size: 12px;
+      }
+
+      .slide-dark .fund-desc {
+        color: rgba(255,255,255,0.5);
+      }
+
+      /* MILESTONE */
+      .milestone-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+
+      .milestone-item {
+        text-align: center;
+        padding: 20px;
+        border-radius: var(--radius-sm);
+      }
+
+      .slide-dark .milestone-item {
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.1);
+      }
+
+      .milestone-value {
+        font-size: 28px;
+        font-weight: 900;
+        margin-bottom: 4px;
+      }
+
+      .slide-dark .milestone-value {
+        color: var(--secondary);
+      }
+
+      .milestone-label {
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .slide-dark .milestone-label {
+        color: rgba(255,255,255,0.6);
+      }
+
+      /* TEAM SLIDE */
+      .team-card {
+        padding: 40px;
+        border-radius: var(--radius);
+        text-align: center;
+        margin-bottom: 32px;
+      }
+
+      .slide-light .team-card,
+      .slide-white .team-card {
+        background: var(--white);
+        box-shadow: var(--shadow-md);
+      }
+
+      .team-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+      }
+
+      .team-avatar svg {
+        width: 36px;
+        height: 36px;
+        color: var(--white);
+      }
+
+      .team-role {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+      }
+
+      .team-name {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 8px;
+      }
+
+      .team-desc {
+        font-size: 15px;
+        color: var(--text-light);
+        max-width: 500px;
+        margin: 0 auto;
+      }
+
+      .advisory-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+
+      .advisory-item {
+        padding: 20px;
+        border-radius: var(--radius-sm);
+        text-align: center;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .slide-light .advisory-item,
+      .slide-white .advisory-item {
+        background: rgba(107,91,149,0.04);
+        color: var(--text-light);
+        border: 1px dashed rgba(107,91,149,0.2);
+      }
+
+      .advisory-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--primary);
+        margin-bottom: 6px;
+      }
+
+      .contact-info {
+        text-align: center;
+        padding: 28px;
+        border-radius: var(--radius);
+      }
+
+      .slide-light .contact-info,
+      .slide-white .contact-info {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: var(--white);
+      }
+
+      .contact-info a {
+        color: var(--white);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      .contact-quote {
+        font-size: 17px;
+        font-style: italic;
+        font-weight: 600;
+        max-width: 600px;
+        margin: 0 auto 20px;
+        line-height: 1.5;
+      }
+
+      .contact-links {
+        display: flex;
+        justify-content: center;
+        gap: 32px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      /* SCIENCE CARDS */
+      .science-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .science-card {
+        padding: 24px;
+        border-radius: var(--radius-sm);
+      }
+
+      .slide-dark .science-card {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .science-card h4 {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .slide-dark .science-card h4 {
+        color: var(--secondary);
+      }
+
+      .science-card p {
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .slide-dark .science-card p {
+        color: rgba(255,255,255,0.6);
+      }
+
+      .citations {
+        font-size: 12px;
+        font-style: italic;
+        margin-top: 16px;
+      }
+
+      .slide-dark .citations {
+        color: rgba(255,255,255,0.35);
+      }
+
+      /* TAM SAM SOM */
+      .tam-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 32px;
+      }
+
+      .tam-circle {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        text-align: center;
+      }
+
+      .tam-circle.tam {
+        width: 160px;
+        height: 160px;
+        background: rgba(107,91,149,0.08);
+        border: 2px solid var(--primary-light);
+      }
+
+      .tam-circle.sam {
+        width: 130px;
+        height: 130px;
+        background: rgba(136,179,181,0.1);
+        border: 2px solid var(--secondary);
+      }
+
+      .tam-circle.som {
+        width: 100px;
+        height: 100px;
+        background: rgba(232,180,184,0.1);
+        border: 2px solid var(--accent);
+      }
+
+      .tam-value {
+        font-size: 20px;
+        font-weight: 900;
+        color: var(--primary-dark);
+      }
+
+      .tam-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-light);
+      }
+
+      .tam-sublabel {
+        font-size: 9px;
+        color: var(--text-light);
+        max-width: 80px;
+        text-align: center;
+      }
+
+      /* ARROW BETWEEN TAM CIRCLES */
+      .tam-arrow {
+        font-size: 20px;
+        color: var(--primary-light);
+        font-weight: 300;
+      }
+
+      /* KEY METRICS ROW */
+      .metrics-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 24px;
+      }
+
+      .metric-item {
+        text-align: center;
+        padding: 16px;
+        border-radius: var(--radius-sm);
+      }
+
+      .slide-light .metric-item,
+      .slide-white .metric-item {
+        background: var(--white);
+        box-shadow: var(--shadow-sm);
+      }
+
+      .metric-value {
+        font-size: 22px;
+        font-weight: 900;
+        color: var(--primary);
+      }
+
+      .metric-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-light);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      /* RESPONSIVE */
+      @media (max-width: 768px) {
+        .slide {
+          padding: 40px 20px;
+        }
+
+        .logo-text {
+          font-size: 42px;
+        }
+
+        .tagline {
+          font-size: 18px;
+        }
+
+        .slide-heading {
+          font-size: 26px;
+          margin-bottom: 28px;
+        }
+
+        .stat-row,
+        .tier-row,
+        .unit-econ,
+        .milestone-row,
+        .metrics-row {
+          grid-template-columns: 1fr;
+        }
+
+        .two-col,
+        .feature-grid,
+        .science-grid,
+        .fund-grid,
+        .traction-grid,
+        .advisory-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .comp-table {
+          font-size: 12px;
+        }
+
+        .comp-table th,
+        .comp-table td {
+          padding: 8px 10px;
+        }
+
+        .tam-row {
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .tam-circle.tam,
+        .tam-circle.sam,
+        .tam-circle.som {
+          width: 120px;
+          height: 120px;
+        }
+
+        .tam-arrow {
+          transform: rotate(90deg);
+        }
+
+        .nav-dots {
+          right: 8px;
+          gap: 6px;
+        }
+
+        .nav-dot {
+          width: 7px;
+          height: 7px;
+        }
+
+        .download-btn span {
+          display: none;
+        }
+
+        .download-btn {
+          padding: 10px;
+        }
+
+        .contact-links {
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .watermark {
+          font-size: 60px !important;
+        }
+
+        .stat-value {
+          font-size: 24px;
+        }
+
+        .fund-bar {
+          height: 24px;
+        }
+
+        .fund-segment {
+          font-size: 9px;
+        }
+      }
+
+      /* PRINT STYLES */
+      @media print {
+        html {
+          scroll-snap-type: none;
+        }
+
+        body {
+          background: white;
+        }
+
+        .nav-dots,
+        .download-btn {
+          display: none !important;
+        }
+
+        .slide {
+          min-height: 100vh;
+          page-break-after: always;
+          page-break-inside: avoid;
+          scroll-snap-align: none;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .slide:last-child {
+          page-break-after: auto;
+        }
+
+        .slide-dark {
+          background: linear-gradient(135deg, var(--primary-dark) 0%, #2A1F4E 100%) !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .slide-title {
+          background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, #2A1F4E 100%) !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .stat-card,
+        .feature-item,
+        .traction-item,
+        .science-card,
+        .fund-item,
+        .milestone-item,
+        .tier-card {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .fund-segment,
+        .traction-check,
+        .team-avatar,
+        .contact-info {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .proj-table th {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .slide-number {
+          display: block;
+        }
+      }
+
+      @page {
+        size: landscape;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+
+    <button class="download-btn" onclick="window.print()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>Download PDF</span>
+    </button>
+
+    <nav class="nav-dots" id="navDots"></nav>
+
+    <!-- SLIDE 1: TITLE -->
+    <section class="slide slide-title" data-slide="0">
+      <div class="title-orb title-orb-1"></div>
+      <div class="title-orb title-orb-2"></div>
+      <div class="watermark">Confidential</div>
+      <div class="slide-inner">
+        <div class="logo-text">InteroSense</div>
+        <div class="tagline">The Science of Feeling Better, From the Inside Out</div>
+        <div class="deck-subtitle">Investor Deck &mdash; February 2026</div>
+      </div>
+      <div class="slide-number">1 / 13</div>
+    </section>
+
+    <!-- SLIDE 2: THE PROBLEM -->
+    <section class="slide slide-light" data-slide="1">
+      <div class="slide-inner">
+        <div class="slide-label">The Problem</div>
+        <h2 class="slide-heading">The Mental Health Crisis Is a <span class="highlight">Body Awareness</span> Crisis</h2>
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="stat-value">280M+</div>
+            <div class="stat-desc">People suffer from depression globally (WHO)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">56%</div>
+            <div class="stat-desc">Of US adults with mental illness receive no treatment (SAMHSA)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">197M</div>
+            <div class="stat-desc">Indians need mental health support</div>
+          </div>
+        </div>
+        <ul class="bullet-list">
+          <li>Current solutions (talk therapy, meditation apps) miss the body-brain connection</li>
+        </ul>
+        <div class="insight-box">"People can't manage what they can't feel."</div>
+      </div>
+      <div class="slide-number">2 / 13</div>
+    </section>
+
+    <!-- SLIDE 3: THE SOLUTION -->
+    <section class="slide slide-dark" data-slide="2">
+      <div class="slide-inner">
+        <div class="slide-label">The Solution</div>
+        <h2 class="slide-heading">InteroSense: Teaching Your Body to <span class="highlight">Heal Your Mind</span></h2>
+        <ul class="bullet-list">
+          <li>Interoception = sensing internal body signals (heartbeat, breath, gut, tension)</li>
+          <li>First consumer app dedicated to interoceptive awareness training</li>
+          <li>Guided exercises based on MABT (Mindful Awareness in Body-oriented Therapy)</li>
+          <li>AI-powered personalization engine adapting to each user's conditions, history, and goals</li>
+          <li>Clinical assessment tracking (GAD-7, PHQ-9, PCL-5)</li>
+        </ul>
+      </div>
+      <div class="slide-number">3 / 13</div>
+    </section>
+
+    <!-- SLIDE 4: MARKET OPPORTUNITY -->
+    <section class="slide slide-light" data-slide="3">
+      <div class="slide-inner">
+        <div class="slide-label">Market Opportunity</div>
+        <h2 class="slide-heading">A <span class="highlight">$7.5B</span> Market Growing to <span class="highlight">$35B+</span></h2>
+        <ul class="bullet-list">
+          <li>Mental wellness app market: $7.5B (2025) growing at 17.5% CAGR to $35B by 2034</li>
+          <li>Meditation app segment: $7B by 2028</li>
+          <li>India mental health market: $3B opportunity, 197M underserved</li>
+          <li>Interoception-specific apps: virtually no consumer competition (blue ocean)</li>
+        </ul>
+        <div class="tam-row">
+          <div class="tam-circle tam">
+            <div class="tam-value">$35B</div>
+            <div class="tam-label">TAM</div>
+            <div class="tam-sublabel">Global mental wellness</div>
+          </div>
+          <div class="tam-arrow">&rarr;</div>
+          <div class="tam-circle sam">
+            <div class="tam-value">$7.5B</div>
+            <div class="tam-label">SAM</div>
+            <div class="tam-sublabel">App-based</div>
+          </div>
+          <div class="tam-arrow">&rarr;</div>
+          <div class="tam-circle som">
+            <div class="tam-value">$50M</div>
+            <div class="tam-label">SOM</div>
+            <div class="tam-sublabel">Interoception niche, Year 5</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">4 / 13</div>
+    </section>
+
+    <!-- SLIDE 5: COMPETITIVE LANDSCAPE -->
+    <section class="slide slide-white" data-slide="4">
+      <div class="slide-inner">
+        <div class="slide-label">Competitive Landscape</div>
+        <h2 class="slide-heading">We Own a Category <span class="highlight">Nobody Else</span> Is Building</h2>
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Revenue/Funding</th>
+              <th>Focus</th>
+              <th>Body Awareness</th>
+              <th>Interoception</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Calm</td>
+              <td>$596M rev (2024)</td>
+              <td>Meditation, sleep stories</td>
+              <td class="x-mark">No</td>
+              <td class="x-mark">No</td>
+            </tr>
+            <tr>
+              <td>Headspace</td>
+              <td>$48M rev</td>
+              <td>Structured meditation</td>
+              <td class="x-mark">No</td>
+              <td class="x-mark">No</td>
+            </tr>
+            <tr>
+              <td>Wysa</td>
+              <td>$30M funded</td>
+              <td>AI chatbot therapy</td>
+              <td class="x-mark">No</td>
+              <td class="x-mark">No</td>
+            </tr>
+            <tr>
+              <td>NEUROFIT</td>
+              <td>Small</td>
+              <td>Somatic exercises</td>
+              <td class="check-mark">Partial</td>
+              <td class="x-mark">No</td>
+            </tr>
+            <tr class="highlight-row">
+              <td>InteroSense</td>
+              <td>Pre-seed</td>
+              <td>Full interoceptive training</td>
+              <td class="check-mark">Yes</td>
+              <td class="check-mark">Yes</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="insight-box">"We don't just calm the mind -- we reconnect the body."</div>
+      </div>
+      <div class="slide-number">5 / 13</div>
+    </section>
+
+    <!-- SLIDE 6: PRODUCT -->
+    <section class="slide slide-dark" data-slide="5">
+      <div class="slide-inner">
+        <div class="slide-label">Product</div>
+        <h2 class="slide-heading">A Complete <span class="highlight">Interoceptive Wellness</span> Platform</h2>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="feature-icon purple">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            </div>
+            25+ guided exercises across 8 clinical categories
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon teal">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            8-step daily check-in (awareness, energy, sleep, stress, mood, body mapping)
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon rose">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            Clinical assessments (GAD-7, PHQ-9, PCL-5) with severity scoring
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon purple">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            7-condition programs (anxiety, depression, PTSD, chronic pain, IBS, ADHD, autism)
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon teal">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2z"/><path d="M12 8v4l3 3"/></svg>
+            </div>
+            AI personalization engine analyzing 9+ factors
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon rose">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+            Interactive body map with historical heatmap
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon purple">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            30+ achievement badges, streak tracking
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon teal">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            </div>
+            Crisis toolkit with guided grounding exercises
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">6 / 13</div>
+    </section>
+
+    <!-- SLIDE 7: THE SCIENCE -->
+    <section class="slide slide-dark" data-slide="6">
+      <div class="slide-inner">
+        <div class="slide-label">The Science</div>
+        <h2 class="slide-heading">Built on <span class="highlight">Peer-Reviewed Research</span></h2>
+        <div class="science-grid">
+          <div class="science-card">
+            <h4>Lancet eClinicalMedicine (2024)</h4>
+            <p>3 out of 4 RCTs show interoceptive interventions improve mental health outcomes</p>
+          </div>
+          <div class="science-card">
+            <h4>NIH Grant (2025)</h4>
+            <p>$14.2M grant to map interoception as the "hidden sixth sense"</p>
+          </div>
+          <div class="science-card">
+            <h4>MABT Methodology</h4>
+            <p>Clinically validated for anxiety, depression, and PTSD treatment</p>
+          </div>
+          <div class="science-card">
+            <h4>MAIA Assessment Scale</h4>
+            <p>Validated in 30+ languages for measuring interoceptive awareness</p>
+          </div>
+        </div>
+        <ul class="bullet-list">
+          <li>Mechanism: improved interoception leads to better emotion regulation leads to symptom reduction</li>
+        </ul>
+        <div class="citations">Sources: Price & Hooven (2018), Heim et al. (2023), Lancet eClinicalMedicine (2024)</div>
+      </div>
+      <div class="slide-number">7 / 13</div>
+    </section>
+
+    <!-- SLIDE 8: BUSINESS MODEL -->
+    <section class="slide slide-light" data-slide="7">
+      <div class="slide-inner">
+        <div class="slide-label">Business Model</div>
+        <h2 class="slide-heading">Freemium With <span class="highlight">Premium Subscriptions</span></h2>
+        <div class="tier-row">
+          <div class="tier-card">
+            <div class="tier-name">Free</div>
+            <div class="tier-price">$0</div>
+            <ul class="tier-features">
+              <li>5 basic exercises</li>
+              <li>Daily check-in</li>
+              <li>1 assessment</li>
+            </ul>
+          </div>
+          <div class="tier-card featured">
+            <div class="tier-name">Premium</div>
+            <div class="tier-price">$9.99/mo</div>
+            <ul class="tier-features">
+              <li>All exercises</li>
+              <li>AI personalization</li>
+              <li>Unlimited assessments</li>
+              <li>Condition programs</li>
+              <li>$69.99/year option</li>
+            </ul>
+          </div>
+          <div class="tier-card">
+            <div class="tier-name">Enterprise</div>
+            <div class="tier-price">Custom</div>
+            <ul class="tier-features">
+              <li>Corporate wellness</li>
+              <li>Custom branding</li>
+              <li>Admin dashboard</li>
+              <li>Usage analytics</li>
+            </ul>
+          </div>
+        </div>
+        <div class="unit-econ">
+          <div class="econ-item">
+            <div class="econ-value">$120</div>
+            <div class="econ-label">Target LTV</div>
+          </div>
+          <div class="econ-item">
+            <div class="econ-value">$15</div>
+            <div class="econ-label">Target CAC</div>
+          </div>
+          <div class="econ-item">
+            <div class="econ-value">8:1</div>
+            <div class="econ-label">LTV:CAC Ratio</div>
+          </div>
+        </div>
+        <p style="text-align:center;font-size:13px;color:var(--text-light);margin-top:16px;">Benchmark: Calm converts 7% of users, charges $39.99-49.99/year</p>
+      </div>
+      <div class="slide-number">8 / 13</div>
+    </section>
+
+    <!-- SLIDE 9: GO-TO-MARKET STRATEGY -->
+    <section class="slide slide-white" data-slide="8">
+      <div class="slide-inner">
+        <div class="slide-label">Go-to-Market</div>
+        <h2 class="slide-heading">West First, <span class="highlight">Then India</span></h2>
+        <div class="two-col">
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-phase">Phase 1 (2026)</div>
+              <div class="timeline-title">US, UK, Australia</div>
+              <div class="timeline-desc">English-speaking markets with high willingness to pay</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-phase">Phase 2 (2027)</div>
+              <div class="timeline-title">EU + India Launch</div>
+              <div class="timeline-desc">Hindi and regional language support for India expansion</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-phase">Phase 3 (2028+)</div>
+              <div class="timeline-title">Southeast Asia + B2B</div>
+              <div class="timeline-desc">Regional partnerships and corporate wellness programs</div>
+            </div>
+          </div>
+          <div>
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;color:var(--text);">Growth Channels</h3>
+            <ul class="bullet-list">
+              <li>Content marketing (body awareness education)</li>
+              <li>Therapist and OT referral programs</li>
+              <li>Corporate wellness partnerships</li>
+              <li>Social media (TikTok/Instagram body awareness content)</li>
+            </ul>
+            <div class="insight-box" style="margin-top:20px;">India advantage: 197M underserved, founder operates from India (cost efficiency)</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">9 / 13</div>
+    </section>
+
+    <!-- SLIDE 10: TRACTION & CURRENT STATE -->
+    <section class="slide slide-dark" data-slide="9">
+      <div class="slide-inner">
+        <div class="slide-label">Traction</div>
+        <h2 class="slide-heading">MVP Built, <span class="highlight">Ready to Scale</span></h2>
+        <div class="traction-grid">
+          <div class="traction-item">
+            <div class="traction-check">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            Fully functional app (web + mobile via Expo)
+          </div>
+          <div class="traction-item">
+            <div class="traction-check">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            25+ exercises, 7 condition programs
+          </div>
+          <div class="traction-item">
+            <div class="traction-check">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            3 clinical assessments built in
+          </div>
+          <div class="traction-item">
+            <div class="traction-check">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            AI personalization engine operational
+          </div>
+          <div class="traction-item">
+            <div class="traction-check">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            User authentication and account system
+          </div>
+          <div class="traction-item">
+            <div class="traction-check">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            Premium subscription infrastructure
+          </div>
+        </div>
+        <div class="insight-box" style="margin-top:28px;">Currently in beta testing phase. Looking for seed funding to scale user acquisition and expand content library.</div>
+      </div>
+      <div class="slide-number">10 / 13</div>
+    </section>
+
+    <!-- SLIDE 11: FINANCIAL PROJECTIONS -->
+    <section class="slide slide-light" data-slide="10">
+      <div class="slide-inner">
+        <div class="slide-label">Financials</div>
+        <h2 class="slide-heading">Path to <span class="highlight">Profitability</span></h2>
+        <table class="proj-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Year 1</th>
+              <th>Year 2</th>
+              <th>Year 3</th>
+              <th>Year 5</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Users</td>
+              <td>10K</td>
+              <td>100K</td>
+              <td>500K</td>
+              <td>2M</td>
+            </tr>
+            <tr>
+              <td>ARR</td>
+              <td>$50K</td>
+              <td>$500K</td>
+              <td>$3M</td>
+              <td>$15M</td>
+            </tr>
+            <tr>
+              <td>Focus</td>
+              <td>Product-market fit</td>
+              <td>India launch</td>
+              <td>Break-even</td>
+              <td>Global scale</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="metrics-row">
+          <div class="metric-item">
+            <div class="metric-value">7%</div>
+            <div class="metric-label">Free-to-Paid Conversion</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value">65%</div>
+            <div class="metric-label">Annual Retention</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-value">$70</div>
+            <div class="metric-label">ARPU</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">11 / 13</div>
+    </section>
+
+    <!-- SLIDE 12: THE ASK -->
+    <section class="slide slide-dark" data-slide="11">
+      <div class="slide-inner">
+        <div class="slide-label">The Ask</div>
+        <h2 class="slide-heading">Raising <span class="highlight">$500K</span> Seed Round</h2>
+        <div class="fund-bar">
+          <div class="fund-segment product" style="width:40%;">40%</div>
+          <div class="fund-segment acquisition" style="width:25%;">25%</div>
+          <div class="fund-segment team" style="width:20%;">20%</div>
+          <div class="fund-segment operations" style="width:15%;">15%</div>
+        </div>
+        <div class="fund-grid">
+          <div class="fund-item product">
+            <div class="fund-pct">40%</div>
+            <div class="fund-name">Product Development</div>
+            <div class="fund-desc">Content creation, AI improvements, wearable integration</div>
+          </div>
+          <div class="fund-item acquisition">
+            <div class="fund-pct">25%</div>
+            <div class="fund-name">User Acquisition</div>
+            <div class="fund-desc">Digital marketing, influencer partnerships</div>
+          </div>
+          <div class="fund-item team">
+            <div class="fund-pct">20%</div>
+            <div class="fund-name">Team</div>
+            <div class="fund-desc">Clinical advisor, content creator, growth marketer</div>
+          </div>
+          <div class="fund-item operations">
+            <div class="fund-pct">15%</div>
+            <div class="fund-name">Operations</div>
+            <div class="fund-desc">Infrastructure, compliance, legal</div>
+          </div>
+        </div>
+        <div class="milestone-row">
+          <div class="milestone-item">
+            <div class="milestone-value">50K</div>
+            <div class="milestone-label">Users</div>
+          </div>
+          <div class="milestone-item">
+            <div class="milestone-value">$250K</div>
+            <div class="milestone-label">ARR Target</div>
+          </div>
+          <div class="milestone-item">
+            <div class="milestone-value">18mo</div>
+            <div class="milestone-label">Series A Readiness</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">12 / 13</div>
+    </section>
+
+    <!-- SLIDE 13: TEAM & CONTACT -->
+    <section class="slide slide-light" data-slide="12">
+      <div class="slide-inner">
+        <div class="slide-label">Team & Contact</div>
+        <h2 class="slide-heading">The Team Behind <span class="highlight">InteroSense</span></h2>
+        <div class="team-card">
+          <div class="team-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="team-role">Founder</div>
+          <div class="team-name">[Founder Name]</div>
+          <div class="team-desc">Operations & Client Management background, passionate about mental wellness accessibility</div>
+        </div>
+        <div class="advisory-grid">
+          <div class="advisory-item">
+            <div class="advisory-label">Seeking</div>
+            Clinical Psychologist
+          </div>
+          <div class="advisory-item">
+            <div class="advisory-label">Seeking</div>
+            Neuroscience Researcher
+          </div>
+          <div class="advisory-item">
+            <div class="advisory-label">Seeking</div>
+            Growth Marketing Expert
+          </div>
+        </div>
+        <div class="contact-info">
+          <div class="contact-quote">"We're looking for mentors and advisors who believe the future of mental health starts in the body."</div>
+          <div class="contact-links">
+            <span>[contact@placeholder.com]</span>
+            <a href="BASE_URL_PLACEHOLDER">BASE_URL_PLACEHOLDER</a>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">13 / 13</div>
+    </section>
+
+    <script>
+      (function() {
+        var slides = document.querySelectorAll('.slide');
+        var dotsContainer = document.getElementById('navDots');
+
+        slides.forEach(function(slide, i) {
+          var dot = document.createElement('button');
+          dot.className = 'nav-dot';
+          dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+          dot.addEventListener('click', function() {
+            slide.scrollIntoView({ behavior: 'smooth' });
+          });
+          dotsContainer.appendChild(dot);
+        });
+
+        var dots = dotsContainer.querySelectorAll('.nav-dot');
+
+        function updateActiveDot() {
+          var scrollTop = window.scrollY || document.documentElement.scrollTop;
+          var windowHeight = window.innerHeight;
+          var activeIndex = 0;
+
+          slides.forEach(function(slide, i) {
+            var rect = slide.getBoundingClientRect();
+            if (rect.top <= windowHeight * 0.5 && rect.bottom > windowHeight * 0.5) {
+              activeIndex = i;
+            }
+          });
+
+          dots.forEach(function(d, i) {
+            d.classList.toggle('active', i === activeIndex);
+          });
+        }
+
+        window.addEventListener('scroll', updateActiveDot, { passive: true });
+        updateActiveDot();
+      })();
+    </script>
+
+  </body>
+</html>
