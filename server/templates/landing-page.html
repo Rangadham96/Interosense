@@ -25,15 +25,8 @@
         --radius-sm: 10px;
       }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      html {
-        scroll-behavior: smooth;
-      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html { scroll-behavior: smooth; }
 
       body {
         font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -44,938 +37,660 @@
         -webkit-font-smoothing: antialiased;
       }
 
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 24px;
-      }
+      .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
       /* NAV */
       .nav {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-        padding: 16px 0;
-        transition: all 0.3s ease;
+        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+        padding: 16px 0; transition: all 0.3s ease;
       }
-
       .nav.scrolled {
-        background: rgba(255,255,255,0.85);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        box-shadow: 0 1px 20px rgba(107,91,149,0.08);
-        padding: 12px 0;
+        background: rgba(255,255,255,0.88);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 1px 20px rgba(107,91,149,0.08); padding: 10px 0;
       }
-
       .nav-inner {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 24px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+        max-width: 1200px; margin: 0 auto; padding: 0 24px;
+        display: flex; align-items: center; justify-content: space-between;
       }
-
       .nav-logo {
-        font-size: 22px;
-        font-weight: 800;
-        color: var(--white);
-        text-decoration: none;
-        letter-spacing: -0.5px;
-        transition: color 0.3s;
+        font-size: 22px; font-weight: 800; color: var(--white);
+        text-decoration: none; letter-spacing: -0.5px; transition: color 0.3s;
       }
-
-      .nav.scrolled .nav-logo {
-        color: var(--primary-dark);
-      }
-
-      .nav-links {
-        display: flex;
-        gap: 32px;
-        list-style: none;
-      }
-
+      .nav.scrolled .nav-logo { color: var(--primary-dark); }
+      .nav-links { display: flex; gap: 28px; list-style: none; align-items: center; }
       .nav-links a {
-        color: rgba(255,255,255,0.85);
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 15px;
-        transition: color 0.3s;
+        color: rgba(255,255,255,0.85); text-decoration: none;
+        font-weight: 600; font-size: 15px; transition: color 0.3s;
       }
-
-      .nav.scrolled .nav-links a {
-        color: var(--text-light);
+      .nav.scrolled .nav-links a { color: var(--text-light); }
+      .nav-links a:hover { color: var(--white); }
+      .nav.scrolled .nav-links a:hover { color: var(--primary); }
+      .nav-cta {
+        display: inline-block; padding: 8px 22px; background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.3); border-radius: 50px;
+        color: var(--white); font-weight: 700; font-size: 14px;
+        text-decoration: none; transition: all 0.3s;
       }
-
-      .nav-links a:hover {
-        color: var(--white);
+      .nav-cta:hover { background: rgba(255,255,255,0.25); }
+      .nav.scrolled .nav-cta {
+        background: var(--primary); border-color: var(--primary); color: var(--white);
       }
-
-      .nav.scrolled .nav-links a:hover {
-        color: var(--primary);
-      }
+      .nav.scrolled .nav-cta:hover { background: var(--primary-dark); }
 
       /* HERO */
       .hero {
-        position: relative;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 120px 24px 80px;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, #2A1F4E 100%);
-        background-size: 200% 200%;
-        animation: gradientShift 12s ease infinite;
-        overflow: hidden;
+        position: relative; min-height: 100vh; display: flex; align-items: center;
+        justify-content: center; text-align: center; padding: 120px 24px 80px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 40%, #2A1F4E 70%, #1a1235 100%);
+        background-size: 300% 300%; animation: heroGradient 16s ease infinite; overflow: hidden;
+      }
+      @keyframes heroGradient {
+        0%, 100% { background-position: 0% 50%; }
+        25% { background-position: 50% 0%; }
+        50% { background-position: 100% 50%; }
+        75% { background-position: 50% 100%; }
       }
 
-      @keyframes gradientShift {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
+      .hero-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+      .particle {
+        position: absolute; border-radius: 50%; opacity: 0;
+        animation: particleDrift linear infinite;
+      }
+      @keyframes particleDrift {
+        0% { opacity: 0; transform: translateY(100vh) translateX(0); }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { opacity: 0; transform: translateY(-20vh) translateX(var(--dx)); }
       }
 
       .hero-orb {
-        position: absolute;
-        border-radius: 50%;
-        opacity: 0.12;
-        pointer-events: none;
+        position: absolute; border-radius: 50%; pointer-events: none;
+        filter: blur(60px);
       }
-
       .hero-orb-1 {
-        width: 400px;
-        height: 400px;
-        background: var(--accent);
-        top: -100px;
-        right: -80px;
-        animation: float1 8s ease-in-out infinite;
+        width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(232,180,184,0.25), transparent 70%);
+        top: -150px; right: -100px; animation: orbFloat1 12s ease-in-out infinite;
       }
-
       .hero-orb-2 {
-        width: 250px;
-        height: 250px;
-        background: var(--secondary);
-        bottom: -60px;
-        left: -40px;
-        animation: float2 10s ease-in-out infinite;
+        width: 350px; height: 350px;
+        background: radial-gradient(circle, rgba(136,179,181,0.3), transparent 70%);
+        bottom: -80px; left: -60px; animation: orbFloat2 15s ease-in-out infinite;
       }
-
       .hero-orb-3 {
-        width: 150px;
-        height: 150px;
-        background: var(--primary-light);
-        top: 30%;
-        left: 10%;
-        animation: float3 7s ease-in-out infinite;
+        width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(168,156,200,0.35), transparent 70%);
+        top: 25%; left: 8%; animation: orbFloat3 10s ease-in-out infinite;
       }
-
       .hero-orb-4 {
-        width: 100px;
-        height: 100px;
-        background: var(--accent);
-        bottom: 25%;
-        right: 15%;
-        animation: float1 9s ease-in-out infinite reverse;
+        width: 280px; height: 280px;
+        background: radial-gradient(circle, rgba(232,180,184,0.2), transparent 70%);
+        bottom: 20%; right: 5%; animation: orbFloat1 14s ease-in-out infinite reverse;
       }
-
-      @keyframes float1 {
+      .hero-orb-5 {
+        width: 160px; height: 160px;
+        background: radial-gradient(circle, rgba(136,179,181,0.25), transparent 70%);
+        top: 60%; left: 60%; animation: orbFloat2 11s ease-in-out infinite;
+      }
+      .hero-orb-6 {
+        width: 120px; height: 120px;
+        background: radial-gradient(circle, rgba(107,91,149,0.3), transparent 70%);
+        top: 15%; right: 30%; animation: orbFloat3 13s ease-in-out infinite reverse;
+      }
+      @keyframes orbFloat1 {
         0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(30px, -40px) scale(1.05); }
-        66% { transform: translate(-20px, 20px) scale(0.95); }
+        33% { transform: translate(40px, -50px) scale(1.08); }
+        66% { transform: translate(-30px, 30px) scale(0.94); }
       }
-
-      @keyframes float2 {
+      @keyframes orbFloat2 {
         0%, 100% { transform: translate(0, 0) scale(1); }
-        50% { transform: translate(40px, -30px) scale(1.08); }
+        50% { transform: translate(50px, -40px) scale(1.1); }
       }
-
-      @keyframes float3 {
+      @keyframes orbFloat3 {
         0%, 100% { transform: translate(0, 0); }
-        50% { transform: translate(-25px, 35px); }
+        50% { transform: translate(-35px, 45px); }
       }
 
-      .hero-content {
-        position: relative;
-        z-index: 2;
-        max-width: 720px;
-      }
-
+      .hero-content { position: relative; z-index: 2; max-width: 760px; }
       .hero-badge {
-        display: inline-block;
-        padding: 8px 20px;
-        background: rgba(255,255,255,0.12);
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 50px;
-        color: rgba(255,255,255,0.9);
-        font-size: 13px;
-        font-weight: 600;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        margin-bottom: 28px;
+        display: inline-block; padding: 8px 24px;
+        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 50px; color: rgba(255,255,255,0.9);
+        font-size: 12px; font-weight: 700; letter-spacing: 2px;
+        text-transform: uppercase; margin-bottom: 28px;
+        animation: badgePulse 3s ease-in-out infinite;
+      }
+      @keyframes badgePulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(168,156,200,0); }
+        50% { box-shadow: 0 0 20px 4px rgba(168,156,200,0.3); }
       }
 
       .hero h1 {
-        font-size: 42px;
-        font-weight: 900;
-        color: var(--white);
-        line-height: 1.15;
-        margin-bottom: 20px;
-        letter-spacing: -1px;
+        font-size: 36px; font-weight: 900; color: var(--white);
+        line-height: 1.12; margin-bottom: 22px; letter-spacing: -1px;
+        background: linear-gradient(90deg, #fff 0%, rgba(168,156,200,0.8) 50%, #fff 100%);
+        background-size: 200% 100%; -webkit-background-clip: text;
+        background-clip: text; -webkit-text-fill-color: transparent;
+        animation: textShimmer 4s ease-in-out infinite;
+      }
+      @keyframes textShimmer {
+        0%, 100% { background-position: -200% 0; }
+        50% { background-position: 200% 0; }
       }
 
       .hero-subtitle {
-        font-size: 18px;
-        color: rgba(255,255,255,0.8);
-        max-width: 540px;
-        margin: 0 auto 36px;
-        line-height: 1.7;
-        font-weight: 400;
+        font-size: 17px; color: rgba(255,255,255,0.78);
+        max-width: 560px; margin: 0 auto 32px; line-height: 1.7; font-weight: 400;
       }
+
+      .heartbeat-wrapper { margin: 0 auto 36px; text-align: center; cursor: pointer; }
+      .heartbeat-ring {
+        width: 80px; height: 80px; margin: 0 auto 14px;
+        border: 3px solid rgba(232,180,184,0.5); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        animation: heartbeat 1.4s ease-in-out infinite;
+        transition: border-color 0.3s;
+      }
+      .heartbeat-ring-inner {
+        width: 50px; height: 50px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(232,180,184,0.4), rgba(232,180,184,0.1));
+        animation: heartbeat 1.4s ease-in-out infinite 0.1s;
+      }
+      .heartbeat-wrapper:hover .heartbeat-ring,
+      .heartbeat-wrapper.active .heartbeat-ring {
+        animation: heartbeatFast 0.6s ease-in-out infinite;
+        border-color: rgba(232,180,184,0.9);
+      }
+      .heartbeat-wrapper:hover .heartbeat-ring-inner,
+      .heartbeat-wrapper.active .heartbeat-ring-inner {
+        animation: heartbeatFast 0.6s ease-in-out infinite 0.05s;
+      }
+      @keyframes heartbeat {
+        0%, 100% { transform: scale(1); }
+        15% { transform: scale(1.12); }
+        30% { transform: scale(1); }
+        45% { transform: scale(1.08); }
+        60% { transform: scale(1); }
+      }
+      @keyframes heartbeatFast {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.18); }
+      }
+      .heartbeat-text {
+        color: rgba(255,255,255,0.65); font-size: 15px; font-weight: 500;
+        transition: all 0.4s ease;
+      }
+      .heartbeat-wrapper:hover .heartbeat-text,
+      .heartbeat-wrapper.active .heartbeat-text { color: rgba(232,180,184,0.9); }
 
       .hero-cta {
-        display: inline-block;
-        padding: 16px 40px;
-        background: var(--white);
-        color: var(--primary-dark);
-        font-family: 'Nunito', sans-serif;
-        font-size: 16px;
-        font-weight: 700;
-        border: none;
-        border-radius: 50px;
-        cursor: pointer;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        display: inline-block; padding: 16px 44px; background: var(--white);
+        color: var(--primary-dark); font-family: 'Nunito', sans-serif;
+        font-size: 16px; font-weight: 700; border: none; border-radius: 50px;
+        cursor: pointer; text-decoration: none; transition: all 0.3s ease;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15), 0 0 40px rgba(168,156,200,0.2);
       }
-
       .hero-cta:hover {
         transform: translateY(-2px);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.2), 0 0 60px rgba(168,156,200,0.3);
       }
 
-      /* STATS BAR */
-      .stats-bar {
-        background: var(--white);
-        padding: 40px 24px;
-        box-shadow: var(--shadow-sm);
+      .scroll-indicator {
+        position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+        z-index: 2; animation: scrollBounce 2s ease-in-out infinite;
+      }
+      .scroll-indicator svg { width: 28px; height: 28px; color: rgba(255,255,255,0.5); }
+      @keyframes scrollBounce {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50% { transform: translateX(-50%) translateY(10px); }
       }
 
+      /* STATS */
+      .stats-bar { background: var(--white); padding: 48px 24px; box-shadow: var(--shadow-sm); }
       .stats-grid {
-        max-width: 1000px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 24px;
-        text-align: center;
+        max-width: 1000px; margin: 0 auto; display: grid;
+        grid-template-columns: repeat(2, 1fr); gap: 24px; text-align: center;
       }
-
-      .stat-item {
-        padding: 8px;
-      }
-
-      .stat-number {
-        font-size: 28px;
-        font-weight: 900;
-        color: var(--primary);
-        line-height: 1.2;
-      }
-
+      .stat-item { padding: 8px; }
+      .stat-number { font-size: 32px; font-weight: 900; color: var(--primary); line-height: 1.2; }
       .stat-label {
-        font-size: 13px;
-        color: var(--text-light);
-        font-weight: 600;
-        margin-top: 4px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        font-size: 13px; color: var(--text-light); font-weight: 600;
+        margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px;
       }
 
       /* SECTIONS */
-      .section {
-        padding: 80px 24px;
-      }
-
-      .section-header {
-        text-align: center;
-        max-width: 640px;
-        margin: 0 auto 56px;
-      }
-
+      .section { padding: 80px 24px; }
+      .section-header { text-align: center; max-width: 640px; margin: 0 auto 56px; }
       .section-label {
-        display: inline-block;
-        padding: 6px 16px;
-        background: rgba(107,91,149,0.08);
-        color: var(--primary);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        border-radius: 50px;
-        margin-bottom: 16px;
+        display: inline-block; padding: 6px 16px;
+        background: rgba(107,91,149,0.08); color: var(--primary);
+        font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+        text-transform: uppercase; border-radius: 50px; margin-bottom: 16px;
       }
-
       .section-title {
-        font-size: 32px;
-        font-weight: 800;
-        color: var(--text);
-        line-height: 1.2;
-        margin-bottom: 16px;
-        letter-spacing: -0.5px;
+        font-size: 30px; font-weight: 800; color: var(--text);
+        line-height: 1.2; margin-bottom: 16px; letter-spacing: -0.5px;
+      }
+      .section-desc { font-size: 16px; color: var(--text-light); line-height: 1.7; }
+
+      /* BODY MAP */
+      .bodymap-section {
+        background: linear-gradient(180deg, rgba(168,156,200,0.08) 0%, rgba(136,179,181,0.06) 100%);
+      }
+      .bodymap-container {
+        display: flex; flex-direction: column; align-items: center; gap: 40px;
+        max-width: 900px; margin: 0 auto;
+      }
+      .bodymap-svg-wrap {
+        position: relative; width: 200px; height: 400px;
+        filter: drop-shadow(0 0 20px rgba(107,91,149,0.15));
+        animation: bodyGlow 4s ease-in-out infinite;
+      }
+      @keyframes bodyGlow {
+        0%, 100% { filter: drop-shadow(0 0 20px rgba(107,91,149,0.15)); }
+        50% { filter: drop-shadow(0 0 35px rgba(107,91,149,0.25)); }
+      }
+      .bodymap-svg-wrap svg { width: 100%; height: 100%; }
+      .body-region {
+        fill: rgba(168,156,200,0.15); stroke: var(--primary-light);
+        stroke-width: 1.5; cursor: pointer; transition: all 0.3s ease;
+      }
+      .body-region:hover {
+        fill: rgba(107,91,149,0.3);
+        filter: drop-shadow(0 0 12px rgba(107,91,149,0.5));
+      }
+      .bodymap-tooltip {
+        position: absolute; background: var(--white); padding: 14px 18px;
+        border-radius: var(--radius-sm); box-shadow: var(--shadow-md);
+        font-size: 14px; font-weight: 600; color: var(--text);
+        pointer-events: none; opacity: 0; transition: opacity 0.3s;
+        white-space: nowrap; z-index: 10; left: 110%; top: 50%;
+        transform: translateY(-50%);
+      }
+      .bodymap-tooltip.visible { opacity: 1; }
+      .bodymap-tooltip-desc { font-weight: 400; color: var(--text-light); font-size: 13px; margin-top: 2px; }
+      .bodymap-cta { text-align: center; margin-top: 12px; }
+      .bodymap-cta p { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 16px; }
+      .bodymap-cta a {
+        display: inline-block; padding: 12px 32px; background: var(--primary);
+        color: var(--white); border-radius: 50px; text-decoration: none;
+        font-weight: 700; font-size: 15px; transition: all 0.3s;
+        box-shadow: 0 4px 20px rgba(107,91,149,0.3);
+      }
+      .bodymap-cta a:hover { background: var(--primary-dark); transform: translateY(-2px); }
+
+      /* PHONE MOCKUP */
+      .walkthrough-section { background: var(--white); }
+      .phone-container { display: flex; flex-direction: column; align-items: center; }
+      .phone-frame {
+        width: 280px; height: 560px; background: #1a1a2e;
+        border-radius: 40px; padding: 12px; position: relative;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.25), inset 0 0 0 2px rgba(255,255,255,0.1);
+      }
+      .phone-notch {
+        position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+        width: 120px; height: 28px; background: #1a1a2e;
+        border-radius: 0 0 16px 16px; z-index: 5;
+      }
+      .phone-screen {
+        width: 100%; height: 100%; background: var(--bg);
+        border-radius: 30px; overflow: hidden; position: relative;
+      }
+      .phone-screen-content {
+        position: absolute; inset: 0; opacity: 0;
+        transition: opacity 0.6s ease; padding: 44px 16px 16px;
+      }
+      .phone-screen-content.active { opacity: 1; }
+      .screen-header {
+        font-size: 11px; font-weight: 700; color: var(--text);
+        margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;
       }
 
-      .section-desc {
-        font-size: 16px;
-        color: var(--text-light);
-        line-height: 1.7;
+      .screen-1 .greeting { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 14px; }
+      .screen-1 .insight-card {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border-radius: 14px; padding: 14px; color: var(--white); margin-bottom: 12px;
       }
+      .screen-1 .insight-card .insight-label { font-size: 10px; font-weight: 600; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+      .screen-1 .insight-card .insight-text { font-size: 13px; font-weight: 600; margin-top: 4px; line-height: 1.4; }
+      .screen-1 .rec-card {
+        background: var(--white); border-radius: 12px; padding: 12px;
+        display: flex; gap: 10px; align-items: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      }
+      .screen-1 .rec-icon {
+        width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+        background: linear-gradient(135deg, var(--secondary), #6A9B9D);
+        display: flex; align-items: center; justify-content: center;
+      }
+      .screen-1 .rec-icon svg { width: 18px; height: 18px; color: var(--white); }
+      .screen-1 .rec-title { font-size: 12px; font-weight: 700; color: var(--text); }
+      .screen-1 .rec-sub { font-size: 10px; color: var(--text-light); }
 
-      /* INTEROCEPTION */
-      .intero-text {
-        text-align: center;
-        max-width: 640px;
-        margin: 0 auto 48px;
-        font-size: 17px;
-        color: var(--text-light);
-        line-height: 1.8;
+      .screen-2 .timer-circle {
+        width: 140px; height: 140px; border-radius: 50%; margin: 10px auto 16px;
+        border: 4px solid var(--primary-light); display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        background: radial-gradient(circle, rgba(107,91,149,0.08), transparent);
       }
+      .screen-2 .timer-time { font-size: 28px; font-weight: 800; color: var(--primary-dark); }
+      .screen-2 .timer-label { font-size: 10px; color: var(--text-light); font-weight: 600; text-transform: uppercase; }
+      .screen-2 .breathe-text {
+        text-align: center; font-size: 16px; font-weight: 700;
+        color: var(--secondary); margin-bottom: 16px;
+      }
+      .screen-2 .step-dots { display: flex; justify-content: center; gap: 6px; }
+      .screen-2 .step-dot {
+        width: 8px; height: 8px; border-radius: 50%; background: var(--primary-light);
+      }
+      .screen-2 .step-dot.filled { background: var(--primary); }
 
-      .intero-cards {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-        max-width: 800px;
-        margin: 0 auto;
+      .screen-3 .checkin-label { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+      .screen-3 .slider-track {
+        height: 6px; background: rgba(107,91,149,0.12); border-radius: 3px;
+        margin-bottom: 18px; position: relative;
       }
+      .screen-3 .slider-fill {
+        height: 100%; border-radius: 3px; position: absolute; left: 0; top: 0;
+      }
+      .screen-3 .slider-fill.mood { width: 65%; background: var(--primary); }
+      .screen-3 .slider-fill.energy { width: 45%; background: var(--secondary); }
+      .screen-3 .slider-fill.stress { width: 30%; background: var(--accent); }
+      .screen-3 .body-selector {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px;
+      }
+      .screen-3 .body-btn {
+        padding: 6px 4px; background: var(--white); border-radius: 8px;
+        font-size: 9px; font-weight: 600; color: var(--text-light);
+        text-align: center; border: 1px solid rgba(107,91,149,0.1);
+      }
+      .screen-3 .body-btn.selected { background: rgba(107,91,149,0.1); color: var(--primary); border-color: var(--primary-light); }
 
-      .intero-card {
-        background: var(--white);
-        padding: 32px 24px;
-        border-radius: var(--radius);
-        text-align: center;
-        box-shadow: var(--shadow-sm);
-        transition: all 0.3s ease;
+      .screen-4 .chart-area { height: 100px; margin-bottom: 14px; position: relative; }
+      .screen-4 .chart-area svg { width: 100%; height: 100%; }
+      .screen-4 .streak-row { display: flex; gap: 10px; margin-bottom: 10px; }
+      .screen-4 .streak-card {
+        flex: 1; background: var(--white); padding: 10px; border-radius: 10px;
+        text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
       }
+      .screen-4 .streak-num { font-size: 20px; font-weight: 800; color: var(--primary); }
+      .screen-4 .streak-label { font-size: 9px; color: var(--text-light); font-weight: 600; text-transform: uppercase; }
+      .screen-4 .badges-row { display: flex; gap: 8px; justify-content: center; }
+      .screen-4 .badge-circle {
+        width: 36px; height: 36px; border-radius: 50%; display: flex;
+        align-items: center; justify-content: center;
+      }
+      .screen-4 .badge-circle svg { width: 16px; height: 16px; color: var(--white); }
 
-      .intero-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-md);
+      .phone-dots { display: flex; gap: 8px; margin-top: 24px; }
+      .phone-dot {
+        width: 10px; height: 10px; border-radius: 50%;
+        background: var(--primary-light); transition: all 0.3s; cursor: pointer;
       }
-
-      .intero-icon {
-        width: 56px;
-        height: 56px;
-        margin: 0 auto 16px;
-        background: rgba(107,91,149,0.08);
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .intero-icon svg {
-        width: 28px;
-        height: 28px;
-        color: var(--primary);
-      }
-
-      .intero-card h3 {
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--text);
-        margin-bottom: 8px;
-      }
-
-      .intero-card p {
-        font-size: 14px;
-        color: var(--text-light);
-        line-height: 1.6;
-      }
+      .phone-dot.active { background: var(--primary); width: 28px; border-radius: 5px; }
 
       /* FEATURES */
-      .features-section {
-        background: var(--white);
-      }
-
+      .features-section { background: var(--white); }
       .features-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 20px;
-        max-width: 1000px;
-        margin: 0 auto;
+        display: grid; grid-template-columns: 1fr; gap: 20px;
+        max-width: 1000px; margin: 0 auto;
       }
-
       .feature-card {
-        background: var(--bg);
-        padding: 32px 28px;
-        border-radius: var(--radius);
-        transition: all 0.35s ease;
-        border: 1px solid transparent;
+        background: var(--bg); padding: 32px 28px; border-radius: var(--radius);
+        transition: all 0.35s ease; border: 1px solid transparent;
       }
-
       .feature-card:hover {
-        transform: translateY(-6px);
-        box-shadow: var(--shadow-lg);
+        transform: translateY(-6px); box-shadow: var(--shadow-lg);
         border-color: rgba(107,91,149,0.1);
       }
-
       .feature-icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
+        width: 52px; height: 52px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
       }
-
-      .feature-icon svg {
-        width: 26px;
-        height: 26px;
-        color: var(--white);
-      }
-
+      .feature-icon svg { width: 26px; height: 26px; color: var(--white); }
       .feature-icon.purple { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
       .feature-icon.teal { background: linear-gradient(135deg, var(--secondary), #6A9B9D); }
       .feature-icon.rose { background: linear-gradient(135deg, var(--accent), #D4949A); }
-
-      .feature-card h3 {
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--text);
-        margin-bottom: 10px;
-      }
-
-      .feature-card p {
-        font-size: 15px;
-        color: var(--text-light);
-        line-height: 1.7;
-      }
+      .feature-card h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+      .feature-card p { font-size: 15px; color: var(--text-light); line-height: 1.7; }
 
       /* HOW IT WORKS */
+      .steps-section { background: var(--bg); }
       .steps-flow {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 32px;
-        max-width: 900px;
-        margin: 0 auto;
+        display: grid; grid-template-columns: 1fr; gap: 32px;
+        max-width: 900px; margin: 0 auto;
       }
-
-      .flow-step {
-        display: flex;
-        gap: 24px;
-        align-items: flex-start;
-      }
-
+      .flow-step { display: flex; gap: 24px; align-items: flex-start; }
       .flow-number {
-        width: 52px;
-        height: 52px;
-        min-width: 52px;
+        width: 56px; height: 56px; min-width: 56px;
         background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-        color: var(--white);
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        font-weight: 800;
+        color: var(--white); border-radius: 16px; display: flex;
+        align-items: center; justify-content: center;
+        font-size: 22px; font-weight: 800;
       }
-
-      .flow-content h3 {
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--text);
-        margin-bottom: 8px;
-      }
-
-      .flow-content p {
-        font-size: 15px;
-        color: var(--text-light);
-        line-height: 1.7;
-      }
+      .flow-content h3 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+      .flow-content p { font-size: 15px; color: var(--text-light); line-height: 1.7; }
 
       /* SCIENCE */
       .science-section {
-        background: linear-gradient(135deg, var(--primary-dark) 0%, #2A1F4E 100%);
-        color: var(--white);
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #2A1F4E 50%, #1a1235 100%);
+        color: var(--white); position: relative; overflow: hidden;
       }
-
-      .science-section .section-label {
-        background: rgba(255,255,255,0.12);
-        color: rgba(255,255,255,0.9);
+      .science-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; opacity: 0.12; }
+      .science-bg svg { width: 100%; height: 100%; }
+      .neural-path {
+        stroke: var(--primary-light); stroke-width: 1; fill: none;
+        stroke-dasharray: 600; stroke-dashoffset: 600;
+        animation: neuralDraw 8s linear infinite;
       }
-
-      .science-section .section-title {
-        color: var(--white);
+      .neural-path:nth-child(2) { animation-delay: 2s; stroke: var(--secondary); }
+      .neural-path:nth-child(3) { animation-delay: 4s; stroke: var(--accent); }
+      @keyframes neuralDraw {
+        0% { stroke-dashoffset: 600; }
+        50% { stroke-dashoffset: 0; }
+        100% { stroke-dashoffset: -600; }
       }
-
-      .science-section .section-desc {
-        color: rgba(255,255,255,0.7);
+      .science-section .section-label { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); }
+      .science-section .section-title { color: var(--white); }
+      .science-section .section-desc { color: rgba(255,255,255,0.7); }
+      .science-grid {
+        display: grid; grid-template-columns: 1fr; gap: 24px;
+        max-width: 900px; margin: 0 auto; position: relative; z-index: 2;
       }
-
-      .science-content {
-        max-width: 800px;
-        margin: 0 auto;
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 24px;
-      }
-
       .science-card {
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: var(--radius);
-        padding: 32px 28px;
+        background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+        border-radius: var(--radius); padding: 32px 28px;
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        transition: all 0.3s;
       }
-
-      .science-card h3 {
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--white);
-        margin-bottom: 12px;
+      .science-card:hover {
+        background: rgba(255,255,255,0.12); transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.2);
       }
-
-      .science-card p {
-        font-size: 15px;
-        color: rgba(255,255,255,0.7);
-        line-height: 1.7;
-      }
+      .science-card h3 { font-size: 18px; font-weight: 700; color: var(--white); margin-bottom: 12px; }
+      .science-card p { font-size: 15px; color: rgba(255,255,255,0.7); line-height: 1.7; }
 
       /* CONDITIONS */
       .conditions-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-        max-width: 900px;
-        margin: 0 auto;
+        display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+        max-width: 900px; margin: 0 auto;
       }
-
       .condition-card {
-        background: var(--white);
-        padding: 24px 20px;
-        border-radius: var(--radius-sm);
-        box-shadow: var(--shadow-sm);
-        border-left: 4px solid var(--primary-light);
+        background: var(--white); padding: 24px 20px; border-radius: var(--radius-sm);
+        box-shadow: var(--shadow-sm); border-left: 4px solid var(--primary-light);
         transition: all 0.3s ease;
       }
-
-      .condition-card:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-md);
-        border-left-color: var(--primary);
-      }
-
-      .condition-card h3 {
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--text);
-        margin-bottom: 6px;
-      }
-
-      .condition-card p {
-        font-size: 13px;
-        color: var(--text-light);
-        line-height: 1.5;
-      }
+      .condition-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-left-color: var(--primary); }
+      .condition-card:nth-child(2) { border-left-color: var(--secondary); }
+      .condition-card:nth-child(2):hover { border-left-color: #6A9B9D; }
+      .condition-card:nth-child(3) { border-left-color: var(--accent); }
+      .condition-card:nth-child(3):hover { border-left-color: #D4949A; }
+      .condition-card:nth-child(5) { border-left-color: var(--secondary); }
+      .condition-card:nth-child(5):hover { border-left-color: #6A9B9D; }
+      .condition-card:nth-child(6) { border-left-color: var(--accent); }
+      .condition-card:nth-child(6):hover { border-left-color: #D4949A; }
+      .condition-card h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+      .condition-card p { font-size: 13px; color: var(--text-light); line-height: 1.5; }
 
       /* TESTIMONIALS */
-      .testimonials-section {
-        background: var(--white);
-      }
-
+      .testimonials-section { background: var(--white); }
       .testimonials-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 24px;
-        max-width: 900px;
-        margin: 0 auto;
+        display: grid; grid-template-columns: 1fr; gap: 24px;
+        max-width: 900px; margin: 0 auto;
       }
-
       .testimonial-card {
-        background: var(--bg);
-        padding: 32px 28px;
-        border-radius: var(--radius);
-        position: relative;
+        background: var(--bg); padding: 32px 28px; border-radius: var(--radius);
       }
-
       .testimonial-quote {
-        font-size: 16px;
-        color: var(--text);
-        line-height: 1.7;
-        margin-bottom: 20px;
-        font-style: italic;
+        font-size: 16px; color: var(--text); line-height: 1.7;
+        margin-bottom: 20px; font-style: italic;
       }
-
-      .testimonial-author {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
+      .testimonial-author { display: flex; align-items: center; gap: 12px; }
       .testimonial-avatar {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
+        width: 44px; height: 44px; border-radius: 50%;
         background: linear-gradient(135deg, var(--primary-light), var(--secondary));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--white);
-        font-weight: 700;
-        font-size: 16px;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--white); font-weight: 700; font-size: 16px;
       }
-
-      .testimonial-name {
-        font-size: 15px;
-        font-weight: 700;
-        color: var(--text);
-      }
-
-      .testimonial-role {
-        font-size: 13px;
-        color: var(--text-light);
-      }
-
+      .testimonial-name { font-size: 15px; font-weight: 700; color: var(--text); }
+      .testimonial-role { font-size: 13px; color: var(--text-light); }
       .testimonial-note {
-        text-align: center;
-        font-size: 12px;
-        color: var(--text-light);
-        margin-top: 24px;
-        font-style: italic;
+        text-align: center; font-size: 12px; color: var(--text-light);
+        margin-top: 24px; font-style: italic;
       }
 
-      /* TRY IT NOW / QR */
-      .try-section {
-        text-align: center;
+      /* FINAL CTA */
+      .final-cta {
+        position: relative; padding: 100px 24px; text-align: center;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, #2A1F4E 100%);
+        overflow: hidden;
       }
-
-      .try-wrapper {
-        max-width: 800px;
-        margin: 0 auto;
+      .final-cta-particles { position: absolute; inset: 0; pointer-events: none; }
+      .final-cta-content { position: relative; z-index: 2; }
+      .final-cta h2 {
+        font-size: 32px; font-weight: 800; color: var(--white);
+        margin-bottom: 16px; letter-spacing: -0.5px;
       }
-
-      .loading {
-        display: none;
-        margin: 60px 0;
+      .final-cta .subtitle {
+        font-size: 17px; color: rgba(255,255,255,0.75); margin-bottom: 36px;
+        max-width: 500px; margin-left: auto; margin-right: auto;
       }
-
-      .spinner {
-        border: 3px solid rgba(107,91,149,0.15);
-        border-top-color: var(--primary);
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        animation: spin 0.8s linear infinite;
-        margin: 20px auto;
-      }
-
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-
-      .loading-text {
-        font-size: 16px;
-        color: var(--text-light);
-        font-weight: 600;
-      }
-
-      .content {
-        display: block;
-      }
-
-      .try-steps {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 24px;
-        margin-top: 48px;
-      }
-
-      .try-step {
-        padding: 32px 28px;
-        border-radius: var(--radius);
-        text-align: center;
-        background: var(--white);
-        box-shadow: var(--shadow-sm);
-      }
-
-      .try-step-header {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        margin-bottom: 16px;
-      }
-
-      .try-step-number {
-        width: 32px;
-        height: 32px;
-        background: var(--primary);
-        color: var(--white);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 14px;
-        flex-shrink: 0;
-      }
-
-      .try-step-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--text);
-      }
-
-      .try-step-desc {
-        font-size: 14px;
+      .final-cta-btn {
+        display: inline-block; padding: 18px 48px; background: var(--white);
+        color: var(--primary-dark); font-family: 'Nunito', sans-serif;
+        font-size: 17px; font-weight: 700; border: none; border-radius: 50px;
+        cursor: pointer; text-decoration: none; transition: all 0.3s;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.2), 0 0 40px rgba(168,156,200,0.2);
         margin-bottom: 20px;
-        color: var(--text-light);
       }
-
-      .store-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        justify-content: center;
-      }
-
-      .store-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 14px 24px;
-        font-family: 'Nunito', sans-serif;
-        font-size: 15px;
-        font-weight: 600;
-        border: 1px solid rgba(107,91,149,0.2);
-        border-radius: var(--radius-sm);
-        text-decoration: none;
-        color: var(--text);
-        background: var(--white);
-        transition: all 0.2s ease;
-      }
-
-      .store-button:hover {
-        background: rgba(107,91,149,0.04);
-        border-color: var(--primary-light);
-        transform: translateY(-1px);
-      }
-
-      .store-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 8px 0;
-        font-family: 'Nunito', sans-serif;
-        font-size: 13px;
-        font-weight: 500;
-        text-decoration: underline;
-        text-underline-offset: 3px;
-        color: var(--text-light);
-        background: none;
-        border: none;
-        transition: color 0.2s;
-      }
-
-      .store-link:hover {
-        color: var(--primary);
-      }
-
-      .store-link .store-icon {
-        width: 14px;
-        height: 14px;
-      }
-
-      .store-icon {
-        width: 18px;
-        height: 18px;
-      }
-
-      .qr-step {
-        background: linear-gradient(135deg, var(--primary-dark), #2A1F4E);
-        color: var(--white);
-        box-shadow: var(--shadow-lg);
-      }
-
-      .qr-step .try-step-number {
-        background: rgba(255,255,255,0.2);
-      }
-
-      .qr-step .try-step-title {
-        color: var(--white);
-      }
-
-      .qr-step .try-step-desc {
-        color: rgba(255,255,255,0.7);
-      }
-
-      .qr-code {
-        width: 180px;
-        height: 180px;
-        margin: 0 auto 20px;
-        background: var(--white);
-        border-radius: 12px;
-        padding: 12px;
-      }
-
-      .qr-code canvas {
-        width: 100%;
-        height: 100%;
-      }
-
-      .open-button {
-        display: inline-block;
-        padding: 14px 32px;
-        font-family: 'Nunito', sans-serif;
-        font-size: 15px;
-        font-weight: 700;
-        border: none;
-        border-radius: 50px;
-        text-decoration: none;
-        color: var(--primary-dark);
-        background: var(--white);
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      }
-
-      .open-button:hover {
+      .final-cta-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.25), 0 0 60px rgba(168,156,200,0.3);
       }
+      .final-cta .explore-link {
+        display: block; color: rgba(255,255,255,0.6); font-size: 14px;
+        text-decoration: none; transition: color 0.3s;
+      }
+      .final-cta .explore-link:hover { color: rgba(255,255,255,0.9); }
+      .final-cta .explore-link span { text-decoration: underline; text-underline-offset: 3px; }
 
       /* FOOTER */
       .footer {
-        background: var(--primary-dark);
-        color: rgba(255,255,255,0.7);
-        padding: 48px 24px;
-        text-align: center;
+        background: var(--primary-dark); color: rgba(255,255,255,0.7);
+        padding: 48px 24px; text-align: center;
       }
-
-      .footer-logo {
-        font-size: 22px;
-        font-weight: 800;
-        color: var(--white);
-        margin-bottom: 16px;
-      }
-
+      .footer-logo { font-size: 22px; font-weight: 800; color: var(--white); margin-bottom: 16px; }
       .footer-disclaimer {
-        font-size: 13px;
-        max-width: 500px;
-        margin: 0 auto 20px;
-        line-height: 1.6;
-        color: rgba(255,255,255,0.5);
+        font-size: 13px; max-width: 500px; margin: 0 auto 20px;
+        line-height: 1.6; color: rgba(255,255,255,0.5);
       }
+      .footer-copyright { font-size: 13px; color: rgba(255,255,255,0.4); }
 
-      .footer-copyright {
-        font-size: 13px;
-        color: rgba(255,255,255,0.4);
+      /* PORTAL OVERLAY */
+      .portal-overlay {
+        position: fixed; inset: 0; z-index: 10000;
+        background: radial-gradient(ellipse at center, #2A1F4E 0%, #0d0a1a 100%);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        opacity: 0; pointer-events: none; transition: opacity 0.5s ease;
       }
+      .portal-overlay.active { opacity: 1; pointer-events: all; }
+      .portal-particles { position: absolute; inset: 0; pointer-events: none; }
+      .portal-ripple {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 0; height: 0; border-radius: 50%;
+        border: 1px solid rgba(168,156,200,0.3);
+        animation: portalRipple 3s ease-out infinite;
+      }
+      .portal-ripple:nth-child(2) { animation-delay: 1s; }
+      .portal-ripple:nth-child(3) { animation-delay: 2s; }
+      @keyframes portalRipple {
+        0% { width: 0; height: 0; opacity: 1; }
+        100% { width: 600px; height: 600px; opacity: 0; }
+      }
+      .portal-text {
+        position: relative; z-index: 2; text-align: center;
+        color: var(--white); font-family: 'Nunito', sans-serif;
+      }
+      .portal-text h2 {
+        font-size: 28px; font-weight: 300; opacity: 0;
+        transition: opacity 0.8s ease, transform 0.8s ease;
+        transform: translateY(10px);
+      }
+      .portal-text h2.visible { opacity: 1; transform: translateY(0); }
+      .portal-begin {
+        display: inline-block; margin-top: 24px; padding: 14px 36px;
+        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25);
+        border-radius: 50px; color: var(--white); font-family: 'Nunito', sans-serif;
+        font-size: 16px; font-weight: 600; cursor: pointer;
+        text-decoration: none; opacity: 0; transition: opacity 0.6s, background 0.3s;
+      }
+      .portal-begin.visible { opacity: 1; }
+      .portal-begin:hover { background: rgba(255,255,255,0.2); }
 
-      /* REVEAL ANIMATIONS */
+      /* REVEAL */
       .reveal {
-        opacity: 0;
-        transform: translateY(40px);
+        opacity: 0; transform: translateY(40px);
         transition: opacity 0.8s ease, transform 0.8s ease;
       }
-
-      .reveal.visible {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      .reveal.visible { opacity: 1; transform: translateY(0); }
 
       /* RESPONSIVE */
       @media (min-width: 640px) {
-        .intero-cards {
-          grid-template-columns: repeat(4, 1fr);
-        }
-
-        .features-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-
-        .conditions-grid {
-          grid-template-columns: repeat(3, 1fr);
-        }
-
-        .try-steps {
-          grid-template-columns: repeat(2, 1fr);
-        }
-
-        .stats-grid {
-          grid-template-columns: repeat(4, 1fr);
-        }
+        .hero h1 { font-size: 48px; }
+        .section-title { font-size: 34px; }
+        .stats-grid { grid-template-columns: repeat(4, 1fr); }
+        .features-grid { grid-template-columns: repeat(2, 1fr); }
+        .testimonials-grid { grid-template-columns: repeat(2, 1fr); }
+        .science-grid { grid-template-columns: repeat(2, 1fr); }
+        .conditions-grid { grid-template-columns: repeat(3, 1fr); }
+        .final-cta h2 { font-size: 38px; }
       }
-
       @media (min-width: 768px) {
-        .hero h1 {
-          font-size: 54px;
-        }
-
-        .hero-subtitle {
-          font-size: 20px;
-        }
-
-        .section {
-          padding: 100px 24px;
-        }
-
-        .section-title {
-          font-size: 38px;
-        }
-
-        .features-grid {
-          grid-template-columns: repeat(2, 1fr);
-          gap: 24px;
-        }
-
-        .steps-flow {
-          grid-template-columns: repeat(3, 1fr);
-          gap: 40px;
-        }
-
-        .flow-step {
-          flex-direction: column;
-          text-align: center;
-          align-items: center;
-        }
-
-        .science-content {
-          grid-template-columns: repeat(3, 1fr);
-        }
-
-        .testimonials-grid {
-          grid-template-columns: repeat(3, 1fr);
-        }
-
-        .conditions-grid {
-          grid-template-columns: repeat(4, 1fr);
-        }
-
-        .qr-code {
-          width: 200px;
-          height: 200px;
-        }
+        .section { padding: 100px 24px; }
+        .steps-flow { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .flow-step { flex-direction: column; text-align: center; align-items: center; }
+        .bodymap-container { flex-direction: row; gap: 60px; }
+        .bodymap-tooltip { left: 110%; }
       }
-
       @media (min-width: 1024px) {
-        .hero h1 {
-          font-size: 62px;
-        }
-
-        .features-grid {
-          grid-template-columns: repeat(3, 1fr);
-        }
-
-        .stat-number {
-          font-size: 36px;
-        }
+        .hero h1 { font-size: 62px; }
+        .section-title { font-size: 38px; }
+        .features-grid { grid-template-columns: repeat(3, 1fr); }
+        .conditions-grid { grid-template-columns: repeat(4, 1fr); }
+        .science-grid { grid-template-columns: repeat(3, 1fr); }
+        .testimonials-grid { grid-template-columns: repeat(3, 1fr); }
+        .phone-frame { width: 320px; height: 640px; }
+        .final-cta h2 { font-size: 44px; }
+      }
+      @media (max-width: 639px) {
+        .nav-links { gap: 16px; }
+        .nav-links a { font-size: 13px; }
+        .bodymap-tooltip { left: 50%; top: auto; bottom: -60px; transform: translateX(-50%); }
       }
     </style>
   </head>
   <body>
-
     <!-- NAV -->
     <nav class="nav" id="nav">
       <div class="nav-inner">
@@ -983,414 +698,605 @@
         <ul class="nav-links">
           <li><a href="#features">Features</a></li>
           <li><a href="#science">Science</a></li>
-          <li><a href="#about">About</a></li>
+          <li><a href="#conditions">About</a></li>
+          <li><a href="BASE_URL_PLACEHOLDER/app" class="nav-cta">Try the App</a></li>
         </ul>
       </div>
     </nav>
 
     <!-- HERO -->
     <section class="hero" id="hero">
+      <div class="hero-particles" id="heroParticles"></div>
       <div class="hero-orb hero-orb-1"></div>
       <div class="hero-orb hero-orb-2"></div>
       <div class="hero-orb hero-orb-3"></div>
       <div class="hero-orb hero-orb-4"></div>
+      <div class="hero-orb hero-orb-5"></div>
+      <div class="hero-orb hero-orb-6"></div>
       <div class="hero-content">
-        <div class="hero-badge">The 8th Sense</div>
-        <h1>Discover Your Body's Hidden Intelligence</h1>
-        <p class="hero-subtitle">Interoceptive awareness -- the ability to sense your body's internal signals -- is the key to emotional regulation, stress resilience, and lasting mental wellness.</p>
-        <a href="#try" class="hero-cta">Start Your Journey</a>
+        <div class="hero-badge">BACKED BY NEUROSCIENCE</div>
+        <h1>Your Body Knows More Than You Think</h1>
+        <p class="hero-subtitle">InteroSense trains your interoceptive awareness &mdash; the hidden sense that connects body signals to emotional regulation, stress resilience, and mental clarity.</p>
+        <div class="heartbeat-wrapper" id="heartbeatWrapper">
+          <div class="heartbeat-ring"><div class="heartbeat-ring-inner"></div></div>
+          <p class="heartbeat-text" id="heartbeatText">Can you feel your heartbeat right now?</p>
+        </div>
+        <button class="hero-cta" onclick="startPortal()">Start Your Journey</button>
+      </div>
+      <div class="scroll-indicator">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
     </section>
 
-    <!-- STATS BAR -->
-    <div class="stats-bar">
-      <div class="stats-grid reveal">
+    <!-- STATS -->
+    <section class="stats-bar reveal">
+      <div class="stats-grid">
         <div class="stat-item">
-          <div class="stat-number">25+</div>
+          <div class="stat-number" data-target="25" data-suffix="+">0</div>
           <div class="stat-label">Guided Exercises</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number">8</div>
+          <div class="stat-number" data-target="8" data-suffix="">0</div>
           <div class="stat-label">Clinical Categories</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number">3</div>
-          <div class="stat-label">Clinical Assessments</div>
+          <div class="stat-number" data-target="50" data-suffix="+">0</div>
+          <div class="stat-label">Research Studies</div>
         </div>
         <div class="stat-item">
-          <div class="stat-number">100%</div>
-          <div class="stat-label">Research-Backed</div>
+          <div class="stat-number" data-target="3" data-suffix="">0</div>
+          <div class="stat-label">Clinical Assessments</div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- WHAT IS INTEROCEPTION -->
-    <section class="section" id="about">
-      <div class="section-header reveal">
-        <span class="section-label">Understanding Interoception</span>
-        <h2 class="section-title">What Is Interoception?</h2>
-        <p class="section-desc">Beyond the five senses lies interoception -- your body's internal awareness system. It is how you feel hunger, sense your heartbeat, and recognize emotions before they escalate.</p>
+    <!-- BODY MAP -->
+    <section class="section bodymap-section reveal" id="bodymap">
+      <div class="section-header">
+        <span class="section-label">Interoception</span>
+        <h2 class="section-title">Experience Your Body's Signals</h2>
+        <p class="section-desc">Your body constantly sends signals about your emotional and physical state. Tap each region to explore.</p>
       </div>
-      <div class="intero-cards">
-        <div class="intero-card reveal">
-          <div class="intero-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <div class="bodymap-container">
+        <div class="bodymap-svg-wrap">
+          <svg viewBox="0 0 200 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Head -->
+            <ellipse class="body-region" data-region="head" data-title="Head" data-desc="67% of users report tension here during stress" cx="100" cy="42" rx="30" ry="36"/>
+            <!-- Neck -->
+            <rect class="body-region" data-region="neck" data-title="Neck" data-desc="Muscle tightness often linked to anxiety" x="88" y="75" width="24" height="20" rx="8"/>
+            <!-- Chest -->
+            <ellipse class="body-region" data-region="chest" data-title="Chest" data-desc="Heart rate awareness is a core interoceptive signal" cx="100" cy="140" rx="45" ry="40"/>
+            <!-- Stomach -->
+            <ellipse class="body-region" data-region="stomach" data-title="Stomach" data-desc="Gut feelings are real interoceptive signals" cx="100" cy="210" rx="38" ry="30"/>
+            <!-- Left Arm -->
+            <path class="body-region" data-region="arms" data-title="Hands & Arms" data-desc="Tingling and temperature shifts signal stress response" d="M52,110 Q30,140 25,200 Q22,230 30,260 L45,255 Q42,220 48,185 Q52,155 58,130 Z"/>
+            <!-- Right Arm -->
+            <path class="body-region" data-region="arms" data-title="Hands & Arms" data-desc="Tingling and temperature shifts signal stress response" d="M148,110 Q170,140 175,200 Q178,230 170,260 L155,255 Q158,220 152,185 Q148,155 142,130 Z"/>
+            <!-- Left Leg -->
+            <path class="body-region" data-region="legs" data-title="Legs" data-desc="Restlessness and heaviness reflect emotional states" d="M75,240 Q70,290 68,340 Q66,380 70,410 L95,410 Q92,380 90,340 Q88,290 92,240 Z"/>
+            <!-- Right Leg -->
+            <path class="body-region" data-region="legs" data-title="Legs" data-desc="Restlessness and heaviness reflect emotional states" d="M108,240 Q112,290 112,340 Q114,380 130,410 L105,410 Q108,380 110,340 Q112,290 108,240 Z"/>
+          </svg>
+          <div class="bodymap-tooltip" id="bodymapTooltip">
+            <div id="tooltipTitle"></div>
+            <div class="bodymap-tooltip-desc" id="tooltipDesc"></div>
           </div>
-          <h3>Feel Your Heartbeat</h3>
-          <p>Develop cardiac awareness through guided attention exercises</p>
         </div>
-        <div class="intero-card reveal">
-          <div class="intero-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M8 12s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
-          </div>
-          <h3>Notice Your Breath</h3>
-          <p>Learn to observe respiratory patterns and rhythms</p>
+        <div class="bodymap-cta">
+          <p>Discover what your body is telling you</p>
+          <a href="BASE_URL_PLACEHOLDER/app">Explore InteroSense</a>
         </div>
-        <div class="intero-card reveal">
-          <div class="intero-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      </div>
+    </section>
+
+    <!-- APP WALKTHROUGH -->
+    <section class="section walkthrough-section reveal">
+      <div class="section-header">
+        <span class="section-label">App Preview</span>
+        <h2 class="section-title">See InteroSense in Action</h2>
+        <p class="section-desc">A personalized wellness experience designed around your unique body signals.</p>
+      </div>
+      <div class="phone-container">
+        <div class="phone-frame">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <!-- Screen 1: Home Dashboard -->
+            <div class="phone-screen-content screen-1 active" data-screen="0">
+              <div class="screen-header">Home</div>
+              <div class="greeting">Good morning, Alex</div>
+              <div class="insight-card">
+                <div class="insight-label">Daily Insight</div>
+                <div class="insight-text">Your body awareness improved 23% this week. Keep exploring your signals.</div>
+              </div>
+              <div class="rec-card">
+                <div class="rec-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div>
+                  <div class="rec-title">Body Scan Meditation</div>
+                  <div class="rec-sub">Recommended - 10 min</div>
+                </div>
+              </div>
+            </div>
+            <!-- Screen 2: Exercise Session -->
+            <div class="phone-screen-content screen-2" data-screen="1">
+              <div class="screen-header">Exercise Session</div>
+              <div class="timer-circle">
+                <div class="timer-time">4:32</div>
+                <div class="timer-label">Remaining</div>
+              </div>
+              <div class="breathe-text">Breathe In...</div>
+              <div class="step-dots">
+                <div class="step-dot filled"></div>
+                <div class="step-dot filled"></div>
+                <div class="step-dot filled"></div>
+                <div class="step-dot"></div>
+                <div class="step-dot"></div>
+              </div>
+            </div>
+            <!-- Screen 3: Daily Check-in -->
+            <div class="phone-screen-content screen-3" data-screen="2">
+              <div class="screen-header">Daily Check-in</div>
+              <div class="checkin-label">Mood</div>
+              <div class="slider-track"><div class="slider-fill mood"></div></div>
+              <div class="checkin-label">Energy</div>
+              <div class="slider-track"><div class="slider-fill energy"></div></div>
+              <div class="checkin-label">Stress</div>
+              <div class="slider-track"><div class="slider-fill stress"></div></div>
+              <div class="checkin-label" style="margin-top:12px">Body Areas</div>
+              <div class="body-selector">
+                <div class="body-btn selected">Head</div>
+                <div class="body-btn">Chest</div>
+                <div class="body-btn selected">Stomach</div>
+                <div class="body-btn">Back</div>
+                <div class="body-btn">Hands</div>
+                <div class="body-btn">Legs</div>
+              </div>
+            </div>
+            <!-- Screen 4: Progress Analytics -->
+            <div class="phone-screen-content screen-4" data-screen="3">
+              <div class="screen-header">Progress</div>
+              <div class="chart-area">
+                <svg viewBox="0 0 240 90" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="rgba(107,91,149,0.3)"/>
+                      <stop offset="100%" stop-color="rgba(107,91,149,0)"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M0,70 Q30,65 60,50 T120,35 T180,25 T240,15" stroke="var(--primary)" stroke-width="2" fill="none"/>
+                  <path d="M0,70 Q30,65 60,50 T120,35 T180,25 T240,15 L240,90 L0,90 Z" fill="url(#chartGrad)"/>
+                </svg>
+              </div>
+              <div class="streak-row">
+                <div class="streak-card">
+                  <div class="streak-num">14</div>
+                  <div class="streak-label">Day Streak</div>
+                </div>
+                <div class="streak-card">
+                  <div class="streak-num">82</div>
+                  <div class="streak-label">Awareness Score</div>
+                </div>
+              </div>
+              <div class="badges-row">
+                <div class="badge-circle" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark))">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="badge-circle" style="background:linear-gradient(135deg,var(--secondary),#6A9B9D)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+                <div class="badge-circle" style="background:linear-gradient(135deg,var(--accent),#D4949A)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                </div>
+              </div>
+            </div>
           </div>
-          <h3>Sense Your Emotions</h3>
-          <p>Connect physical sensations to emotional states</p>
         </div>
-        <div class="intero-card reveal">
-          <div class="intero-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          </div>
-          <h3>Track Your Progress</h3>
-          <p>Measure growth in body awareness over time</p>
+        <div class="phone-dots">
+          <div class="phone-dot active" data-dot="0"></div>
+          <div class="phone-dot" data-dot="1"></div>
+          <div class="phone-dot" data-dot="2"></div>
+          <div class="phone-dot" data-dot="3"></div>
         </div>
       </div>
     </section>
 
     <!-- FEATURES -->
-    <section class="section features-section" id="features">
-      <div class="section-header reveal">
+    <section class="section features-section reveal" id="features">
+      <div class="section-header">
         <span class="section-label">Features</span>
         <h2 class="section-title">Everything You Need for Inner Awareness</h2>
-        <p class="section-desc">A comprehensive toolkit grounded in clinical research, designed to build your interoceptive skills progressively.</p>
       </div>
       <div class="features-grid">
-        <div class="feature-card reveal">
+        <div class="feature-card">
           <div class="feature-icon purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
           </div>
           <h3>Guided Exercises</h3>
-          <p>25 MABT-based exercises across 8 clinical categories, from body scanning to advanced interoceptive meditation.</p>
+          <p>25 MABT-based exercises across 8 clinical categories, from body scanning to emotional awareness techniques guided by evidence-based protocols.</p>
         </div>
-        <div class="feature-card reveal">
+        <div class="feature-card">
           <div class="feature-icon teal">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           </div>
           <h3>Clinical Assessments</h3>
-          <p>Validated clinical scales including GAD-7, PHQ-9, and PCL-5 to track your mental health progress objectively.</p>
+          <p>Validated clinical scales including GAD-7, PHQ-9, and PCL-5 to track your mental health progress with professional-grade measurements.</p>
         </div>
-        <div class="feature-card reveal">
+        <div class="feature-card">
           <div class="feature-icon rose">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12"/><path d="M12 6v6l4 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"/><path d="M12 8v4l3 3"/></svg>
           </div>
           <h3>AI-Powered Personalization</h3>
-          <p>Intelligent recommendations that adapt to your conditions, history, and wellness goals for a tailored experience.</p>
+          <p>Intelligent recommendations that adapt to your conditions, goals, and progress, creating a truly personalized interoceptive training journey.</p>
         </div>
-        <div class="feature-card reveal">
+        <div class="feature-card">
           <div class="feature-icon teal">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           </div>
           <h3>Daily Check-ins</h3>
-          <p>8-step awareness tracking covering stress, mood, and body mapping to build a consistent mindfulness habit.</p>
+          <p>8-step awareness tracking covering stress, mood, energy, and body sensations to build consistent interoceptive habits over time.</p>
         </div>
-        <div class="feature-card reveal">
+        <div class="feature-card">
           <div class="feature-icon purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
           <h3>Condition Programs</h3>
-          <p>7 condition-specific programs integrating neuroscience-backed approaches for targeted therapeutic support.</p>
+          <p>7 condition-specific programs integrating neuroscience research for anxiety, depression, PTSD, chronic pain, IBS, ADHD, and autism spectrum.</p>
         </div>
-        <div class="feature-card reveal">
+        <div class="feature-card">
           <div class="feature-icon rose">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <h3>Crisis Toolkit</h3>
-          <p>Personalized emergency grounding techniques and coping strategies accessible when you need them most.</p>
+          <p>Personalized emergency grounding techniques and calming exercises available instantly when you need them most, based on your individual profile.</p>
         </div>
       </div>
     </section>
 
     <!-- HOW IT WORKS -->
-    <section class="section">
-      <div class="section-header reveal">
+    <section class="section steps-section reveal">
+      <div class="section-header">
         <span class="section-label">How It Works</span>
-        <h2 class="section-title">Three Steps to Greater Awareness</h2>
-        <p class="section-desc">Getting started is simple. InteroSense meets you where you are and guides you forward.</p>
+        <h2 class="section-title">Three Steps to Inner Awareness</h2>
       </div>
       <div class="steps-flow">
-        <div class="flow-step reveal">
+        <div class="flow-step">
           <div class="flow-number">1</div>
           <div class="flow-content">
             <h3>Tell Us About You</h3>
-            <p>Share your conditions, wellness goals, and experience level so we can understand your unique needs.</p>
+            <p>Share your conditions, goals, and experience level so we can create your personalized starting point.</p>
           </div>
         </div>
-        <div class="flow-step reveal">
+        <div class="flow-step">
           <div class="flow-number">2</div>
           <div class="flow-content">
             <h3>Get Your Personalized Plan</h3>
-            <p>Receive a curated program of exercises, assessments, and daily practices tailored specifically to you.</p>
+            <p>Receive curated exercises, assessments, and condition-specific programs tailored to your needs.</p>
           </div>
         </div>
-        <div class="flow-step reveal">
+        <div class="flow-step">
           <div class="flow-number">3</div>
           <div class="flow-content">
             <h3>Build Awareness Daily</h3>
-            <p>Follow guided sessions, track your progress, and develop lasting interoceptive skills over time.</p>
+            <p>Follow guided sessions, complete daily check-ins, and track your interoceptive growth over time.</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- SCIENCE -->
-    <section class="section science-section" id="science">
-      <div class="section-header reveal">
-        <span class="section-label">The Science</span>
-        <h2 class="section-title">Built on Research</h2>
-        <p class="section-desc">InteroSense is grounded in peer-reviewed research and established clinical frameworks, bringing laboratory-validated methods to your daily practice.</p>
+    <section class="section science-section reveal" id="science">
+      <div class="science-bg">
+        <svg viewBox="0 0 1200 600" preserveAspectRatio="none">
+          <path class="neural-path" d="M0,300 Q150,200 300,350 T600,250 T900,300 T1200,200"/>
+          <path class="neural-path" d="M0,400 Q200,300 400,450 T800,350 T1200,400"/>
+          <path class="neural-path" d="M0,200 Q100,100 300,250 T700,150 T1000,200 T1200,100"/>
+        </svg>
       </div>
-      <div class="science-content">
-        <div class="science-card reveal">
+      <div class="section-header">
+        <span class="section-label">Research</span>
+        <h2 class="section-title">Built on Research</h2>
+        <p class="section-desc">Every exercise and assessment in InteroSense is grounded in peer-reviewed neuroscience research.</p>
+      </div>
+      <div class="science-grid">
+        <div class="science-card">
           <h3>MABT Methodology</h3>
-          <p>Exercises are built on Mindfulness-Based Awareness Training, a clinically validated approach to developing interoceptive awareness through progressive body-based mindfulness.</p>
+          <p>Based on Mindful Awareness in Body-oriented Therapy, a clinically validated approach developed by Dr. Cynthia Price for teaching interoceptive awareness through progressive body-based exercises.</p>
         </div>
-        <div class="science-card reveal">
+        <div class="science-card">
           <h3>Interoception Framework</h3>
-          <p>Informed by Kelly Mahler's interoception curriculum, our approach systematically builds body awareness from foundational sensing to complex emotional integration.</p>
+          <p>Built on the latest interoception research showing how body signal awareness directly influences emotional regulation, decision-making, and mental health outcomes across clinical populations.</p>
         </div>
-        <div class="science-card reveal">
+        <div class="science-card">
           <h3>Clinical Validation</h3>
-          <p>Assessment tools use gold-standard validated scales. The neuroscience of interoception connects the insular cortex, vagus nerve, and autonomic regulation to mental health outcomes.</p>
+          <p>Incorporates validated clinical instruments (GAD-7, PHQ-9, PCL-5) and evidence-based protocols used in clinical trials, ensuring professional-grade measurement and tracking.</p>
         </div>
       </div>
     </section>
 
     <!-- CONDITIONS -->
-    <section class="section">
-      <div class="section-header reveal">
+    <section class="section reveal" id="conditions">
+      <div class="section-header">
         <span class="section-label">Conditions</span>
         <h2 class="section-title">Conditions We Address</h2>
-        <p class="section-desc">Interoceptive awareness training has shown benefits across a wide range of mental and physical health conditions.</p>
+        <p class="section-desc">Tailored interoceptive training programs for a range of conditions supported by clinical research.</p>
       </div>
       <div class="conditions-grid">
-        <div class="condition-card reveal">
+        <div class="condition-card">
           <h3>Anxiety</h3>
-          <p>Recognize and regulate the physical signals of anxiety before they escalate</p>
+          <p>Learn to recognize and regulate the body signals that drive anxious thoughts and panic responses.</p>
         </div>
-        <div class="condition-card reveal">
+        <div class="condition-card">
           <h3>Depression</h3>
-          <p>Rebuild the mind-body connection that depression often disrupts</p>
+          <p>Reconnect with body sensations to break cycles of emotional numbness and low motivation.</p>
         </div>
-        <div class="condition-card reveal">
+        <div class="condition-card">
           <h3>PTSD</h3>
-          <p>Safely reconnect with body sensations through graded exposure</p>
+          <p>Safely rebuild body awareness and process trauma-related physical responses with guided support.</p>
         </div>
-        <div class="condition-card reveal">
+        <div class="condition-card">
           <h3>Chronic Pain</h3>
-          <p>Develop a new relationship with pain signals through mindful awareness</p>
+          <p>Develop nuanced body awareness to change your relationship with pain signals and reduce suffering.</p>
         </div>
-        <div class="condition-card reveal">
+        <div class="condition-card">
           <h3>IBS</h3>
-          <p>Better understand gut-brain communication and reduce symptom distress</p>
+          <p>Understand gut-brain connections and learn to manage digestive distress through interoceptive skills.</p>
         </div>
-        <div class="condition-card reveal">
+        <div class="condition-card">
           <h3>ADHD</h3>
-          <p>Improve self-regulation through enhanced body awareness and grounding</p>
+          <p>Improve attention and self-regulation by strengthening awareness of internal body states and cues.</p>
         </div>
-        <div class="condition-card reveal">
+        <div class="condition-card">
           <h3>Autism Spectrum</h3>
-          <p>Build interoceptive vocabulary and emotional identification skills</p>
+          <p>Build structured body awareness skills to better identify and communicate internal experiences.</p>
         </div>
       </div>
     </section>
 
     <!-- TESTIMONIALS -->
-    <section class="section testimonials-section">
-      <div class="section-header reveal">
-        <span class="section-label">Experiences</span>
+    <section class="section testimonials-section reveal">
+      <div class="section-header">
+        <span class="section-label">Testimonials</span>
         <h2 class="section-title">What Users Are Saying</h2>
       </div>
       <div class="testimonials-grid">
-        <div class="testimonial-card reveal">
-          <p class="testimonial-quote">"I never realized how disconnected I was from my body. After three weeks with InteroSense, I can actually notice my stress building before it becomes overwhelming."</p>
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"I never realized how disconnected I was from my own body. InteroSense taught me to notice the early warning signs of my anxiety before it spirals. It has genuinely changed how I manage my stress."</p>
           <div class="testimonial-author">
-            <div class="testimonial-avatar">S</div>
+            <div class="testimonial-avatar">SK</div>
             <div>
-              <div class="testimonial-name">Sarah M.</div>
-              <div class="testimonial-role">Managing anxiety</div>
+              <div class="testimonial-name">Sarah K.</div>
+              <div class="testimonial-role">Generalized Anxiety</div>
             </div>
           </div>
         </div>
-        <div class="testimonial-card reveal">
-          <p class="testimonial-quote">"The guided exercises helped me reconnect with physical sensations I had been avoiding for years. The gradual approach made it feel safe and manageable."</p>
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"The daily check-ins helped me identify patterns I never saw before. I can now feel when my depression is shifting before it takes over. This app gave me a sense of control I had lost."</p>
           <div class="testimonial-author">
-            <div class="testimonial-avatar">J</div>
+            <div class="testimonial-avatar">MR</div>
             <div>
-              <div class="testimonial-name">James R.</div>
-              <div class="testimonial-role">PTSD recovery</div>
+              <div class="testimonial-name">Marcus R.</div>
+              <div class="testimonial-role">Depression & Chronic Pain</div>
             </div>
           </div>
         </div>
-        <div class="testimonial-card reveal">
-          <p class="testimonial-quote">"As someone on the autism spectrum, understanding my body's signals has been transformative. The structured approach and clear language make all the difference."</p>
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"As someone on the autism spectrum, understanding my body signals was always a challenge. The structured exercises in InteroSense made interoception accessible and practical for the first time."</p>
           <div class="testimonial-author">
-            <div class="testimonial-avatar">A</div>
+            <div class="testimonial-avatar">JL</div>
             <div>
-              <div class="testimonial-name">Alex T.</div>
-              <div class="testimonial-role">Autism spectrum</div>
+              <div class="testimonial-name">Jordan L.</div>
+              <div class="testimonial-role">Autism Spectrum</div>
             </div>
           </div>
         </div>
       </div>
-      <p class="testimonial-note reveal">Illustrative testimonials representing common user experiences.</p>
+      <p class="testimonial-note">Illustrative testimonials representing common user experiences.</p>
     </section>
 
-    <!-- TRY IT NOW -->
-    <section class="section try-section" id="try">
-      <div class="section-header reveal">
-        <span class="section-label">Get Started</span>
-        <h2 class="section-title">Try InteroSense Now</h2>
-        <p class="section-desc">Download Expo Go and scan the QR code to preview the app on your phone instantly.</p>
-      </div>
-
-      <div class="try-wrapper">
-        <div class="loading" id="loading">
-          <div class="spinner"></div>
-          <div class="loading-text">Opening in Expo Go...</div>
-        </div>
-
-        <div class="content" id="content">
-          <div class="try-steps">
-            <div class="try-step">
-              <div class="try-step-header">
-                <div class="try-step-number">1</div>
-                <h2 class="try-step-title">Download Expo Go</h2>
-              </div>
-              <p class="try-step-desc">Expo Go is a free app to preview mobile apps</p>
-              <div class="store-buttons" id="store-buttons">
-                <a id="app-store-btn" href="https://apps.apple.com/app/id982107779" class="store-button" target="_blank">
-                  <svg class="store-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                  </svg>
-                  App Store
-                </a>
-                <a id="play-store-btn" href="https://play.google.com/store/apps/details?id=host.exp.exponent" class="store-button" target="_blank">
-                  <svg class="store-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
-                  </svg>
-                  Google Play
-                </a>
-              </div>
-            </div>
-
-            <div class="try-step qr-step">
-              <div class="try-step-header">
-                <div class="try-step-number">2</div>
-                <h2 class="try-step-title">Scan QR Code</h2>
-              </div>
-              <p class="try-step-desc">Use your phone's camera or Expo Go</p>
-              <div class="qr-code" id="qr-code"></div>
-              <a href="exps://EXPS_URL_PLACEHOLDER" class="open-button">Open in Expo Go</a>
-            </div>
-          </div>
-        </div>
+    <!-- FINAL CTA -->
+    <section class="final-cta">
+      <div class="final-cta-particles" id="ctaParticles"></div>
+      <div class="final-cta-content reveal">
+        <h2>Ready to Discover Your Hidden Sense?</h2>
+        <p class="subtitle">Join thousands discovering the power of interoceptive awareness.</p>
+        <button class="final-cta-btn" onclick="startPortal()">Start Your Journey</button>
+        <a href="BASE_URL_PLACEHOLDER/app" class="explore-link">or <span>explore the app</span></a>
       </div>
     </section>
 
     <!-- FOOTER -->
     <footer class="footer">
       <div class="footer-logo">InteroSense</div>
-      <p class="footer-disclaimer">InteroSense is a wellness tool designed for educational and self-improvement purposes. It is not a replacement for professional medical care, therapy, or clinical diagnosis. If you are in crisis, please contact your local emergency services or a mental health professional.</p>
-      <p class="footer-copyright">Copyright 2025 InteroSense. All rights reserved.</p>
+      <p class="footer-disclaimer">InteroSense is a wellness tool for developing interoceptive awareness. It is not a replacement for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or qualified health provider.</p>
+      <p class="footer-copyright">Copyright 2026 InteroSense. All rights reserved.</p>
     </footer>
 
-    <script src="https://unpkg.com/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
+    <!-- PORTAL OVERLAY -->
+    <div class="portal-overlay" id="portalOverlay">
+      <div class="portal-particles" id="portalParticles"></div>
+      <div class="portal-ripple"></div>
+      <div class="portal-ripple"></div>
+      <div class="portal-ripple"></div>
+      <div class="portal-text">
+        <h2 id="portalHeading">Welcome to a space designed for you.</h2>
+        <a href="BASE_URL_PLACEHOLDER/app" class="portal-begin" id="portalBegin">Let's begin.</a>
+      </div>
+    </div>
+
     <script>
-      (function () {
-        // Nav scroll effect
+      (function() {
+        // NAV SCROLL
         var nav = document.getElementById('nav');
         window.addEventListener('scroll', function() {
-          if (window.scrollY > 60) {
-            nav.classList.add('scrolled');
-          } else {
-            nav.classList.remove('scrolled');
-          }
+          nav.classList.toggle('scrolled', window.scrollY > 60);
         });
 
-        // Reveal on scroll
-        var revealEls = document.querySelectorAll('.reveal');
-        var observer = new IntersectionObserver(function(entries) {
+        // PARTICLES
+        function createParticles(container, count) {
+          var colors = ['rgba(255,255,255,0.6)', 'rgba(136,179,181,0.5)', 'rgba(232,180,184,0.5)'];
+          for (var i = 0; i < count; i++) {
+            var p = document.createElement('div');
+            p.className = 'particle';
+            var size = Math.random() * 4 + 2;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.bottom = '-10px';
+            p.style.background = colors[Math.floor(Math.random() * colors.length)];
+            p.style.setProperty('--dx', (Math.random() * 100 - 50) + 'px');
+            p.style.animationDuration = (Math.random() * 15 + 10) + 's';
+            p.style.animationDelay = (Math.random() * 15) + 's';
+            p.style.boxShadow = '0 0 ' + (size * 2) + 'px ' + p.style.background;
+            container.appendChild(p);
+          }
+        }
+        createParticles(document.getElementById('heroParticles'), 35);
+        createParticles(document.getElementById('ctaParticles'), 20);
+
+        // HEARTBEAT INTERACTION
+        var hbWrapper = document.getElementById('heartbeatWrapper');
+        var hbText = document.getElementById('heartbeatText');
+        var defaultText = 'Can you feel your heartbeat right now?';
+        var hoverText = 'That awareness is interoception.';
+        hbWrapper.addEventListener('mouseenter', function() { hbText.textContent = hoverText; });
+        hbWrapper.addEventListener('mouseleave', function() { hbText.textContent = defaultText; hbWrapper.classList.remove('active'); });
+        hbWrapper.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          hbWrapper.classList.toggle('active');
+          hbText.textContent = hbWrapper.classList.contains('active') ? hoverText : defaultText;
+        }, { passive: false });
+
+        // STATS COUNTER
+        var statsObserver = new IntersectionObserver(function(entries) {
+          entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+              var nums = entry.target.querySelectorAll('.stat-number');
+              nums.forEach(function(el) {
+                var target = parseInt(el.getAttribute('data-target'));
+                var suffix = el.getAttribute('data-suffix') || '';
+                var duration = 1500;
+                var start = 0;
+                var startTime = null;
+                function animate(ts) {
+                  if (!startTime) startTime = ts;
+                  var progress = Math.min((ts - startTime) / duration, 1);
+                  var eased = 1 - Math.pow(1 - progress, 3);
+                  el.textContent = Math.floor(eased * target) + suffix;
+                  if (progress < 1) requestAnimationFrame(animate);
+                }
+                requestAnimationFrame(animate);
+              });
+              statsObserver.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.3 });
+        var statsBar = document.querySelector('.stats-bar');
+        if (statsBar) statsObserver.observe(statsBar);
+
+        // REVEAL ON SCROLL
+        var revealObserver = new IntersectionObserver(function(entries) {
           entries.forEach(function(entry) {
             if (entry.isIntersecting) {
               entry.target.classList.add('visible');
+              revealObserver.unobserve(entry.target);
             }
           });
         }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-        revealEls.forEach(function(el) { observer.observe(el); });
+        document.querySelectorAll('.reveal').forEach(function(el) { revealObserver.observe(el); });
 
-        // Original QR / deep link logic
-        const ua = navigator.userAgent;
-        const loadingEl = document.getElementById("loading");
-        const contentEl = document.getElementById("content");
-
-        const isAndroid = /Android/i.test(ua);
-        const isIOS =
-          /iPhone|iPad|iPod/i.test(ua) ||
-          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
-        const deepLink = "exps://EXPS_URL_PLACEHOLDER";
-
-        const appStoreBtn = document.getElementById("app-store-btn");
-        const playStoreBtn = document.getElementById("play-store-btn");
-        const storeButtonsContainer = document.getElementById("store-buttons");
-
-        if (isIOS) {
-          playStoreBtn.className = "store-link";
-          storeButtonsContainer.appendChild(playStoreBtn);
-        } else if (isAndroid) {
-          appStoreBtn.className = "store-link";
-          storeButtonsContainer.insertBefore(playStoreBtn, appStoreBtn);
-        }
-
-        const qrCode = new QRCodeStyling({
-          width: 400,
-          height: 400,
-          data: deepLink,
-          dotsOptions: {
-            color: "#3D2F6B",
-            type: "rounded",
-          },
-          backgroundOptions: {
-            color: "#ffffff",
-          },
-          cornersSquareOptions: {
-            type: "extra-rounded",
-          },
-          cornersDotOptions: {
-            type: "dot",
-          },
-          qrOptions: {
-            errorCorrectionLevel: "H",
-          },
+        // BODY MAP
+        var tooltip = document.getElementById('bodymapTooltip');
+        var tooltipTitle = document.getElementById('tooltipTitle');
+        var tooltipDesc = document.getElementById('tooltipDesc');
+        document.querySelectorAll('.body-region').forEach(function(region) {
+          region.addEventListener('mouseenter', function() {
+            tooltipTitle.textContent = this.getAttribute('data-title');
+            tooltipDesc.textContent = this.getAttribute('data-desc');
+            tooltip.classList.add('visible');
+          });
+          region.addEventListener('mouseleave', function() { tooltip.classList.remove('visible'); });
+          region.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            tooltipTitle.textContent = this.getAttribute('data-title');
+            tooltipDesc.textContent = this.getAttribute('data-desc');
+            tooltip.classList.add('visible');
+            setTimeout(function() { tooltip.classList.remove('visible'); }, 2500);
+          }, { passive: false });
         });
 
-        qrCode.append(document.getElementById("qr-code"));
-
-        if (isAndroid || isIOS) {
-          loadingEl.style.display = "block";
-          contentEl.style.display = "none";
-          window.location.href = deepLink;
-          setTimeout(function () {
-            loadingEl.style.display = "none";
-            contentEl.style.display = "block";
-          }, 500);
+        // PHONE MOCKUP CYCLING
+        var screens = document.querySelectorAll('.phone-screen-content');
+        var dots = document.querySelectorAll('.phone-dot');
+        var currentScreen = 0;
+        function showScreen(index) {
+          screens.forEach(function(s) { s.classList.remove('active'); });
+          dots.forEach(function(d) { d.classList.remove('active'); });
+          screens[index].classList.add('active');
+          dots[index].classList.add('active');
+          currentScreen = index;
         }
+        setInterval(function() { showScreen((currentScreen + 1) % screens.length); }, 4000);
+        dots.forEach(function(dot) {
+          dot.addEventListener('click', function() {
+            showScreen(parseInt(this.getAttribute('data-dot')));
+          });
+        });
+
+        // PORTAL TRANSITION
+        window.startPortal = function() {
+          var overlay = document.getElementById('portalOverlay');
+          var heading = document.getElementById('portalHeading');
+          var beginBtn = document.getElementById('portalBegin');
+          overlay.classList.add('active');
+
+          // Create portal particles
+          var pp = document.getElementById('portalParticles');
+          pp.innerHTML = '';
+          for (var i = 0; i < 30; i++) {
+            var dot = document.createElement('div');
+            dot.className = 'particle';
+            var s = Math.random() * 3 + 1;
+            dot.style.width = s + 'px';
+            dot.style.height = s + 'px';
+            dot.style.left = Math.random() * 100 + '%';
+            dot.style.bottom = '-5px';
+            dot.style.background = 'rgba(255,255,255,0.5)';
+            dot.style.setProperty('--dx', (Math.random() * 80 - 40) + 'px');
+            dot.style.animationDuration = (Math.random() * 10 + 8) + 's';
+            dot.style.animationDelay = (Math.random() * 3) + 's';
+            dot.style.boxShadow = '0 0 ' + (s * 2) + 'px rgba(255,255,255,0.3)';
+            pp.appendChild(dot);
+          }
+
+          setTimeout(function() {
+            heading.textContent = 'Welcome to a space designed for you.';
+            heading.classList.add('visible');
+          }, 500);
+
+          setTimeout(function() {
+            heading.style.transition = 'opacity 0.5s';
+            heading.style.opacity = '0';
+            setTimeout(function() {
+              heading.textContent = "Let's begin.";
+              heading.style.opacity = '1';
+              beginBtn.classList.add('visible');
+            }, 500);
+          }, 2000);
+
+          setTimeout(function() {
+            window.location.href = 'BASE_URL_PLACEHOLDER/app';
+          }, 3500);
+        };
+
+        // SMOOTH SCROLL FOR NAV LINKS
+        document.querySelectorAll('.nav-links a[href^="#"]').forEach(function(link) {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            var target = document.querySelector(this.getAttribute('href'));
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        });
       })();
     </script>
   </body>
