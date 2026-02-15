@@ -180,24 +180,7 @@ export default function RegisterScreen() {
               )}
             </Pressable>
 
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <View style={styles.socialButtons}>
-              <Pressable style={styles.socialBtn}>
-                <Feather name="globe" size={20} color={Colors.text} />
-                <Text style={styles.socialBtnText}>Continue with Google</Text>
-              </Pressable>
-              {Platform.OS === 'ios' && (
-                <Pressable style={[styles.socialBtn, styles.appleSocialBtn]}>
-                  <Feather name="smartphone" size={20} color="#fff" />
-                  <Text style={[styles.socialBtnText, { color: '#fff' }]}>Continue with Apple</Text>
-                </Pressable>
-              )}
-            </View>
+            
           </View>
 
           <Pressable style={styles.switchLink} onPress={() => router.replace('/auth/login')}>
@@ -259,17 +242,6 @@ const styles = StyleSheet.create({
   },
   registerButtonDisabled: { opacity: 0.7 },
   registerButtonText: { fontSize: 16, fontFamily: 'Nunito_700Bold', color: '#fff' },
-  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
-  dividerText: { fontSize: 13, fontFamily: 'Nunito_500Medium', color: Colors.textTertiary, marginHorizontal: 16 },
-  socialButtons: { gap: 10 },
-  socialBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    borderWidth: 1, borderColor: Colors.border, borderRadius: 14, paddingVertical: 14,
-    backgroundColor: Colors.surface,
-  },
-  appleSocialBtn: { backgroundColor: '#000', borderColor: '#000' },
-  socialBtnText: { fontSize: 15, fontFamily: 'Nunito_600SemiBold', color: Colors.text },
   switchLink: { alignItems: 'center', marginTop: 24, paddingBottom: 16 },
   switchText: { fontSize: 14, fontFamily: 'Nunito_400Regular', color: Colors.textSecondary },
   switchBold: { fontFamily: 'Nunito_700Bold', color: Colors.primary },
