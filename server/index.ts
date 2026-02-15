@@ -200,6 +200,7 @@ function configureExpoAndLanding(app: express.Application) {
 
   if (hasWebBuild) {
     app.use("/_expo", express.static(path.join(webBuildPath, "_expo")));
+    app.use("/assets", express.static(path.join(webBuildPath, "assets")));
 
     app.use("/app", express.static(webBuildPath));
 
