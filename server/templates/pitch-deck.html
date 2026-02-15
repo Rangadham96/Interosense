@@ -4,23 +4,26 @@
     <title>Interosense - Investor Pitch Deck</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
-        --primary: #6B5B95;
-        --primary-dark: #3D2F6B;
-        --primary-light: #A89CC8;
-        --secondary: #88B3B5;
-        --accent: #E8B4B8;
-        --bg: #F7F9FB;
-        --text: #2D2D3A;
-        --text-light: #6B6B7B;
-        --white: #FFFFFF;
-        --shadow-sm: 0 2px 8px rgba(107,91,149,0.08);
-        --shadow-md: 0 8px 30px rgba(107,91,149,0.12);
-        --shadow-lg: 0 20px 60px rgba(107,91,149,0.15);
+        --primary: #6b5b95;
+        --primary-dark: #3d2f6b;
+        --primary-light: #a89cc8;
+        --secondary: #88b3b5;
+        --accent: #e8b4b8;
+        --bg: #f7f9fb;
+        --text: #2d2d3a;
+        --text-light: #6b6b7b;
+        --white: #ffffff;
+        --shadow-sm: 0 2px 8px rgba(107, 91, 149, 0.08);
+        --shadow-md: 0 8px 30px rgba(107, 91, 149, 0.12);
+        --shadow-lg: 0 20px 60px rgba(107, 91, 149, 0.15);
         --radius: 16px;
         --radius-sm: 10px;
       }
@@ -37,7 +40,12 @@
       }
 
       body {
-        font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-family:
+          "Nunito",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
         background: var(--bg);
         color: var(--text);
         line-height: 1.7;
@@ -74,7 +82,7 @@
       }
 
       .slide-dark .slide-number {
-        color: rgba(255,255,255,0.3);
+        color: rgba(255, 255, 255, 0.3);
       }
 
       /* NAV DOTS */
@@ -123,7 +131,7 @@
         color: var(--white);
         border: none;
         border-radius: 50px;
-        font-family: 'Nunito', sans-serif;
+        font-family: "Nunito", sans-serif;
         font-size: 13px;
         font-weight: 700;
         cursor: pointer;
@@ -147,7 +155,12 @@
 
       /* SLIDE 1 - TITLE */
       .slide-title {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, #2A1F4E 100%);
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--primary-dark) 50%,
+          #2a1f4e 100%
+        );
         text-align: center;
         color: var(--white);
       }
@@ -159,7 +172,7 @@
         transform: translate(-50%, -50%) rotate(-30deg);
         font-size: 120px;
         font-weight: 900;
-        color: rgba(255,255,255,0.03);
+        color: rgba(255, 255, 255, 0.03);
         letter-spacing: 20px;
         text-transform: uppercase;
         white-space: nowrap;
@@ -178,7 +191,7 @@
       .tagline {
         font-size: 24px;
         font-weight: 400;
-        color: rgba(255,255,255,0.85);
+        color: rgba(255, 255, 255, 0.85);
         max-width: 600px;
         margin: 0 auto 20px;
         line-height: 1.4;
@@ -187,7 +200,7 @@
       .deck-subtitle {
         font-size: 15px;
         font-weight: 600;
-        color: rgba(255,255,255,0.5);
+        color: rgba(255, 255, 255, 0.5);
         letter-spacing: 2px;
         text-transform: uppercase;
       }
@@ -217,7 +230,11 @@
 
       /* DARK SLIDES */
       .slide-dark {
-        background: linear-gradient(135deg, var(--primary-dark) 0%, #2A1F4E 100%);
+        background: linear-gradient(
+          135deg,
+          var(--primary-dark) 0%,
+          #2a1f4e 100%
+        );
         color: var(--white);
       }
 
@@ -270,13 +287,13 @@
 
       .slide-light .slide-label,
       .slide-white .slide-label {
-        background: rgba(107,91,149,0.08);
+        background: rgba(107, 91, 149, 0.08);
         color: var(--primary);
       }
 
       .slide-dark .slide-label {
-        background: rgba(255,255,255,0.1);
-        color: rgba(255,255,255,0.8);
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
       }
 
       /* CONTENT ELEMENTS */
@@ -300,8 +317,8 @@
       }
 
       .slide-dark .stat-card {
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .stat-value {
@@ -331,7 +348,7 @@
       }
 
       .slide-dark .stat-desc {
-        color: rgba(255,255,255,0.6);
+        color: rgba(255, 255, 255, 0.6);
       }
 
       .bullet-list {
@@ -348,7 +365,7 @@
       }
 
       .bullet-list li::before {
-        content: '';
+        content: "";
         position: absolute;
         left: 0;
         top: 18px;
@@ -369,12 +386,12 @@
       .slide-light .bullet-list li,
       .slide-white .bullet-list li {
         color: var(--text);
-        border-bottom: 1px solid rgba(107,91,149,0.06);
+        border-bottom: 1px solid rgba(107, 91, 149, 0.06);
       }
 
       .slide-dark .bullet-list li {
-        color: rgba(255,255,255,0.85);
-        border-bottom: 1px solid rgba(255,255,255,0.06);
+        color: rgba(255, 255, 255, 0.85);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       }
 
       .bullet-list li:last-child {
@@ -392,13 +409,13 @@
 
       .slide-light .insight-box,
       .slide-white .insight-box {
-        background: rgba(107,91,149,0.06);
+        background: rgba(107, 91, 149, 0.06);
         color: var(--primary-dark);
         border-left: 4px solid var(--primary);
       }
 
       .slide-dark .insight-box {
-        background: rgba(255,255,255,0.06);
+        background: rgba(255, 255, 255, 0.06);
         color: var(--accent);
         border-left: 4px solid var(--accent);
       }
@@ -430,9 +447,9 @@
 
       .slide-light .comp-table th,
       .slide-white .comp-table th {
-        background: rgba(107,91,149,0.06);
+        background: rgba(107, 91, 149, 0.06);
         color: var(--text-light);
-        border-bottom: 2px solid rgba(107,91,149,0.1);
+        border-bottom: 2px solid rgba(107, 91, 149, 0.1);
       }
 
       .comp-table td {
@@ -442,7 +459,7 @@
 
       .slide-light .comp-table td,
       .slide-white .comp-table td {
-        border-bottom: 1px solid rgba(107,91,149,0.06);
+        border-bottom: 1px solid rgba(107, 91, 149, 0.06);
         color: var(--text);
       }
 
@@ -452,7 +469,7 @@
 
       .slide-light .comp-table tr.highlight-row td,
       .slide-white .comp-table tr.highlight-row td {
-        background: rgba(107,91,149,0.04);
+        background: rgba(107, 91, 149, 0.04);
         color: var(--primary-dark);
         border-bottom: 2px solid var(--primary);
       }
@@ -489,9 +506,9 @@
       }
 
       .slide-dark .feature-item {
-        background: rgba(255,255,255,0.08);
-        color: rgba(255,255,255,0.9);
-        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .feature-item .feature-icon {
@@ -505,9 +522,15 @@
         justify-content: center;
       }
 
-      .feature-icon.purple { background: rgba(107,91,149,0.1); }
-      .feature-icon.teal { background: rgba(136,179,181,0.15); }
-      .feature-icon.rose { background: rgba(232,180,184,0.2); }
+      .feature-icon.purple {
+        background: rgba(107, 91, 149, 0.1);
+      }
+      .feature-icon.teal {
+        background: rgba(136, 179, 181, 0.15);
+      }
+      .feature-icon.rose {
+        background: rgba(232, 180, 184, 0.2);
+      }
 
       .feature-icon svg {
         width: 18px;
@@ -541,7 +564,7 @@
       .slide-white .tier-card {
         background: var(--white);
         box-shadow: var(--shadow-sm);
-        border: 1px solid rgba(107,91,149,0.08);
+        border: 1px solid rgba(107, 91, 149, 0.08);
       }
 
       .tier-card.featured {
@@ -550,7 +573,7 @@
       }
 
       .tier-card.featured::before {
-        content: 'CORE';
+        content: "CORE";
         position: absolute;
         top: -10px;
         left: 50%;
@@ -605,7 +628,7 @@
 
       .slide-light .econ-item,
       .slide-white .econ-item {
-        background: rgba(107,91,149,0.04);
+        background: rgba(107, 91, 149, 0.04);
       }
 
       .econ-value {
@@ -629,7 +652,7 @@
       }
 
       .timeline::before {
-        content: '';
+        content: "";
         position: absolute;
         left: 14px;
         top: 0;
@@ -639,11 +662,11 @@
 
       .slide-light .timeline::before,
       .slide-white .timeline::before {
-        background: rgba(107,91,149,0.15);
+        background: rgba(107, 91, 149, 0.15);
       }
 
       .slide-dark .timeline::before {
-        background: rgba(255,255,255,0.15);
+        background: rgba(255, 255, 255, 0.15);
       }
 
       .timeline-item {
@@ -652,7 +675,7 @@
       }
 
       .timeline-item::before {
-        content: '';
+        content: "";
         position: absolute;
         left: -32px;
         top: 6px;
@@ -706,7 +729,7 @@
       }
 
       .slide-dark .timeline-desc {
-        color: rgba(255,255,255,0.6);
+        color: rgba(255, 255, 255, 0.6);
       }
 
       /* TRACTION ITEMS */
@@ -727,9 +750,9 @@
       }
 
       .slide-dark .traction-item {
-        background: rgba(255,255,255,0.06);
-        color: rgba(255,255,255,0.9);
-        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .traction-check {
@@ -793,13 +816,13 @@
 
       .slide-light .proj-table td,
       .slide-white .proj-table td {
-        border-bottom: 1px solid rgba(107,91,149,0.08);
+        border-bottom: 1px solid rgba(107, 91, 149, 0.08);
         color: var(--text);
       }
 
       .slide-light .proj-table tr:last-child td,
       .slide-white .proj-table tr:last-child td {
-        background: rgba(107,91,149,0.04);
+        background: rgba(107, 91, 149, 0.04);
         font-weight: 800;
         color: var(--primary-dark);
       }
@@ -822,10 +845,18 @@
         color: var(--white);
       }
 
-      .fund-segment.product { background: var(--primary); }
-      .fund-segment.acquisition { background: var(--secondary); }
-      .fund-segment.team { background: var(--accent); }
-      .fund-segment.operations { background: var(--primary-light); }
+      .fund-segment.product {
+        background: var(--primary);
+      }
+      .fund-segment.acquisition {
+        background: var(--secondary);
+      }
+      .fund-segment.team {
+        background: var(--accent);
+      }
+      .fund-segment.operations {
+        background: var(--primary-light);
+      }
 
       .fund-grid {
         display: grid;
@@ -841,13 +872,21 @@
       }
 
       .slide-dark .fund-item {
-        background: rgba(255,255,255,0.06);
+        background: rgba(255, 255, 255, 0.06);
       }
 
-      .fund-item.product { border-left-color: var(--primary); }
-      .fund-item.acquisition { border-left-color: var(--secondary); }
-      .fund-item.team { border-left-color: var(--accent); }
-      .fund-item.operations { border-left-color: var(--primary-light); }
+      .fund-item.product {
+        border-left-color: var(--primary);
+      }
+      .fund-item.acquisition {
+        border-left-color: var(--secondary);
+      }
+      .fund-item.team {
+        border-left-color: var(--accent);
+      }
+      .fund-item.operations {
+        border-left-color: var(--primary-light);
+      }
 
       .fund-pct {
         font-size: 24px;
@@ -866,7 +905,7 @@
       }
 
       .slide-dark .fund-name {
-        color: rgba(255,255,255,0.9);
+        color: rgba(255, 255, 255, 0.9);
       }
 
       .fund-desc {
@@ -874,7 +913,7 @@
       }
 
       .slide-dark .fund-desc {
-        color: rgba(255,255,255,0.5);
+        color: rgba(255, 255, 255, 0.5);
       }
 
       /* MILESTONE */
@@ -891,8 +930,8 @@
       }
 
       .slide-dark .milestone-item {
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .milestone-value {
@@ -911,7 +950,7 @@
       }
 
       .slide-dark .milestone-label {
-        color: rgba(255,255,255,0.6);
+        color: rgba(255, 255, 255, 0.6);
       }
 
       /* TEAM SLIDE */
@@ -932,7 +971,11 @@
         width: 80px;
         height: 80px;
         border-radius: 50%;
-        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-dark)
+        );
         display: flex;
         align-items: center;
         justify-content: center;
@@ -985,9 +1028,9 @@
 
       .slide-light .advisory-item,
       .slide-white .advisory-item {
-        background: rgba(107,91,149,0.04);
+        background: rgba(107, 91, 149, 0.04);
         color: var(--text-light);
-        border: 1px dashed rgba(107,91,149,0.2);
+        border: 1px dashed rgba(107, 91, 149, 0.2);
       }
 
       .advisory-label {
@@ -1007,7 +1050,11 @@
 
       .slide-light .contact-info,
       .slide-white .contact-info {
-        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-dark)
+        );
         color: var(--white);
       }
 
@@ -1048,8 +1095,8 @@
       }
 
       .slide-dark .science-card {
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .science-card h4 {
@@ -1068,7 +1115,7 @@
       }
 
       .slide-dark .science-card p {
-        color: rgba(255,255,255,0.6);
+        color: rgba(255, 255, 255, 0.6);
       }
 
       .citations {
@@ -1078,7 +1125,7 @@
       }
 
       .slide-dark .citations {
-        color: rgba(255,255,255,0.35);
+        color: rgba(255, 255, 255, 0.35);
       }
 
       /* TAM SAM SOM */
@@ -1102,21 +1149,21 @@
       .tam-circle.tam {
         width: 160px;
         height: 160px;
-        background: rgba(107,91,149,0.08);
+        background: rgba(107, 91, 149, 0.08);
         border: 2px solid var(--primary-light);
       }
 
       .tam-circle.sam {
         width: 130px;
         height: 130px;
-        background: rgba(136,179,181,0.1);
+        background: rgba(136, 179, 181, 0.1);
         border: 2px solid var(--secondary);
       }
 
       .tam-circle.som {
         width: 100px;
         height: 100px;
-        background: rgba(232,180,184,0.1);
+        background: rgba(232, 180, 184, 0.1);
         border: 2px solid var(--accent);
       }
 
@@ -1312,13 +1359,22 @@
         }
 
         .slide-dark {
-          background: linear-gradient(135deg, var(--primary-dark) 0%, #2A1F4E 100%) !important;
+          background: linear-gradient(
+            135deg,
+            var(--primary-dark) 0%,
+            #2a1f4e 100%
+          ) !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
 
         .slide-title {
-          background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, #2A1F4E 100%) !important;
+          background: linear-gradient(
+            135deg,
+            var(--primary) 0%,
+            var(--primary-dark) 50%,
+            #2a1f4e 100%
+          ) !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
@@ -1359,9 +1415,20 @@
     </style>
   </head>
   <body>
-
     <button class="download-btn" onclick="window.print()">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+      </svg>
       <span>Download PDF</span>
     </button>
 
@@ -1374,7 +1441,9 @@
       <div class="watermark">Confidential</div>
       <div class="slide-inner">
         <div class="logo-text">Interosense</div>
-        <div class="tagline">The Science of Feeling Better, From the Inside Out</div>
+        <div class="tagline">
+          The Science of Feeling Better, From the Inside Out
+        </div>
         <div class="deck-subtitle">Investor Deck &mdash; February 2026</div>
       </div>
       <div class="slide-number">1 / 13</div>
@@ -1384,15 +1453,22 @@
     <section class="slide slide-light" data-slide="1">
       <div class="slide-inner">
         <div class="slide-label">The Problem</div>
-        <h2 class="slide-heading">The Mental Health Crisis Is a <span class="highlight">Body Awareness</span> Crisis</h2>
+        <h2 class="slide-heading">
+          The Mental Health Crisis Is a
+          <span class="highlight">Body Awareness</span> Crisis
+        </h2>
         <div class="stat-row">
           <div class="stat-card">
             <div class="stat-value">280M+</div>
-            <div class="stat-desc">People suffer from depression globally (WHO)</div>
+            <div class="stat-desc">
+              People suffer from depression globally (WHO)
+            </div>
           </div>
           <div class="stat-card">
             <div class="stat-value">56%</div>
-            <div class="stat-desc">Of US adults with mental illness receive no treatment (SAMHSA)</div>
+            <div class="stat-desc">
+              Of US adults with mental illness receive no treatment (SAMHSA)
+            </div>
           </div>
           <div class="stat-card">
             <div class="stat-value">197M</div>
@@ -1400,9 +1476,14 @@
           </div>
         </div>
         <ul class="bullet-list">
-          <li>Current solutions (talk therapy, meditation apps) miss the body-brain connection</li>
+          <li>
+            Current solutions (talk therapy, meditation apps) miss the
+            body-brain connection
+          </li>
         </ul>
-        <div class="insight-box">"People can't manage what they can't feel."</div>
+        <div class="insight-box">
+          "People can't manage what they can't feel."
+        </div>
       </div>
       <div class="slide-number">2 / 13</div>
     </section>
@@ -1411,12 +1492,26 @@
     <section class="slide slide-dark" data-slide="2">
       <div class="slide-inner">
         <div class="slide-label">The Solution</div>
-        <h2 class="slide-heading">Interosense: Teaching Your Body to <span class="highlight">Heal Your Mind</span></h2>
+        <h2 class="slide-heading">
+          Interosense: Teaching Your Body to
+          <span class="highlight">Heal Your Mind</span>
+        </h2>
         <ul class="bullet-list">
-          <li>Interoception = sensing internal body signals (heartbeat, breath, gut, tension)</li>
-          <li>First consumer app dedicated to interoceptive awareness training</li>
-          <li>Guided exercises based on MABT (Mindful Awareness in Body-oriented Therapy)</li>
-          <li>AI-powered personalization engine adapting to each user's conditions, history, and goals</li>
+          <li>
+            Interoception = sensing internal body signals (heartbeat, breath,
+            gut, tension)
+          </li>
+          <li>
+            First consumer app dedicated to interoceptive awareness training
+          </li>
+          <li>
+            Guided exercises based on MABT (Mindful Awareness in Body-oriented
+            Therapy)
+          </li>
+          <li>
+            AI-powered personalization engine adapting to each user's
+            conditions, history, and goals
+          </li>
           <li>Clinical assessment tracking (GAD-7, PHQ-9, PCL-5)</li>
         </ul>
       </div>
@@ -1427,12 +1522,21 @@
     <section class="slide slide-light" data-slide="3">
       <div class="slide-inner">
         <div class="slide-label">Market Opportunity</div>
-        <h2 class="slide-heading">A <span class="highlight">$7.5B</span> Market Growing to <span class="highlight">$35B+</span></h2>
+        <h2 class="slide-heading">
+          A <span class="highlight">$7.5B</span> Market Growing to
+          <span class="highlight">$35B+</span>
+        </h2>
         <ul class="bullet-list">
-          <li>Mental wellness app market: $7.5B (2025) growing at 17.5% CAGR to $35B by 2034</li>
+          <li>
+            Mental wellness app market: $7.5B (2025) growing at 17.5% CAGR to
+            $35B by 2034
+          </li>
           <li>Meditation app segment: $7B by 2028</li>
           <li>India mental health market: $3B opportunity, 197M underserved</li>
-          <li>Interoception-specific apps: virtually no consumer competition (blue ocean)</li>
+          <li>
+            Interoception-specific apps: virtually no consumer competition (blue
+            ocean)
+          </li>
         </ul>
         <div class="tam-row">
           <div class="tam-circle tam">
@@ -1461,7 +1565,10 @@
     <section class="slide slide-white" data-slide="4">
       <div class="slide-inner">
         <div class="slide-label">Competitive Landscape</div>
-        <h2 class="slide-heading">We Own a Category <span class="highlight">Nobody Else</span> Is Building</h2>
+        <h2 class="slide-heading">
+          We Own a Category <span class="highlight">Nobody Else</span> Is
+          Building
+        </h2>
         <table class="comp-table">
           <thead>
             <tr>
@@ -1510,7 +1617,9 @@
             </tr>
           </tbody>
         </table>
-        <div class="insight-box">"We don't just calm the mind -- we reconnect the body."</div>
+        <div class="insight-box">
+          "We don't just calm the mind -- we reconnect the body."
+        </div>
       </div>
       <div class="slide-number">5 / 13</div>
     </section>
@@ -1519,53 +1628,154 @@
     <section class="slide slide-dark" data-slide="5">
       <div class="slide-inner">
         <div class="slide-label">Product</div>
-        <h2 class="slide-heading">A Complete <span class="highlight">Interoceptive Wellness</span> Platform</h2>
+        <h2 class="slide-heading">
+          A Complete
+          <span class="highlight">Interoceptive Wellness</span> Platform
+        </h2>
         <div class="feature-grid">
           <div class="feature-item">
             <div class="feature-icon purple">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M18 20V10" />
+                <path d="M12 20V4" />
+                <path d="M6 20v-6" />
+              </svg>
             </div>
             25+ guided exercises across 8 clinical categories
           </div>
           <div class="feature-item">
             <div class="feature-icon teal">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+              </svg>
             </div>
-            8-step daily check-in (awareness, energy, sleep, stress, mood, body mapping)
+            8-step daily check-in (awareness, energy, sleep, stress, mood, body
+            mapping)
           </div>
           <div class="feature-item">
             <div class="feature-icon rose">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 11l3 3L22 4" />
+                <path
+                  d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
+                />
+              </svg>
             </div>
             Clinical assessments (GAD-7, PHQ-9, PCL-5) with severity scoring
           </div>
           <div class="feature-item">
             <div class="feature-icon purple">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
             </div>
-            7-condition programs (anxiety, depression, PTSD, chronic pain, IBS, ADHD, autism)
+            7-condition programs (anxiety, depression, PTSD, chronic pain, IBS,
+            ADHD, autism)
           </div>
           <div class="feature-item">
             <div class="feature-icon teal">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2z"/><path d="M12 8v4l3 3"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2z"
+                />
+                <path d="M12 8v4l3 3" />
+              </svg>
             </div>
             AI personalization engine analyzing 9+ factors
           </div>
           <div class="feature-item">
             <div class="feature-icon rose">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                />
+              </svg>
             </div>
             Interactive body map with historical heatmap
           </div>
           <div class="feature-item">
             <div class="feature-icon purple">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                />
+              </svg>
             </div>
             30+ achievement badges, streak tracking
           </div>
           <div class="feature-item">
             <div class="feature-icon teal">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
+                />
+                <line x1="4" y1="22" x2="4" y2="15" />
+              </svg>
             </div>
             Crisis toolkit with guided grounding exercises
           </div>
@@ -1578,11 +1788,16 @@
     <section class="slide slide-dark" data-slide="6">
       <div class="slide-inner">
         <div class="slide-label">The Science</div>
-        <h2 class="slide-heading">Built on <span class="highlight">Peer-Reviewed Research</span></h2>
+        <h2 class="slide-heading">
+          Built on <span class="highlight">Peer-Reviewed Research</span>
+        </h2>
         <div class="science-grid">
           <div class="science-card">
             <h4>Lancet eClinicalMedicine (2024)</h4>
-            <p>3 out of 4 RCTs show interoceptive interventions improve mental health outcomes</p>
+            <p>
+              3 out of 4 RCTs show interoceptive interventions improve mental
+              health outcomes
+            </p>
           </div>
           <div class="science-card">
             <h4>NIH Grant (2025)</h4>
@@ -1590,17 +1805,27 @@
           </div>
           <div class="science-card">
             <h4>MABT Methodology</h4>
-            <p>Clinically validated for anxiety, depression, and PTSD treatment</p>
+            <p>
+              Clinically validated for anxiety, depression, and PTSD treatment
+            </p>
           </div>
           <div class="science-card">
             <h4>MAIA Assessment Scale</h4>
-            <p>Validated in 30+ languages for measuring interoceptive awareness</p>
+            <p>
+              Validated in 30+ languages for measuring interoceptive awareness
+            </p>
           </div>
         </div>
         <ul class="bullet-list">
-          <li>Mechanism: improved interoception leads to better emotion regulation leads to symptom reduction</li>
+          <li>
+            Mechanism: improved interoception leads to better emotion regulation
+            leads to symptom reduction
+          </li>
         </ul>
-        <div class="citations">Sources: Price & Hooven (2018), Heim et al. (2023), Lancet eClinicalMedicine (2024)</div>
+        <div class="citations">
+          Sources: Price & Hooven (2018), Heim et al. (2023), Lancet
+          eClinicalMedicine (2024)
+        </div>
       </div>
       <div class="slide-number">7 / 13</div>
     </section>
@@ -1609,7 +1834,9 @@
     <section class="slide slide-light" data-slide="7">
       <div class="slide-inner">
         <div class="slide-label">Business Model</div>
-        <h2 class="slide-heading">Freemium With <span class="highlight">Premium Subscriptions</span></h2>
+        <h2 class="slide-heading">
+          Freemium With <span class="highlight">Premium Subscriptions</span>
+        </h2>
         <div class="tier-row">
           <div class="tier-card">
             <div class="tier-name">Free</div>
@@ -1656,7 +1883,16 @@
             <div class="econ-label">LTV:CAC Ratio</div>
           </div>
         </div>
-        <p style="text-align:center;font-size:13px;color:var(--text-light);margin-top:16px;">Benchmark: Calm converts 7% of users, charges $39.99-49.99/year</p>
+        <p
+          style="
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-light);
+            margin-top: 16px;
+          "
+        >
+          Benchmark: Calm converts 7% of users, charges $39.99-49.99/year
+        </p>
       </div>
       <div class="slide-number">8 / 13</div>
     </section>
@@ -1665,34 +1901,54 @@
     <section class="slide slide-white" data-slide="8">
       <div class="slide-inner">
         <div class="slide-label">Go-to-Market</div>
-        <h2 class="slide-heading">West First, <span class="highlight">Then India</span></h2>
+        <h2 class="slide-heading">
+          West First, <span class="highlight">Then India</span>
+        </h2>
         <div class="two-col">
           <div class="timeline">
             <div class="timeline-item">
               <div class="timeline-phase">Phase 1 (2026)</div>
               <div class="timeline-title">US, UK, Australia</div>
-              <div class="timeline-desc">English-speaking markets with high willingness to pay</div>
+              <div class="timeline-desc">
+                English-speaking markets with high willingness to pay
+              </div>
             </div>
             <div class="timeline-item">
               <div class="timeline-phase">Phase 2 (2027)</div>
               <div class="timeline-title">EU + India Launch</div>
-              <div class="timeline-desc">Hindi and regional language support for India expansion</div>
+              <div class="timeline-desc">
+                Hindi and regional language support for India expansion
+              </div>
             </div>
             <div class="timeline-item">
               <div class="timeline-phase">Phase 3 (2028+)</div>
               <div class="timeline-title">Southeast Asia + B2B</div>
-              <div class="timeline-desc">Regional partnerships and corporate wellness programs</div>
+              <div class="timeline-desc">
+                Regional partnerships and corporate wellness programs
+              </div>
             </div>
           </div>
           <div>
-            <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;color:var(--text);">Growth Channels</h3>
+            <h3
+              style="
+                font-size: 16px;
+                font-weight: 700;
+                margin-bottom: 16px;
+                color: var(--text);
+              "
+            >
+              Growth Channels
+            </h3>
             <ul class="bullet-list">
               <li>Content marketing (body awareness education)</li>
               <li>Therapist and OT referral programs</li>
               <li>Corporate wellness partnerships</li>
               <li>Social media (TikTok/Instagram body awareness content)</li>
             </ul>
-            <div class="insight-box" style="margin-top:20px;">India advantage: 197M underserved, founder operates from India (cost efficiency)</div>
+            <div class="insight-box" style="margin-top: 20px">
+              India advantage: 197M underserved, founder operates from India
+              (cost efficiency)
+            </div>
           </div>
         </div>
       </div>
@@ -1703,46 +1959,111 @@
     <section class="slide slide-dark" data-slide="9">
       <div class="slide-inner">
         <div class="slide-label">Traction</div>
-        <h2 class="slide-heading">MVP Built, <span class="highlight">Ready to Scale</span></h2>
+        <h2 class="slide-heading">
+          MVP Built, <span class="highlight">Ready to Scale</span>
+        </h2>
         <div class="traction-grid">
           <div class="traction-item">
             <div class="traction-check">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
             </div>
             Fully functional app (web + mobile via Expo)
           </div>
           <div class="traction-item">
             <div class="traction-check">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
             </div>
             25+ exercises, 7 condition programs
           </div>
           <div class="traction-item">
             <div class="traction-check">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
             </div>
             3 clinical assessments built in
           </div>
           <div class="traction-item">
             <div class="traction-check">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
             </div>
             AI personalization engine operational
           </div>
           <div class="traction-item">
             <div class="traction-check">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
             </div>
             User authentication and account system
           </div>
           <div class="traction-item">
             <div class="traction-check">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
             </div>
             Premium subscription infrastructure
           </div>
         </div>
-        <div class="insight-box" style="margin-top:28px;">Currently in beta testing phase. Looking for seed funding to scale user acquisition and expand content library.</div>
+        <div class="insight-box" style="margin-top: 28px">
+          Currently in beta testing phase. Looking for seed funding to scale
+          user acquisition and expand content library.
+        </div>
       </div>
       <div class="slide-number">10 / 13</div>
     </section>
@@ -1751,7 +2072,9 @@
     <section class="slide slide-light" data-slide="10">
       <div class="slide-inner">
         <div class="slide-label">Financials</div>
-        <h2 class="slide-heading">Path to <span class="highlight">Profitability</span></h2>
+        <h2 class="slide-heading">
+          Path to <span class="highlight">Profitability</span>
+        </h2>
         <table class="proj-table">
           <thead>
             <tr>
@@ -1808,28 +2131,36 @@
     <section class="slide slide-dark" data-slide="11">
       <div class="slide-inner">
         <div class="slide-label">The Ask</div>
-        <h2 class="slide-heading">Raising <span class="highlight">$500K</span> Seed Round</h2>
+        <h2 class="slide-heading">
+          Raising <span class="highlight">$500K</span> Seed Round
+        </h2>
         <div class="fund-bar">
-          <div class="fund-segment product" style="width:40%;">40%</div>
-          <div class="fund-segment acquisition" style="width:25%;">25%</div>
-          <div class="fund-segment team" style="width:20%;">20%</div>
-          <div class="fund-segment operations" style="width:15%;">15%</div>
+          <div class="fund-segment product" style="width: 40%">40%</div>
+          <div class="fund-segment acquisition" style="width: 25%">25%</div>
+          <div class="fund-segment team" style="width: 20%">20%</div>
+          <div class="fund-segment operations" style="width: 15%">15%</div>
         </div>
         <div class="fund-grid">
           <div class="fund-item product">
             <div class="fund-pct">40%</div>
             <div class="fund-name">Product Development</div>
-            <div class="fund-desc">Content creation, AI improvements, wearable integration</div>
+            <div class="fund-desc">
+              Content creation, AI improvements, wearable integration
+            </div>
           </div>
           <div class="fund-item acquisition">
             <div class="fund-pct">25%</div>
             <div class="fund-name">User Acquisition</div>
-            <div class="fund-desc">Digital marketing, influencer partnerships</div>
+            <div class="fund-desc">
+              Digital marketing, influencer partnerships
+            </div>
           </div>
           <div class="fund-item team">
             <div class="fund-pct">20%</div>
             <div class="fund-name">Team</div>
-            <div class="fund-desc">Clinical advisor, content creator, growth marketer</div>
+            <div class="fund-desc">
+              Clinical advisor, content creator, growth marketer
+            </div>
           </div>
           <div class="fund-item operations">
             <div class="fund-pct">15%</div>
@@ -1859,14 +2190,30 @@
     <section class="slide slide-light" data-slide="12">
       <div class="slide-inner">
         <div class="slide-label">Team & Contact</div>
-        <h2 class="slide-heading">The Team Behind <span class="highlight">Interosense</span></h2>
+        <h2 class="slide-heading">
+          The Team Behind <span class="highlight">Interosense</span>
+        </h2>
         <div class="team-card">
           <div class="team-avatar">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
           </div>
           <div class="team-role">Founder</div>
           <div class="team-name">[Founder Name]</div>
-          <div class="team-desc">Operations & Client Management background, passionate about mental wellness accessibility</div>
+          <div class="team-desc">
+            Operations & Client Management background, passionate about mental
+            wellness accessibility
+          </div>
         </div>
         <div class="advisory-grid">
           <div class="advisory-item">
@@ -1883,7 +2230,10 @@
           </div>
         </div>
         <div class="contact-info">
-          <div class="contact-quote">"We're looking for mentors and advisors who believe the future of mental health starts in the body."</div>
+          <div class="contact-quote">
+            "We're looking for mentors and advisors who believe the future of
+            mental health starts in the body."
+          </div>
           <div class="contact-links">
             <span>[contact@placeholder.com]</span>
             <a href="BASE_URL_PLACEHOLDER">BASE_URL_PLACEHOLDER</a>
@@ -1894,43 +2244,45 @@
     </section>
 
     <script>
-      (function() {
-        var slides = document.querySelectorAll('.slide');
-        var dotsContainer = document.getElementById('navDots');
+      (function () {
+        var slides = document.querySelectorAll(".slide");
+        var dotsContainer = document.getElementById("navDots");
 
-        slides.forEach(function(slide, i) {
-          var dot = document.createElement('button');
-          dot.className = 'nav-dot';
-          dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
-          dot.addEventListener('click', function() {
-            slide.scrollIntoView({ behavior: 'smooth' });
+        slides.forEach(function (slide, i) {
+          var dot = document.createElement("button");
+          dot.className = "nav-dot";
+          dot.setAttribute("aria-label", "Go to slide " + (i + 1));
+          dot.addEventListener("click", function () {
+            slide.scrollIntoView({ behavior: "smooth" });
           });
           dotsContainer.appendChild(dot);
         });
 
-        var dots = dotsContainer.querySelectorAll('.nav-dot');
+        var dots = dotsContainer.querySelectorAll(".nav-dot");
 
         function updateActiveDot() {
           var scrollTop = window.scrollY || document.documentElement.scrollTop;
           var windowHeight = window.innerHeight;
           var activeIndex = 0;
 
-          slides.forEach(function(slide, i) {
+          slides.forEach(function (slide, i) {
             var rect = slide.getBoundingClientRect();
-            if (rect.top <= windowHeight * 0.5 && rect.bottom > windowHeight * 0.5) {
+            if (
+              rect.top <= windowHeight * 0.5 &&
+              rect.bottom > windowHeight * 0.5
+            ) {
               activeIndex = i;
             }
           });
 
-          dots.forEach(function(d, i) {
-            d.classList.toggle('active', i === activeIndex);
+          dots.forEach(function (d, i) {
+            d.classList.toggle("active", i === activeIndex);
           });
         }
 
-        window.addEventListener('scroll', updateActiveDot, { passive: true });
+        window.addEventListener("scroll", updateActiveDot, { passive: true });
         updateActiveDot();
       })();
     </script>
-
   </body>
 </html>
