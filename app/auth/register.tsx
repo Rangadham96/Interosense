@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
   ScrollView,
-  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,6 +16,13 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
+
+const TRUST_ITEMS = [
+  'Your data is encrypted and never sold',
+  'Free forever — no credit card required',
+  'Built with clinical research, not trends',
+  'Cancel or delete your account any time',
+];
 
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
@@ -29,21 +35,25 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const passwordsMatch = password === confirmPassword;
+  const showMatchIndicator = confirmPassword.length >= 4;
 
   const handleRegister = async () => {
     setError('');
     if (!name.trim() || !email.trim() || !password.trim()) {
-      setError('Please fill in all fields');
+      setError('Please fill in all the fields to continue.');
       return;
     }
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError('Your password needs to be at least 6 characters.');
       return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError("Your passwords don't match — please check and try again.");
       return;
     }
 
@@ -52,13 +62,14 @@ export default function RegisterScreen() {
     setLoading(false);
 
     if (!result.success) {
-      setError(result.message || 'Registration failed');
+      const msg = result.message || '';
+      if (msg.toLowerCase().includes('exist') || msg.toLowerCase().includes('already')) {
+        setError('Looks like you already have an account. Try signing in instead?');
+      } else {
+        setError("Something went wrong on our end. Please try again in a moment.");
+      }
     }
   };
-
-  const passwordStrength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
-  const strengthColors = ['transparent', '#E53935', '#FF9800', '#4CAF50'];
-  const strengthLabels = ['', 'Weak', 'Good', 'Strong'];
 
   return (
     <KeyboardAvoidingView
@@ -67,29 +78,38 @@ export default function RegisterScreen() {
     >
       <View style={[styles.container, { paddingTop: topPadding }]}>
         <LinearGradient
-          colors={[Colors.secondary, '#7AACAE', Colors.background]}
+          colors={['#FAFAFE', '#F3F0FA', Colors.background]}
           style={styles.gradient}
           start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
+          end={{ x: 0.3, y: 1 }}
         />
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={styles.logoSection}>
-            <Image
-              source={require('@/assets/images/icon.png')}
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
+            <View style={styles.logoIconWrap}>
+              <Feather name="activity" size={32} color={Colors.primary} />
+            </View>
             <Text style={styles.appName}>Interosense</Text>
-            <Text style={styles.tagline}>Begin your awareness journey</Text>
+            <Text style={styles.tagline}>Sense your inner world</Text>
+          </View>
+
+          <View style={styles.trustCard}>
+            {TRUST_ITEMS.map((item, i) => (
+              <View key={i} style={styles.trustItem}>
+                <View style={styles.trustCheck}>
+                  <Feather name="check" size={12} color="#fff" />
+                </View>
+                <Text style={styles.trustText}>{item}</Text>
+              </View>
+            ))}
           </View>
 
           <View style={styles.formCard}>
-            <Text style={styles.formTitle}>Create Account</Text>
+            <Text style={styles.formTitle}>Create My Account</Text>
 
             {error ? (
               <View style={styles.errorBox}>
-                <Feather name="alert-circle" size={16} color="#E53935" />
+                <Feather name="alert-circle" size={16} color="#C62828" />
                 <Text style={styles.errorText}>{error}</Text>
               </View>
             ) : null}
@@ -131,40 +151,47 @@ export default function RegisterScreen() {
                 <Feather name="lock" size={18} color={Colors.textTertiary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Password (min 6 characters)"
+                  placeholder="Create a password"
                   placeholderTextColor={Colors.textTertiary}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   testID="register-password"
                 />
-                <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn} testID="register-eye-toggle">
                   <Feather name={showPassword ? 'eye-off' : 'eye'} size={18} color={Colors.textTertiary} />
                 </Pressable>
               </View>
-              {password.length > 0 && (
-                <View style={styles.strengthRow}>
-                  <View style={styles.strengthBar}>
-                    <View style={[styles.strengthFill, { width: `${(passwordStrength / 3) * 100}%`, backgroundColor: strengthColors[passwordStrength] }]} />
-                  </View>
-                  <Text style={[styles.strengthLabel, { color: strengthColors[passwordStrength] }]}>{strengthLabels[passwordStrength]}</Text>
-                </View>
-              )}
             </View>
 
             <View style={styles.inputGroup}>
               <View style={styles.inputWrapper}>
-                <Feather name="check-circle" size={18} color={Colors.textTertiary} style={styles.inputIcon} />
+                <Feather name="lock" size={18} color={Colors.textTertiary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Confirm password"
+                  placeholder="Confirm your password"
                   placeholderTextColor={Colors.textTertiary}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
-                  secureTextEntry={!showPassword}
+                  secureTextEntry={!showConfirmPassword}
                   testID="register-confirm"
                 />
+                <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeBtn} testID="register-confirm-eye-toggle">
+                  <Feather name={showConfirmPassword ? 'eye-off' : 'eye'} size={18} color={Colors.textTertiary} />
+                </Pressable>
               </View>
+              {showMatchIndicator && (
+                <View style={styles.matchRow}>
+                  <Feather
+                    name={passwordsMatch ? 'check-circle' : 'x-circle'}
+                    size={14}
+                    color={passwordsMatch ? '#2E7D32' : '#C62828'}
+                  />
+                  <Text style={[styles.matchText, { color: passwordsMatch ? '#2E7D32' : '#C62828' }]}>
+                    {passwordsMatch ? 'Passwords match' : "Passwords don't match"}
+                  </Text>
+                </View>
+              )}
             </View>
 
             <Pressable
@@ -174,22 +201,23 @@ export default function RegisterScreen() {
               testID="register-submit"
             >
               {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <>
+                  <ActivityIndicator color="#fff" size="small" />
+                  <Text style={styles.registerButtonText}>Just a moment...</Text>
+                </>
               ) : (
-                <Text style={styles.registerButtonText}>Create Account</Text>
+                <Text style={styles.registerButtonText}>Create My Account →</Text>
               )}
             </Pressable>
-
-            
           </View>
 
           <Pressable style={styles.switchLink} onPress={() => router.replace('/auth/login')}>
             <Text style={styles.switchText}>
-              Already have an account? <Text style={styles.switchBold}>Sign In</Text>
+              Already have an account?{' '}<Text style={styles.switchBold}>Sign in</Text>
             </Text>
           </Pressable>
 
-          <View style={{ height: 40 }} />
+          <View style={{ height: Platform.OS === 'web' ? 34 : 40 }} />
         </ScrollView>
       </View>
     </KeyboardAvoidingView>
@@ -198,24 +226,44 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  gradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 350 },
-  content: { paddingHorizontal: 24, justifyContent: 'center', flexGrow: 1 },
-  logoSection: { alignItems: 'center', marginBottom: 24, marginTop: 24 },
-  logoImage: {
-    width: 88, height: 88, borderRadius: 22,
-    marginBottom: 16,
+  gradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
+  content: { paddingHorizontal: 24, paddingTop: 16, flexGrow: 1 },
+  logoSection: { alignItems: 'center', marginBottom: 20 },
+  logoIconWrap: {
+    width: 72, height: 72, borderRadius: 20,
+    backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center',
+    marginBottom: 12,
+    ...Platform.select({
+      ios: { shadowColor: Colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12 },
+      android: { elevation: 4 },
+      web: { boxShadow: '0 4px 16px rgba(107,91,149,0.15)' },
+    }),
   },
-  appName: { fontSize: 32, fontFamily: 'Nunito_800ExtraBold', color: '#fff' },
-  tagline: { fontSize: 15, fontFamily: 'Nunito_400Regular', color: 'rgba(255,255,255,0.8)', marginTop: 4 },
+  appName: { fontSize: 28, fontFamily: 'Nunito_800ExtraBold', color: Colors.text },
+  tagline: { fontSize: 14, fontFamily: 'Nunito_400Regular', color: Colors.textSecondary, marginTop: 4 },
+  trustCard: {
+    backgroundColor: Colors.surface, borderRadius: 16, padding: 16, marginBottom: 16, gap: 10,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
+      android: { elevation: 2 },
+      web: { boxShadow: '0 2px 12px rgba(0,0,0,0.05)' },
+    }),
+  },
+  trustItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  trustCheck: {
+    width: 20, height: 20, borderRadius: 10,
+    backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center',
+  },
+  trustText: { fontSize: 13, fontFamily: 'Nunito_500Medium', color: Colors.textSecondary, flex: 1 },
   formCard: {
     backgroundColor: Colors.surface, borderRadius: 24, padding: 24,
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 24 },
-      android: { elevation: 8 },
-      web: { boxShadow: '0 8px 32px rgba(0,0,0,0.1)' },
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.08, shadowRadius: 24 },
+      android: { elevation: 6 },
+      web: { boxShadow: '0 8px 32px rgba(0,0,0,0.08)' },
     }),
   },
-  formTitle: { fontSize: 24, fontFamily: 'Nunito_700Bold', color: Colors.text, marginBottom: 20, textAlign: 'center' },
+  formTitle: { fontSize: 22, fontFamily: 'Nunito_700Bold', color: Colors.text, marginBottom: 20, textAlign: 'center' },
   errorBox: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: '#FFEBEE', borderRadius: 12, padding: 12, marginBottom: 16,
@@ -232,13 +280,11 @@ const styles = StyleSheet.create({
     fontSize: 15, fontFamily: 'Nunito_500Medium', color: Colors.text,
   },
   eyeBtn: { padding: 14 },
-  strengthRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 8 },
-  strengthBar: { flex: 1, height: 4, backgroundColor: Colors.border, borderRadius: 2, overflow: 'hidden' as const },
-  strengthFill: { height: '100%', borderRadius: 2 },
-  strengthLabel: { fontSize: 11, fontFamily: 'Nunito_600SemiBold' },
+  matchRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, paddingLeft: 4 },
+  matchText: { fontSize: 12, fontFamily: 'Nunito_600SemiBold' },
   registerButton: {
-    backgroundColor: Colors.secondary, borderRadius: 14, paddingVertical: 16,
-    alignItems: 'center', marginTop: 8,
+    backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8,
   },
   registerButtonDisabled: { opacity: 0.7 },
   registerButtonText: { fontSize: 16, fontFamily: 'Nunito_700Bold', color: '#fff' },

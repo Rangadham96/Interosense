@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <title>APP_NAME_PLACEHOLDER</title>
+    <title>Interosense — Your Body Has Been Trying to Tell You Something</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -57,8 +57,7 @@
       .nav-logo {
         font-size: 22px; font-weight: 800; color: var(--white);
         text-decoration: none; letter-spacing: -0.5px; transition: color 0.3s;
-        flex-shrink: 0;
-        margin-right: 24px;
+        flex-shrink: 0; margin-right: 24px;
       }
       .nav.scrolled .nav-logo { color: var(--primary-dark); }
       .nav-links {
@@ -68,8 +67,7 @@
       .nav-links li { flex-shrink: 0; }
       .nav-links a {
         color: rgba(255,255,255,0.85); text-decoration: none;
-        font-weight: 600; font-size: 15px; transition: color 0.3s;
-        white-space: nowrap;
+        font-weight: 600; font-size: 15px; transition: color 0.3s; white-space: nowrap;
       }
       .nav.scrolled .nav-links a { color: var(--text-light); }
       .nav-links a:hover { color: var(--white); }
@@ -78,19 +76,16 @@
         display: inline-block; padding: 8px 16px; background: rgba(255,255,255,0.15);
         border: 1px solid rgba(255,255,255,0.3); border-radius: 50px;
         color: var(--white) !important; font-weight: 700; font-size: 14px;
-        text-decoration: none; transition: all 0.3s;
-        white-space: nowrap;
+        text-decoration: none; transition: all 0.3s; white-space: nowrap;
       }
       .nav-cta:hover { background: rgba(255,255,255,0.25); }
-      .nav.scrolled .nav-cta {
-        background: var(--primary); border-color: var(--primary); color: var(--white) !important;
-      }
+      .nav.scrolled .nav-cta { background: var(--primary); border-color: var(--primary); color: var(--white) !important; }
       .nav.scrolled .nav-cta:hover { background: var(--primary-dark); }
 
       /* HERO */
       .hero {
         position: relative; min-height: 100vh; display: flex; align-items: center;
-        justify-content: center; text-align: center; padding: 120px 24px 80px;
+        justify-content: center; text-align: center; padding: 120px 24px 100px;
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 40%, #2A1F4E 70%, #1a1235 100%);
         background-size: 300% 300%; animation: heroGradient 16s ease infinite; overflow: hidden;
       }
@@ -113,10 +108,7 @@
         100% { opacity: 0; transform: translateY(-20vh) translateX(var(--dx)); }
       }
 
-      .hero-orb {
-        position: absolute; border-radius: 50%; pointer-events: none;
-        filter: blur(60px);
-      }
+      .hero-orb { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(60px); }
       .hero-orb-1 {
         width: 500px; height: 500px;
         background: radial-gradient(circle, rgba(232,180,184,0.25), transparent 70%);
@@ -146,7 +138,7 @@
         50% { transform: translate(-35px, 45px); }
       }
 
-      .hero-content { position: relative; z-index: 2; max-width: 760px; }
+      .hero-content { position: relative; z-index: 2; max-width: 780px; }
       .hero-badge {
         display: inline-block; padding: 8px 24px;
         background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
@@ -162,8 +154,8 @@
 
       .hero h1 {
         font-size: 36px; font-weight: 900; color: var(--white);
-        line-height: 1.12; margin-bottom: 22px; letter-spacing: -1px;
-        background: linear-gradient(90deg, #fff 0%, rgba(168,156,200,0.8) 50%, #fff 100%);
+        line-height: 1.1; margin-bottom: 22px; letter-spacing: -1px;
+        background: linear-gradient(90deg, #fff 0%, rgba(168,156,200,0.85) 50%, #fff 100%);
         background-size: 200% 100%; -webkit-background-clip: text;
         background-clip: text; -webkit-text-fill-color: transparent;
         animation: textShimmer 4s ease-in-out infinite;
@@ -175,60 +167,37 @@
 
       .hero-subtitle {
         font-size: 17px; color: rgba(255,255,255,0.78);
-        max-width: 560px; margin: 0 auto 32px; line-height: 1.7; font-weight: 400;
+        max-width: 580px; margin: 0 auto 36px; line-height: 1.7; font-weight: 400;
       }
 
-      .heartbeat-wrapper { margin: 0 auto 36px; text-align: center; cursor: pointer; }
-      .heartbeat-ring {
-        width: 80px; height: 80px; margin: 0 auto 14px;
-        border: 3px solid rgba(232,180,184,0.5); border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        animation: heartbeat 1.4s ease-in-out infinite;
-        transition: border-color 0.3s;
-      }
-      .heartbeat-ring-inner {
-        width: 50px; height: 50px; border-radius: 50%;
-        background: radial-gradient(circle, rgba(232,180,184,0.4), rgba(232,180,184,0.1));
-        animation: heartbeat 1.4s ease-in-out infinite 0.1s;
-      }
-      .heartbeat-wrapper:hover .heartbeat-ring,
-      .heartbeat-wrapper.active .heartbeat-ring {
-        animation: heartbeatFast 0.6s ease-in-out infinite;
-        border-color: rgba(232,180,184,0.9);
-      }
-      .heartbeat-wrapper:hover .heartbeat-ring-inner,
-      .heartbeat-wrapper.active .heartbeat-ring-inner {
-        animation: heartbeatFast 0.6s ease-in-out infinite 0.05s;
-      }
-      @keyframes heartbeat {
-        0%, 100% { transform: scale(1); }
-        15% { transform: scale(1.12); }
-        30% { transform: scale(1); }
-        45% { transform: scale(1.08); }
-        60% { transform: scale(1); }
-      }
-      @keyframes heartbeatFast {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.18); }
-      }
-      .heartbeat-text {
-        color: rgba(255,255,255,0.65); font-size: 15px; font-weight: 500;
-        transition: all 0.4s ease;
-      }
-      .heartbeat-wrapper:hover .heartbeat-text,
-      .heartbeat-wrapper.active .heartbeat-text { color: rgba(232,180,184,0.9); }
-
-      .hero-cta {
-        display: inline-block; padding: 16px 44px; background: var(--white);
+      .hero-ctas { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 48px; }
+      .hero-cta-primary {
+        display: inline-block; padding: 16px 40px; background: var(--white);
         color: var(--primary-dark); font-family: 'Nunito', sans-serif;
         font-size: 16px; font-weight: 700; border: none; border-radius: 50px;
         cursor: pointer; text-decoration: none; transition: all 0.3s ease;
         box-shadow: 0 8px 30px rgba(0,0,0,0.15), 0 0 40px rgba(168,156,200,0.2);
       }
-      .hero-cta:hover {
+      .hero-cta-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 12px 40px rgba(0,0,0,0.2), 0 0 60px rgba(168,156,200,0.3);
       }
+      .hero-cta-outline {
+        display: inline-block; padding: 16px 40px;
+        background: transparent; border: 2px solid rgba(255,255,255,0.4);
+        color: var(--white); font-family: 'Nunito', sans-serif;
+        font-size: 16px; font-weight: 700; border-radius: 50px;
+        cursor: pointer; text-decoration: none; transition: all 0.3s ease;
+      }
+      .hero-cta-outline:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.7); }
+
+      .hero-trust { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; }
+      .hero-trust-item { display: flex; align-items: center; gap: 8px; }
+      .hero-trust-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: rgba(168,156,200,0.8);
+      }
+      .hero-trust-item span { font-size: 13px; color: rgba(255,255,255,0.7); font-weight: 600; white-space: nowrap; }
 
       .scroll-indicator {
         position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
@@ -240,19 +209,6 @@
         50% { transform: translateX(-50%) translateY(10px); }
       }
 
-      /* STATS */
-      .stats-bar { background: var(--white); padding: 48px 24px; box-shadow: var(--shadow-sm); }
-      .stats-grid {
-        max-width: 1000px; margin: 0 auto; display: grid;
-        grid-template-columns: repeat(2, 1fr); gap: 24px; text-align: center;
-      }
-      .stat-item { padding: 8px; }
-      .stat-number { font-size: 32px; font-weight: 900; color: var(--primary); line-height: 1.2; }
-      .stat-label {
-        font-size: 13px; color: var(--text-light); font-weight: 600;
-        margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px;
-      }
-
       /* SECTIONS */
       .section { padding: 80px 24px; }
       .section-header { text-align: center; max-width: 640px; margin: 0 auto 56px; }
@@ -262,149 +218,30 @@
         font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
         text-transform: uppercase; border-radius: 50px; margin-bottom: 16px;
       }
-      .section-title {
-        font-size: 30px; font-weight: 800; color: var(--text);
-        line-height: 1.2; margin-bottom: 16px; letter-spacing: -0.5px;
-      }
+      .section-title { font-size: 30px; font-weight: 800; color: var(--text); line-height: 1.2; margin-bottom: 16px; letter-spacing: -0.5px; }
       .section-desc { font-size: 16px; color: var(--text-light); line-height: 1.7; }
 
-      /* BODY MAP */
-      .bodymap-section {
-        background: linear-gradient(180deg, rgba(168,156,200,0.08) 0%, rgba(136,179,181,0.06) 100%);
-      }
-      .bodymap-container {
-        display: flex; flex-direction: column; align-items: center; gap: 40px;
-        max-width: 900px; margin: 0 auto;
-      }
-      .bodymap-svg-wrap {
-        position: relative; width: 220px; height: 420px;
-        animation: bodyGlow 4s ease-in-out infinite;
-      }
-      @keyframes bodyGlow {
-        0%, 100% { filter: drop-shadow(0 0 20px rgba(107,91,149,0.15)); }
-        50% { filter: drop-shadow(0 0 35px rgba(107,91,149,0.3)); }
-      }
-      .bodymap-svg-wrap svg { width: 100%; height: 100%; }
-      .body-region {
-        fill: rgba(168,156,200,0.12); stroke: var(--primary-light);
-        stroke-width: 1.2; cursor: pointer; transition: all 0.4s ease;
-      }
-      .body-region:hover, .body-region.active {
-        fill: rgba(107,91,149,0.25);
-        stroke: var(--primary);
-        stroke-width: 2;
-        filter: drop-shadow(0 0 8px rgba(107,91,149,0.4));
-      }
-      .bodymap-info {
-        text-align: center; max-width: 340px;
-        min-height: 80px;
-      }
-      .bodymap-info-title {
-        font-size: 20px; font-weight: 700; color: var(--primary);
-        margin-bottom: 8px;
-        opacity: 0; transform: translateY(8px);
-        transition: all 0.4s ease;
-      }
-      .bodymap-info-desc {
-        font-size: 15px; color: var(--text-light); line-height: 1.6;
-        opacity: 0; transform: translateY(8px);
-        transition: all 0.4s ease 0.1s;
-      }
-      .bodymap-info-title.visible, .bodymap-info-desc.visible {
-        opacity: 1; transform: translateY(0);
-      }
-      .bodymap-default-text {
-        font-size: 16px; color: var(--text-light); font-weight: 500;
-        transition: opacity 0.3s;
-      }
-      .bodymap-cta { text-align: center; margin-top: 12px; }
-      .bodymap-cta a {
-        display: inline-block; padding: 12px 32px; background: var(--primary);
-        color: var(--white); border-radius: 50px; text-decoration: none;
-        font-weight: 700; font-size: 15px; transition: all 0.3s;
-        box-shadow: 0 4px 20px rgba(107,91,149,0.3);
-      }
-      .bodymap-cta a:hover { background: var(--primary-dark); transform: translateY(-2px); }
-
-      /* PHONE MOCKUP */
-      .walkthrough-section { background: var(--white); }
-      .phone-container { display: flex; flex-direction: column; align-items: center; }
-      .phone-frame {
-        width: 280px; height: 560px; background: #1a1a2e;
-        border-radius: 40px; padding: 10px; position: relative;
-        box-shadow: 0 30px 80px rgba(0,0,0,0.25), inset 0 0 0 2px rgba(255,255,255,0.1);
-      }
-      .phone-notch {
-        position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-        width: 100px; height: 26px; background: #1a1a2e;
-        border-radius: 0 0 16px 16px; z-index: 5;
-      }
-      .phone-screen {
-        width: 100%; height: 100%; background: var(--bg);
-        border-radius: 32px; overflow: hidden; position: relative;
-      }
-      .phone-screen-img {
-        position: absolute; inset: 0; width: 100%; height: 100%;
-        object-fit: cover; object-position: top;
-        opacity: 0; transition: opacity 0.6s ease;
-      }
-      .phone-screen-img.active { opacity: 1; }
-
-      .phone-dots { display: flex; gap: 8px; margin-top: 24px; }
-      .phone-dot {
-        width: 10px; height: 10px; border-radius: 50%;
-        background: var(--primary-light); transition: all 0.3s; cursor: pointer;
-      }
-      .phone-dot.active { background: var(--primary); width: 28px; border-radius: 5px; }
-      .phone-label {
-        margin-top: 12px; font-size: 15px; font-weight: 600; color: var(--text);
-        transition: opacity 0.3s; min-height: 24px;
-      }
-
-      /* FEATURES */
-      .features-section { background: var(--white); }
-      .features-grid {
-        display: grid; grid-template-columns: 1fr; gap: 20px;
-        max-width: 1000px; margin: 0 auto;
-      }
-      .feature-card {
-        background: var(--bg); padding: 32px 28px; border-radius: var(--radius);
-        transition: all 0.35s ease; border: 1px solid transparent;
-      }
-      .feature-card:hover {
-        transform: translateY(-6px); box-shadow: var(--shadow-lg);
-        border-color: rgba(107,91,149,0.1);
-      }
-      .feature-icon {
-        width: 52px; height: 52px; border-radius: 14px;
-        display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
-      }
-      .feature-icon svg { width: 26px; height: 26px; color: var(--white); }
-      .feature-icon.purple { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
-      .feature-icon.teal { background: linear-gradient(135deg, var(--secondary), #6A9B9D); }
-      .feature-icon.rose { background: linear-gradient(135deg, var(--accent), #D4949A); }
-      .feature-card h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
-      .feature-card p { font-size: 15px; color: var(--text-light); line-height: 1.7; }
-
-      /* HOW IT WORKS */
-      .steps-section { background: var(--bg); }
-      .steps-flow {
+      /* PROBLEM SECTION */
+      .problem-section { background: var(--white); }
+      .problem-grid {
         display: grid; grid-template-columns: 1fr; gap: 32px;
         max-width: 900px; margin: 0 auto;
       }
-      .flow-step { display: flex; gap: 24px; align-items: flex-start; }
-      .flow-number {
-        width: 56px; height: 56px; min-width: 56px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-        color: var(--white); border-radius: 16px; display: flex;
-        align-items: center; justify-content: center;
-        font-size: 22px; font-weight: 800;
+      .problem-col { border-radius: var(--radius); padding: 36px 32px; }
+      .problem-col.generic { background: #FFF8F8; border: 2px solid #F5E0E0; }
+      .problem-col.interosense { background: rgba(107,91,149,0.05); border: 2px solid rgba(107,91,149,0.2); }
+      .problem-col-label {
+        font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+        margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
       }
-      .flow-content h3 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-      .flow-content p { font-size: 15px; color: var(--text-light); line-height: 1.7; }
+      .problem-col.generic .problem-col-label { color: #C0747A; }
+      .problem-col.interosense .problem-col-label { color: var(--primary); }
+      .problem-item { display: flex; gap: 12px; margin-bottom: 16px; align-items: flex-start; }
+      .problem-icon { width: 22px; height: 22px; min-width: 22px; margin-top: 2px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+      .problem-item p { font-size: 15px; color: var(--text); line-height: 1.6; }
 
-      /* SCIENCE */
-      .science-section {
+      /* SCIENCE STATS */
+      .science-stats-section {
         background: linear-gradient(135deg, var(--primary-dark) 0%, #2A1F4E 50%, #1a1235 100%);
         color: var(--white); position: relative; overflow: hidden;
       }
@@ -422,25 +259,44 @@
         50% { stroke-dashoffset: 0; }
         100% { stroke-dashoffset: -600; }
       }
-      .science-section .section-label { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); }
-      .science-section .section-title { color: var(--white); }
-      .science-section .section-desc { color: rgba(255,255,255,0.7); }
-      .science-grid {
+      .science-stats-section .section-label { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); }
+      .science-stats-section .section-title { color: var(--white); }
+      .science-stats-section .section-desc { color: rgba(255,255,255,0.7); }
+      .stat-cards-grid {
         display: grid; grid-template-columns: 1fr; gap: 24px;
-        max-width: 900px; margin: 0 auto; position: relative; z-index: 2;
+        max-width: 900px; margin: 0 auto 32px; position: relative; z-index: 2;
       }
-      .science-card {
+      .stat-card {
         background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
-        border-radius: var(--radius); padding: 32px 28px;
+        border-radius: var(--radius); padding: 36px 28px; text-align: center;
         backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         transition: all 0.3s;
       }
-      .science-card:hover {
-        background: rgba(255,255,255,0.12); transform: translateY(-4px);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+      .stat-card:hover { background: rgba(255,255,255,0.12); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.2); }
+      .stat-card-number { font-size: 48px; font-weight: 900; color: var(--white); line-height: 1.1; margin-bottom: 8px; }
+      .stat-card-label { font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.9); margin-bottom: 8px; }
+      .stat-card-desc { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+      .science-citation {
+        text-align: center; position: relative; z-index: 2;
+        font-size: 13px; color: rgba(255,255,255,0.45); font-style: italic;
+        max-width: 700px; margin: 0 auto;
       }
-      .science-card h3 { font-size: 18px; font-weight: 700; color: var(--white); margin-bottom: 12px; }
-      .science-card p { font-size: 15px; color: rgba(255,255,255,0.7); line-height: 1.7; }
+
+      /* HOW IT WORKS */
+      .steps-section { background: var(--bg); }
+      .steps-flow {
+        display: grid; grid-template-columns: 1fr; gap: 32px;
+        max-width: 900px; margin: 0 auto;
+      }
+      .flow-step { display: flex; gap: 24px; align-items: flex-start; }
+      .flow-number {
+        width: 56px; height: 56px; min-width: 56px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: var(--white); border-radius: 16px; display: flex;
+        align-items: center; justify-content: center; font-size: 22px; font-weight: 800;
+      }
+      .flow-content h3 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+      .flow-content p { font-size: 15px; color: var(--text-light); line-height: 1.7; }
 
       /* CONDITIONS */
       .conditions-grid {
@@ -466,17 +322,10 @@
 
       /* TESTIMONIALS */
       .testimonials-section { background: var(--white); }
-      .testimonials-grid {
-        display: grid; grid-template-columns: 1fr; gap: 24px;
-        max-width: 900px; margin: 0 auto;
-      }
-      .testimonial-card {
-        background: var(--bg); padding: 32px 28px; border-radius: var(--radius);
-      }
-      .testimonial-quote {
-        font-size: 16px; color: var(--text); line-height: 1.7;
-        margin-bottom: 20px; font-style: italic;
-      }
+      .testimonials-grid { display: grid; grid-template-columns: 1fr; gap: 24px; max-width: 900px; margin: 0 auto; }
+      .testimonial-card { background: var(--bg); padding: 32px 28px; border-radius: var(--radius); }
+      .testimonial-stars { color: #F0C05A; font-size: 16px; margin-bottom: 16px; letter-spacing: 2px; }
+      .testimonial-quote { font-size: 16px; color: var(--text); line-height: 1.75; margin-bottom: 20px; font-style: italic; }
       .testimonial-author { display: flex; align-items: center; gap: 12px; }
       .testimonial-avatar {
         width: 44px; height: 44px; border-radius: 50%;
@@ -486,10 +335,53 @@
       }
       .testimonial-name { font-size: 15px; font-weight: 700; color: var(--text); }
       .testimonial-role { font-size: 13px; color: var(--text-light); }
-      .testimonial-note {
-        text-align: center; font-size: 12px; color: var(--text-light);
-        margin-top: 24px; font-style: italic;
+      .testimonial-note { text-align: center; font-size: 12px; color: var(--text-light); margin-top: 24px; font-style: italic; }
+
+      /* PRICING */
+      .pricing-section { background: var(--bg); }
+      .pricing-grid {
+        display: grid; grid-template-columns: 1fr; gap: 24px;
+        max-width: 800px; margin: 0 auto;
       }
+      .pricing-card {
+        background: var(--white); border-radius: var(--radius);
+        padding: 40px 32px; position: relative;
+        box-shadow: var(--shadow-sm); border: 2px solid transparent;
+        transition: all 0.3s;
+      }
+      .pricing-card.featured { border-color: rgba(107,91,149,0.25); box-shadow: var(--shadow-md); }
+      .pricing-badge {
+        position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+        background: var(--primary); color: var(--white);
+        font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+        padding: 4px 16px; border-radius: 50px;
+      }
+      .pricing-soon-badge {
+        position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+        background: #9E9E9E; color: var(--white);
+        font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+        padding: 4px 16px; border-radius: 50px;
+      }
+      .pricing-tier { font-size: 14px; font-weight: 700; color: var(--text-light); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+      .pricing-price { font-size: 48px; font-weight: 900; color: var(--text); line-height: 1; margin-bottom: 6px; }
+      .pricing-period { font-size: 15px; color: var(--text-light); margin-bottom: 28px; }
+      .pricing-features { list-style: none; margin-bottom: 32px; }
+      .pricing-features li { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; font-size: 15px; color: var(--text); }
+      .pricing-features li::before { content: "✓"; color: var(--primary); font-weight: 800; font-size: 14px; margin-top: 2px; flex-shrink: 0; }
+      .pricing-features li.muted { color: var(--text-light); }
+      .pricing-features li.muted::before { color: #BDBDBD; }
+      .pricing-cta {
+        display: block; text-align: center; padding: 14px 28px;
+        background: var(--primary); color: var(--white); border-radius: 50px;
+        font-weight: 700; font-size: 16px; text-decoration: none; transition: all 0.3s;
+      }
+      .pricing-cta:hover { background: var(--primary-dark); transform: translateY(-2px); }
+      .pricing-cta.disabled {
+        background: #E0E0E0; color: #9E9E9E; cursor: not-allowed;
+      }
+      .pricing-cta.disabled:hover { transform: none; }
+      .pricing-note { text-align: center; font-size: 14px; color: var(--text-light); margin-top: 32px; font-style: italic; }
+      .pricing-note strong { color: var(--primary); font-style: normal; }
 
       /* FINAL CTA */
       .final-cta {
@@ -499,44 +391,28 @@
       }
       .final-cta-particles { position: absolute; inset: 0; pointer-events: none; }
       .final-cta-content { position: relative; z-index: 2; }
-      .final-cta h2 {
-        font-size: 32px; font-weight: 800; color: var(--white);
-        margin-bottom: 16px; letter-spacing: -0.5px;
-      }
-      .final-cta .subtitle {
-        font-size: 17px; color: rgba(255,255,255,0.75); margin-bottom: 36px;
-        max-width: 500px; margin-left: auto; margin-right: auto;
-      }
+      .final-cta h2 { font-size: 32px; font-weight: 800; color: var(--white); margin-bottom: 16px; letter-spacing: -0.5px; }
+      .final-cta .subtitle { font-size: 17px; color: rgba(255,255,255,0.75); margin-bottom: 36px; max-width: 500px; margin-left: auto; margin-right: auto; }
       .final-cta-btn {
         display: inline-block; padding: 18px 48px; background: var(--white);
         color: var(--primary-dark); font-family: 'Nunito', sans-serif;
         font-size: 17px; font-weight: 700; border: none; border-radius: 50px;
         cursor: pointer; text-decoration: none; transition: all 0.3s;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.2), 0 0 40px rgba(168,156,200,0.2);
-        margin-bottom: 20px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.2), 0 0 40px rgba(168,156,200,0.2); margin-bottom: 20px;
       }
-      .final-cta-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.25), 0 0 60px rgba(168,156,200,0.3);
-      }
-      .final-cta .explore-link {
-        display: block; color: rgba(255,255,255,0.6); font-size: 14px;
-        text-decoration: none; transition: color 0.3s;
-      }
-      .final-cta .explore-link:hover { color: rgba(255,255,255,0.9); }
-      .final-cta .explore-link span { text-decoration: underline; text-underline-offset: 3px; }
+      .final-cta-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.25), 0 0 60px rgba(168,156,200,0.3); }
 
       /* FOOTER */
       .footer {
         background: var(--primary-dark); color: rgba(255,255,255,0.7);
-        padding: 48px 24px; text-align: center;
+        padding: 56px 24px 40px; text-align: center;
       }
-      .footer-logo { font-size: 22px; font-weight: 800; color: var(--white); margin-bottom: 16px; }
-      .footer-disclaimer {
-        font-size: 13px; max-width: 500px; margin: 0 auto 20px;
-        line-height: 1.6; color: rgba(255,255,255,0.5);
-      }
-      .footer-copyright { font-size: 13px; color: rgba(255,255,255,0.4); }
+      .footer-logo { font-size: 22px; font-weight: 800; color: var(--white); margin-bottom: 20px; }
+      .footer-nav { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+      .footer-nav a { font-size: 14px; color: rgba(255,255,255,0.55); text-decoration: none; font-weight: 600; transition: color 0.3s; }
+      .footer-nav a:hover { color: rgba(255,255,255,0.9); }
+      .footer-disclaimer { font-size: 12px; max-width: 620px; margin: 0 auto 20px; line-height: 1.6; color: rgba(255,255,255,0.4); }
+      .footer-copyright { font-size: 12px; color: rgba(255,255,255,0.3); }
 
       /* PORTAL OVERLAY */
       .portal-overlay {
@@ -550,8 +426,7 @@
       .portal-ripple {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         width: 0; height: 0; border-radius: 50%;
-        border: 1px solid rgba(168,156,200,0.3);
-        animation: portalRipple 3s ease-out infinite;
+        border: 1px solid rgba(168,156,200,0.3); animation: portalRipple 3s ease-out infinite;
       }
       .portal-ripple:nth-child(2) { animation-delay: 1s; }
       .portal-ripple:nth-child(3) { animation-delay: 2s; }
@@ -559,15 +434,8 @@
         0% { width: 0; height: 0; opacity: 1; }
         100% { width: 600px; height: 600px; opacity: 0; }
       }
-      .portal-text {
-        position: relative; z-index: 2; text-align: center;
-        color: var(--white); font-family: 'Nunito', sans-serif;
-      }
-      .portal-text h2 {
-        font-size: 28px; font-weight: 300; opacity: 0;
-        transition: opacity 0.8s ease, transform 0.8s ease;
-        transform: translateY(10px);
-      }
+      .portal-text { position: relative; z-index: 2; text-align: center; color: var(--white); font-family: 'Nunito', sans-serif; }
+      .portal-text h2 { font-size: 28px; font-weight: 300; opacity: 0; transition: opacity 0.8s ease, transform 0.8s ease; transform: translateY(10px); }
       .portal-text h2.visible { opacity: 1; transform: translateY(0); }
       .portal-begin {
         display: inline-block; margin-top: 24px; padding: 14px 36px;
@@ -580,37 +448,30 @@
       .portal-begin:hover { background: rgba(255,255,255,0.2); }
 
       /* REVEAL */
-      .reveal {
-        opacity: 0; transform: translateY(40px);
-        transition: opacity 0.8s ease, transform 0.8s ease;
-      }
+      .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s ease, transform 0.8s ease; }
       .reveal.visible { opacity: 1; transform: translateY(0); }
 
       /* RESPONSIVE */
       @media (min-width: 640px) {
         .hero h1 { font-size: 48px; }
         .section-title { font-size: 34px; }
-        .stats-grid { grid-template-columns: repeat(4, 1fr); }
-        .features-grid { grid-template-columns: repeat(2, 1fr); }
         .testimonials-grid { grid-template-columns: repeat(2, 1fr); }
-        .science-grid { grid-template-columns: repeat(2, 1fr); }
+        .stat-cards-grid { grid-template-columns: repeat(3, 1fr); }
         .conditions-grid { grid-template-columns: repeat(3, 1fr); }
         .final-cta h2 { font-size: 38px; }
+        .problem-grid { grid-template-columns: repeat(2, 1fr); }
+        .pricing-grid { grid-template-columns: repeat(2, 1fr); }
       }
       @media (min-width: 768px) {
         .section { padding: 100px 24px; }
-        .steps-flow { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .steps-flow { grid-template-columns: repeat(4, 1fr); gap: 24px; }
         .flow-step { flex-direction: column; text-align: center; align-items: center; }
-        .bodymap-container { flex-direction: row; gap: 60px; }
       }
       @media (min-width: 1024px) {
         .hero h1 { font-size: 62px; }
         .section-title { font-size: 38px; }
-        .features-grid { grid-template-columns: repeat(3, 1fr); }
         .conditions-grid { grid-template-columns: repeat(4, 1fr); }
-        .science-grid { grid-template-columns: repeat(3, 1fr); }
         .testimonials-grid { grid-template-columns: repeat(3, 1fr); }
-        .phone-frame { width: 300px; height: 600px; }
         .final-cta h2 { font-size: 44px; }
       }
       @media (max-width: 639px) {
@@ -619,6 +480,8 @@
         .nav-links { gap: 12px; }
         .nav-links a { font-size: 12px; }
         .nav-cta { padding: 6px 14px; font-size: 12px; }
+        .hero-trust { gap: 12px; }
+        .hero-trust-item span { font-size: 12px; }
       }
       @media (max-width: 420px) {
         .nav-links .nav-text-link { display: none; }
@@ -633,10 +496,11 @@
       <div class="nav-inner">
         <a href="#" class="nav-logo">Interosense</a>
         <ul class="nav-links">
-          <li class="nav-text-link"><a href="#features">Features</a></li>
           <li class="nav-text-link"><a href="#science">Science</a></li>
-          <li class="nav-text-link"><a href="#conditions">About</a></li>
-          <li><a href="/app/auth/register" class="nav-cta">Try the App</a></li>
+          <li class="nav-text-link"><a href="#how-it-works">How It Works</a></li>
+          <li class="nav-text-link"><a href="#conditions">Conditions</a></li>
+          <li class="nav-text-link"><a href="#pricing">Pricing</a></li>
+          <li><a href="/app/auth/register" class="nav-cta">Start Free</a></li>
         </ul>
       </div>
     </nav>
@@ -649,195 +513,87 @@
       <div class="hero-orb hero-orb-3"></div>
       <div class="hero-content">
         <div class="hero-badge">BACKED BY NEUROSCIENCE</div>
-        <h1>Your Body Knows More Than You Think</h1>
-        <p class="hero-subtitle">Interosense trains your interoceptive awareness &mdash; the hidden sense that connects body signals to emotional regulation, stress resilience, and mental clarity.</p>
-        <div class="heartbeat-wrapper" id="heartbeatWrapper">
-          <div class="heartbeat-ring"><div class="heartbeat-ring-inner"></div></div>
-          <p class="heartbeat-text" id="heartbeatText">Can you feel your heartbeat right now?</p>
+        <h1>Your Body Has Been Trying to Tell You Something</h1>
+        <p class="hero-subtitle">Most wellness apps treat symptoms. Interosense trains you to understand the body signals behind them — anxiety, pain, mood, stress — before they spiral.</p>
+        <div class="hero-ctas">
+          <a href="/app/auth/register" class="hero-cta-primary">Start Free Today</a>
+          <a href="#science" class="hero-cta-outline">See the Science</a>
         </div>
-        <a href="#" class="hero-cta" id="heroCta" onclick="startPortal(event)">Start Your Journey</a>
+        <div class="hero-trust">
+          <div class="hero-trust-item">
+            <div class="hero-trust-dot"></div>
+            <span>Clinically researched</span>
+          </div>
+          <div class="hero-trust-item">
+            <div class="hero-trust-dot"></div>
+            <span>Your data stays yours</span>
+          </div>
+          <div class="hero-trust-item">
+            <div class="hero-trust-dot"></div>
+            <span>Free to start</span>
+          </div>
+        </div>
       </div>
       <div class="scroll-indicator">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
     </section>
 
-    <!-- STATS -->
-    <section class="stats-bar reveal">
-      <div class="stats-grid">
-        <div class="stat-item">
-          <div class="stat-number" data-target="25" data-suffix="+">0</div>
-          <div class="stat-label">Guided Exercises</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number" data-target="8" data-suffix="">0</div>
-          <div class="stat-label">Clinical Categories</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number" data-target="50" data-suffix="+">0</div>
-          <div class="stat-label">Research Studies</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number" data-target="3" data-suffix="">0</div>
-          <div class="stat-label">Clinical Assessments</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- BODY MAP -->
-    <section class="section bodymap-section reveal" id="bodymap">
+    <!-- PROBLEM SECTION -->
+    <section class="section problem-section reveal">
       <div class="section-header">
-        <span class="section-label">Interoception</span>
-        <h2 class="section-title">Experience Your Body's Signals</h2>
-        <p class="section-desc">Your body constantly sends signals about your emotional and physical state. Tap each region to explore.</p>
+        <span class="section-label">The Problem</span>
+        <h2 class="section-title">Why Generic Apps Fall Short</h2>
+        <p class="section-desc">There's a difference between tracking your mood and understanding what your body is actually doing.</p>
       </div>
-      <div class="bodymap-container">
-        <div class="bodymap-svg-wrap">
-          <svg viewBox="0 0 220 460" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Head -->
-            <ellipse class="body-region" data-region="head" data-title="Head & Mind" data-desc="67% of users report tension headaches during stress. Interoceptive training helps you notice early warning signs." cx="110" cy="45" rx="28" ry="34"/>
-            <!-- Neck -->
-            <path class="body-region" data-region="neck" data-title="Neck & Throat" data-desc="Tightness here often signals suppressed emotions. Learning to notice it can prevent anxiety spirals." d="M100,78 Q98,88 97,98 L123,98 Q122,88 120,78 Z"/>
-            <!-- Shoulders -->
-            <path class="body-region" data-region="shoulders" data-title="Shoulders" data-desc="The most common site for holding stress. Body scanning reveals tension you didn't know was there." d="M97,98 Q70,100 50,108 Q42,112 44,120 L56,118 Q68,110 97,108 Z"/>
-            <path class="body-region" data-region="shoulders" data-title="Shoulders" data-desc="The most common site for holding stress. Body scanning reveals tension you didn't know was there." d="M123,98 Q150,100 170,108 Q178,112 176,120 L164,118 Q152,110 123,108 Z"/>
-            <!-- Chest -->
-            <path class="body-region" data-region="chest" data-title="Chest & Heart" data-desc="Heart rate awareness is the core interoceptive signal. Your heartbeat holds the key to emotional regulation." d="M97,108 Q80,112 72,130 Q68,148 70,170 Q72,185 80,195 L97,200 L123,200 L140,195 Q148,185 150,170 Q152,148 148,130 Q140,112 123,108 Z"/>
-            <!-- Left Arm -->
-            <path class="body-region" data-region="arms" data-title="Hands & Arms" data-desc="Tingling, sweating, and temperature shifts in your hands are early stress response signals." d="M56,118 Q42,128 32,155 Q24,185 22,215 Q20,240 24,260 L38,256 Q36,235 38,210 Q40,180 48,152 Q54,132 62,120 Z"/>
-            <!-- Right Arm -->
-            <path class="body-region" data-region="arms" data-title="Hands & Arms" data-desc="Tingling, sweating, and temperature shifts in your hands are early stress response signals." d="M164,118 Q178,128 188,155 Q196,185 198,215 Q200,240 196,260 L182,256 Q184,235 182,210 Q180,180 172,152 Q166,132 158,120 Z"/>
-            <!-- Stomach / Gut -->
-            <path class="body-region" data-region="stomach" data-title="Gut & Stomach" data-desc="'Gut feelings' are real interoceptive signals. The gut-brain axis directly influences mood and decision-making." d="M80,200 Q76,215 74,235 Q73,255 78,270 L100,275 L120,275 L142,270 Q147,255 146,235 Q144,215 140,200 Z"/>
-            <!-- Left Leg -->
-            <path class="body-region" data-region="legs" data-title="Legs & Feet" data-desc="Restlessness, heaviness, and grounding sensations in your legs reflect your emotional state and arousal level." d="M78,270 Q72,310 70,350 Q68,390 72,420 Q74,440 80,455 L102,455 Q98,440 96,420 Q94,390 94,350 Q94,310 100,275 Z"/>
-            <!-- Right Leg -->
-            <path class="body-region" data-region="legs" data-title="Legs & Feet" data-desc="Restlessness, heaviness, and grounding sensations in your legs reflect your emotional state and arousal level." d="M142,270 Q148,310 150,350 Q152,390 148,420 Q146,440 140,455 L118,455 Q122,440 124,420 Q126,390 126,350 Q126,310 120,275 Z"/>
-          </svg>
-        </div>
-        <div class="bodymap-info" id="bodymapInfo">
-          <p class="bodymap-default-text" id="bodymapDefault">Tap a body region to discover its signals</p>
-          <h3 class="bodymap-info-title" id="bodymapTitle"></h3>
-          <p class="bodymap-info-desc" id="bodymapDesc"></p>
-        </div>
-        <div class="bodymap-cta">
-          <a href="/app/auth/register">Explore Interosense</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- APP WALKTHROUGH -->
-    <section class="section walkthrough-section reveal">
-      <div class="section-header">
-        <span class="section-label">App Preview</span>
-        <h2 class="section-title">See Interosense in Action</h2>
-        <p class="section-desc">A personalized wellness experience designed around your unique body signals.</p>
-      </div>
-      <div class="phone-container">
-        <div class="phone-frame">
-          <div class="phone-notch"></div>
-          <div class="phone-screen">
-            <img class="phone-screen-img active" data-screen="0" src="/landing-assets/screen-home.png" alt="Home Dashboard"/>
-            <img class="phone-screen-img" data-screen="1" src="/landing-assets/screen-exercise.png" alt="Exercise Session"/>
-            <img class="phone-screen-img" data-screen="2" src="/landing-assets/screen-checkin.png" alt="Daily Check-in"/>
-            <img class="phone-screen-img" data-screen="3" src="/landing-assets/screen-progress.png" alt="Progress Analytics"/>
+      <div class="problem-grid">
+        <div class="problem-col generic">
+          <div class="problem-col-label">
+            <span>⚠</span> Generic Apps
+          </div>
+          <div class="problem-item">
+            <div class="problem-icon">✗</div>
+            <p>Tell you to "breathe" when anxious, without teaching you to recognise anxiety in your body first.</p>
+          </div>
+          <div class="problem-item">
+            <div class="problem-icon">✗</div>
+            <p>Track mood numbers without connecting them to physical sensations driving those states.</p>
+          </div>
+          <div class="problem-item">
+            <div class="problem-icon">✗</div>
+            <p>Offer the same exercises to everyone, regardless of conditions or body awareness level.</p>
+          </div>
+          <div class="problem-item">
+            <div class="problem-icon">✗</div>
+            <p>Lose effectiveness quickly because they address symptoms, not underlying signal patterns.</p>
           </div>
         </div>
-        <div class="phone-dots">
-          <div class="phone-dot active" data-dot="0"></div>
-          <div class="phone-dot" data-dot="1"></div>
-          <div class="phone-dot" data-dot="2"></div>
-          <div class="phone-dot" data-dot="3"></div>
-        </div>
-        <div class="phone-label" id="phoneLabel">Home Dashboard</div>
-      </div>
-    </section>
-
-    <!-- FEATURES -->
-    <section class="section features-section reveal" id="features">
-      <div class="section-header">
-        <span class="section-label">Features</span>
-        <h2 class="section-title">Everything You Need for Inner Awareness</h2>
-      </div>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <div class="problem-col interosense">
+          <div class="problem-col-label">
+            <span>✦</span> Interosense
           </div>
-          <h3>Guided Exercises</h3>
-          <p>25 MABT-based exercises across 8 clinical categories, from body scanning to emotional awareness techniques guided by evidence-based protocols.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon teal">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <div class="problem-item">
+            <div class="problem-icon" style="color: #6B5B95;">✓</div>
+            <p>Trains you to detect the earliest body signals of stress, anxiety, and emotional change — before they escalate.</p>
           </div>
-          <h3>Clinical Assessments</h3>
-          <p>Validated clinical scales including GAD-7, PHQ-9, and PCL-5 to track your mental health progress with professional-grade measurements.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon rose">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"/><path d="M12 8v4l3 3"/></svg>
+          <div class="problem-item">
+            <div class="problem-icon" style="color: #6B5B95;">✓</div>
+            <p>Connects physical sensations to emotional states through evidence-based interoceptive exercises.</p>
           </div>
-          <h3>AI-Powered Personalization</h3>
-          <p>Intelligent recommendations that adapt to your conditions, goals, and progress, creating a truly personalized interoceptive training journey.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon teal">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <div class="problem-item">
+            <div class="problem-icon" style="color: #6B5B95;">✓</div>
+            <p>Personalises every session to your conditions, experience level, and progress over time.</p>
           </div>
-          <h3>Daily Check-ins</h3>
-          <p>8-step awareness tracking covering stress, mood, energy, and body sensations to build consistent interoceptive habits over time.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          </div>
-          <h3>Condition Programs</h3>
-          <p>7 condition-specific programs integrating neuroscience research for anxiety, depression, PTSD, chronic pain, IBS, ADHD, and autism spectrum.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon rose">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <h3>Crisis Toolkit</h3>
-          <p>Personalized emergency grounding techniques and calming exercises available instantly when you need them most, based on your individual profile.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- HOW IT WORKS -->
-    <section class="section steps-section reveal">
-      <div class="section-header">
-        <span class="section-label">How It Works</span>
-        <h2 class="section-title">Three Steps to Inner Awareness</h2>
-      </div>
-      <div class="steps-flow">
-        <div class="flow-step">
-          <div class="flow-number">1</div>
-          <div class="flow-content">
-            <h3>Tell Us About You</h3>
-            <p>Share your conditions, goals, and experience level so we can create your personalized starting point.</p>
-          </div>
-        </div>
-        <div class="flow-step">
-          <div class="flow-number">2</div>
-          <div class="flow-content">
-            <h3>Get Your Personalized Plan</h3>
-            <p>Receive curated exercises, assessments, and condition-specific programs tailored to your needs.</p>
-          </div>
-        </div>
-        <div class="flow-step">
-          <div class="flow-number">3</div>
-          <div class="flow-content">
-            <h3>Build Awareness Daily</h3>
-            <p>Follow guided sessions, complete daily check-ins, and track your interoceptive growth over time.</p>
+          <div class="problem-item">
+            <div class="problem-icon" style="color: #6B5B95;">✓</div>
+            <p>Builds lasting self-regulation capacity — not just momentary relief — through clinically validated methods.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SCIENCE -->
-    <section class="section science-section reveal" id="science">
+    <!-- SCIENCE STATS -->
+    <section class="section science-stats-section reveal" id="science">
       <div class="science-bg">
         <svg viewBox="0 0 1200 600" preserveAspectRatio="none">
           <path class="neural-path" d="M0,300 Q150,200 300,350 T600,250 T900,300 T1200,200"/>
@@ -847,21 +603,64 @@
       </div>
       <div class="section-header">
         <span class="section-label">Research</span>
-        <h2 class="section-title">Built on Research</h2>
-        <p class="section-desc">Every exercise and assessment in Interosense is grounded in peer-reviewed neuroscience research.</p>
+        <h2 class="section-title">The Science Behind the Practice</h2>
+        <p class="section-desc">Interoceptive training is one of the most promising frontiers in mental health research. Here's what the evidence says.</p>
       </div>
-      <div class="science-grid">
-        <div class="science-card">
-          <h3>MABT Methodology</h3>
-          <p>Based on Mindful Awareness in Body-oriented Therapy, a clinically validated approach developed by Dr. Cynthia Price for teaching interoceptive awareness through progressive body-based exercises.</p>
+      <div class="stat-cards-grid">
+        <div class="stat-card">
+          <div class="stat-card-number">30–40%</div>
+          <div class="stat-card-label">Anxiety reduction</div>
+          <div class="stat-card-desc">Clinical trials show interoceptive body-awareness training reduces anxiety symptoms by 30–40% in participants with GAD.</div>
         </div>
-        <div class="science-card">
-          <h3>Interoception Framework</h3>
-          <p>Built on the latest interoception research showing how body signal awareness directly influences emotional regulation, decision-making, and mental health outcomes across clinical populations.</p>
+        <div class="stat-card">
+          <div class="stat-card-number">6+</div>
+          <div class="stat-card-label">Conditions addressed</div>
+          <div class="stat-card-desc">Peer-reviewed research links interoceptive awareness to improved outcomes across anxiety, PTSD, depression, chronic pain, IBS, and ADHD.</div>
         </div>
-        <div class="science-card">
-          <h3>Clinical Validation</h3>
-          <p>Incorporates validated clinical instruments (GAD-7, PHQ-9, PCL-5) and evidence-based protocols used in clinical trials, ensuring professional-grade measurement and tracking.</p>
+        <div class="stat-card">
+          <div class="stat-card-number">8 wks</div>
+          <div class="stat-card-label">To measurable improvement</div>
+          <div class="stat-card-desc">MABT clinical studies demonstrate significant, measurable improvements in self-regulation and symptom severity within eight weeks of practice.</div>
+        </div>
+      </div>
+      <p class="science-citation">Based on peer-reviewed research including Price et al. (2018), Farb et al. (2015), and published MABT clinical trials. Full references available in-app.</p>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section steps-section reveal" id="how-it-works">
+      <div class="section-header">
+        <span class="section-label">How It Works</span>
+        <h2 class="section-title">Four Steps to Inner Awareness</h2>
+        <p class="section-desc">No complex setup. Just a structured path from signal to understanding.</p>
+      </div>
+      <div class="steps-flow">
+        <div class="flow-step">
+          <div class="flow-number">1</div>
+          <div class="flow-content">
+            <h3>Tell Us About You</h3>
+            <p>Share your conditions, goals, and body awareness level so we can build your personalised starting point.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-number">2</div>
+          <div class="flow-content">
+            <h3>Start with Your Body</h3>
+            <p>Begin with guided body scanning and breath exercises that train you to notice what your body is already signalling.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-number">3</div>
+          <div class="flow-content">
+            <h3>Connect Signal to State</h3>
+            <p>Daily check-ins and condition programmes help you link what you feel physically to how you're doing emotionally.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-number">4</div>
+          <div class="flow-content">
+            <h3>Build Lasting Regulation</h3>
+            <p>Track your progress with clinical assessments and see interoceptive awareness grow into genuine self-regulation capacity.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -870,33 +669,33 @@
     <section class="section reveal" id="conditions">
       <div class="section-header">
         <span class="section-label">Conditions</span>
-        <h2 class="section-title">Conditions We Address</h2>
-        <p class="section-desc">Tailored interoceptive training programs for a range of conditions supported by clinical research.</p>
+        <h2 class="section-title">Built for the Conditions That Live in the Body</h2>
+        <p class="section-desc">These conditions don't just affect how you think — they live in your nervous system. Interoceptive training works at that level.</p>
       </div>
       <div class="conditions-grid">
         <div class="condition-card">
           <h3>Anxiety</h3>
-          <p>Learn to recognize and regulate the body signals that drive anxious thoughts and panic responses.</p>
+          <p>Learn to recognise and regulate the body signals that drive anxious thoughts and panic responses before they spiral.</p>
         </div>
         <div class="condition-card">
           <h3>Depression</h3>
-          <p>Reconnect with body sensations to break cycles of emotional numbness and low motivation.</p>
+          <p>Reconnect with body sensations to break cycles of emotional numbness and restore a sense of aliveness and motivation.</p>
         </div>
         <div class="condition-card">
           <h3>PTSD</h3>
-          <p>Safely rebuild body awareness and process trauma-related physical responses with guided support.</p>
+          <p>Safely rebuild body awareness and process trauma-related physical responses with paced, evidence-based guidance.</p>
         </div>
         <div class="condition-card">
           <h3>Chronic Pain</h3>
-          <p>Develop nuanced body awareness to change your relationship with pain signals and reduce suffering.</p>
+          <p>Develop nuanced body awareness to shift your relationship with pain signals and reduce the suffering that surrounds them.</p>
         </div>
         <div class="condition-card">
           <h3>IBS</h3>
-          <p>Understand gut-brain connections and learn to manage digestive distress through interoceptive skills.</p>
+          <p>Understand the gut-brain connection and learn to manage digestive distress through targeted interoceptive skills.</p>
         </div>
         <div class="condition-card">
           <h3>ADHD</h3>
-          <p>Improve attention and self-regulation by strengthening awareness of internal body states and cues.</p>
+          <p>Improve attention and self-regulation by strengthening awareness of internal body states and energy cues.</p>
         </div>
         <div class="condition-card">
           <h3>Autism Spectrum</h3>
@@ -908,60 +707,111 @@
     <!-- TESTIMONIALS -->
     <section class="section testimonials-section reveal">
       <div class="section-header">
-        <span class="section-label">Testimonials</span>
-        <h2 class="section-title">What Users Are Saying</h2>
+        <span class="section-label">People Like You</span>
+        <h2 class="section-title">What Early Users Are Saying</h2>
       </div>
       <div class="testimonials-grid">
         <div class="testimonial-card">
-          <p class="testimonial-quote">"I never realized how disconnected I was from my own body. Interosense taught me to notice the early warning signs of my anxiety before it spirals. It has genuinely changed how I manage my stress."</p>
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-quote">"I'd tried three other apps for anxiety. They all told me to breathe. Interosense was the first thing that actually helped me understand what my body was doing during an attack. I can catch it now before it takes over."</p>
           <div class="testimonial-author">
-            <div class="testimonial-avatar">SK</div>
+            <div class="testimonial-avatar">SM</div>
             <div>
-              <div class="testimonial-name">Sarah K.</div>
-              <div class="testimonial-role">Generalized Anxiety</div>
+              <div class="testimonial-name">Sarah M.</div>
+              <div class="testimonial-role">Generalised Anxiety · 8 weeks in</div>
             </div>
           </div>
         </div>
         <div class="testimonial-card">
-          <p class="testimonial-quote">"The daily check-ins helped me identify patterns I never saw before. I can now feel when my depression is shifting before it takes over. This app gave me a sense of control I had lost."</p>
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-quote">"Living with chronic pain means your body is always sending signals. I used to dread those signals. The body scanning exercises changed how I relate to them. It's not a cure, but it genuinely reduces the suffering."</p>
           <div class="testimonial-author">
-            <div class="testimonial-avatar">MR</div>
+            <div class="testimonial-avatar">JT</div>
             <div>
-              <div class="testimonial-name">Marcus R.</div>
-              <div class="testimonial-role">Depression & Chronic Pain</div>
+              <div class="testimonial-name">James T.</div>
+              <div class="testimonial-role">Chronic Pain · 12 weeks in</div>
             </div>
           </div>
         </div>
         <div class="testimonial-card">
-          <p class="testimonial-quote">"As someone on the autism spectrum, understanding my body signals was always a challenge. The structured exercises in Interosense made interoception accessible and practical for the first time."</p>
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-quote">"As someone with ADHD, understanding my own internal states has always been hard. The structured approach here made it accessible. I'm noticing my energy cues now and actually using them — that's new for me."</p>
           <div class="testimonial-author">
-            <div class="testimonial-avatar">JL</div>
+            <div class="testimonial-avatar">PK</div>
             <div>
-              <div class="testimonial-name">Jordan L.</div>
-              <div class="testimonial-role">Autism Spectrum</div>
+              <div class="testimonial-name">Priya K.</div>
+              <div class="testimonial-role">ADHD · 6 weeks in</div>
             </div>
           </div>
         </div>
       </div>
-      <p class="testimonial-note">Illustrative testimonials representing common user experiences.</p>
+      <p class="testimonial-note">Illustrative testimonials representing common user experiences. Individual results vary.</p>
+    </section>
+
+    <!-- PRICING -->
+    <section class="section pricing-section reveal" id="pricing">
+      <div class="section-header">
+        <span class="section-label">Pricing</span>
+        <h2 class="section-title">Start for Free. Always.</h2>
+        <p class="section-desc">We believe access to body awareness tools should not depend on a subscription. The core of Interosense is free — full stop.</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="pricing-card featured">
+          <div class="pricing-badge">FREE FOREVER</div>
+          <div class="pricing-tier">Free</div>
+          <div class="pricing-price" style="font-size: 28px;">Free Forever</div>
+          <div class="pricing-period">Always. No card required.</div>
+          <ul class="pricing-features">
+            <li>All guided body awareness exercises</li>
+            <li>Daily check-ins and mood tracking</li>
+            <li>Condition-specific programmes</li>
+            <li>Crisis toolkit — always available</li>
+            <li>Clinical assessments (GAD-7, PHQ-9, PCL-5)</li>
+            <li>Progress tracking and insights</li>
+          </ul>
+          <a href="/app/auth/register" class="pricing-cta">Get Started Free</a>
+        </div>
+        <div class="pricing-card">
+          <div class="pricing-soon-badge">COMING SOON</div>
+          <div class="pricing-tier">Premium</div>
+          <div class="pricing-price" style="font-size: 28px; margin-top: 8px;">Coming Soon</div>
+          <div class="pricing-period">Pricing to be announced</div>
+          <ul class="pricing-features">
+            <li>Everything in Free</li>
+            <li>AI-personalised exercise recommendations</li>
+            <li>Advanced progress analytics</li>
+            <li>Unlimited session history</li>
+            <li class="muted">More features in development</li>
+          </ul>
+          <span class="pricing-cta disabled">Notify Me</span>
+        </div>
+      </div>
+      <p class="pricing-note"><strong>The crisis toolkit is always free. No exceptions.</strong><br>If you need it, it's there. That will never change.</p>
     </section>
 
     <!-- FINAL CTA -->
     <section class="final-cta">
       <div class="final-cta-particles" id="ctaParticles"></div>
       <div class="final-cta-content reveal">
-        <h2>Ready to Discover Your Hidden Sense?</h2>
-        <p class="subtitle">Join thousands discovering the power of interoceptive awareness.</p>
-        <a href="#" class="final-cta-btn" onclick="startPortal(event)">Start Your Journey</a>
-        <a href="/app/auth/register" class="explore-link">or <span>sign up directly</span></a>
+        <h2>Your body has been trying to tell you something.</h2>
+        <p class="subtitle">Start listening. It's free, and it takes less than five minutes to begin.</p>
+        <a href="/app/auth/register" class="final-cta-btn">Start Free Today</a>
       </div>
     </section>
 
     <!-- FOOTER -->
     <footer class="footer">
       <div class="footer-logo">Interosense</div>
-      <p class="footer-disclaimer">Interosense is a wellness tool for developing interoceptive awareness. It is not a replacement for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or qualified health provider.</p>
-      <p class="footer-copyright">Copyright 2026 Interosense. All rights reserved.</p>
+      <nav class="footer-nav">
+        <a href="#science">Science</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#conditions">Conditions</a>
+        <a href="#pricing">Pricing</a>
+        <a href="/app/auth/register">Sign Up</a>
+        <a href="/app/auth/login">Sign In</a>
+      </nav>
+      <p class="footer-disclaimer">Interosense is a wellness tool for developing interoceptive awareness. It is not a replacement for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or qualified health provider with any questions you may have regarding a medical condition.</p>
+      <p class="footer-copyright">&copy; 2026 Interosense. All rights reserved.</p>
     </footer>
 
     <!-- PORTAL OVERLAY -->
@@ -1020,45 +870,6 @@
         createParticles(document.getElementById('heroParticles'), 35);
         createParticles(document.getElementById('ctaParticles'), 20);
 
-        // HEARTBEAT INTERACTION
-        var hbWrapper = document.getElementById('heartbeatWrapper');
-        var hbText = document.getElementById('heartbeatText');
-        var defaultText = 'Can you feel your heartbeat right now?';
-        var hoverText = 'That awareness is interoception.';
-        hbWrapper.addEventListener('mouseenter', function() { hbText.textContent = hoverText; });
-        hbWrapper.addEventListener('mouseleave', function() { hbText.textContent = defaultText; hbWrapper.classList.remove('active'); });
-        hbWrapper.addEventListener('touchstart', function(e) {
-          e.preventDefault();
-          hbWrapper.classList.toggle('active');
-          hbText.textContent = hbWrapper.classList.contains('active') ? hoverText : defaultText;
-        }, { passive: false });
-
-        // STATS COUNTER
-        var statsObserver = new IntersectionObserver(function(entries) {
-          entries.forEach(function(entry) {
-            if (entry.isIntersecting) {
-              var nums = entry.target.querySelectorAll('.stat-number');
-              nums.forEach(function(el) {
-                var target = parseInt(el.getAttribute('data-target'));
-                var suffix = el.getAttribute('data-suffix') || '';
-                var duration = 1500;
-                var startTime = null;
-                function animate(ts) {
-                  if (!startTime) startTime = ts;
-                  var progress = Math.min((ts - startTime) / duration, 1);
-                  var eased = 1 - Math.pow(1 - progress, 3);
-                  el.textContent = Math.floor(eased * target) + suffix;
-                  if (progress < 1) requestAnimationFrame(animate);
-                }
-                requestAnimationFrame(animate);
-              });
-              statsObserver.unobserve(entry.target);
-            }
-          });
-        }, { threshold: 0.3 });
-        var statsBar = document.querySelector('.stats-bar');
-        if (statsBar) statsObserver.observe(statsBar);
-
         // REVEAL ON SCROLL
         var revealObserver = new IntersectionObserver(function(entries) {
           entries.forEach(function(entry) {
@@ -1070,77 +881,13 @@
         }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
         document.querySelectorAll('.reveal').forEach(function(el) { revealObserver.observe(el); });
 
-        // BODY MAP - Interactive with info panel
-        var bodymapTitle = document.getElementById('bodymapTitle');
-        var bodymapDesc = document.getElementById('bodymapDesc');
-        var bodymapDefault = document.getElementById('bodymapDefault');
-        var activeRegion = null;
-
-        document.querySelectorAll('.body-region').forEach(function(region) {
-          function showRegion(el) {
-            document.querySelectorAll('.body-region').forEach(function(r) { r.classList.remove('active'); });
-            el.classList.add('active');
-            bodymapDefault.style.display = 'none';
-            bodymapTitle.textContent = el.getAttribute('data-title');
-            bodymapDesc.textContent = el.getAttribute('data-desc');
-            bodymapTitle.classList.add('visible');
-            bodymapDesc.classList.add('visible');
-            activeRegion = el;
-          }
-
-          region.addEventListener('mouseenter', function() { showRegion(this); });
-          region.addEventListener('mouseleave', function() {
-            this.classList.remove('active');
-            bodymapTitle.classList.remove('visible');
-            bodymapDesc.classList.remove('visible');
-            setTimeout(function() {
-              if (!document.querySelector('.body-region.active')) {
-                bodymapDefault.style.display = 'block';
-              }
-            }, 400);
-            activeRegion = null;
-          });
-          region.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            showRegion(this);
-            var self = this;
-            setTimeout(function() {
-              self.classList.remove('active');
-              bodymapTitle.classList.remove('visible');
-              bodymapDesc.classList.remove('visible');
-              setTimeout(function() { bodymapDefault.style.display = 'block'; }, 400);
-            }, 3000);
-          }, { passive: false });
-        });
-
-        // PHONE MOCKUP CYCLING WITH LABELS
-        var screenLabels = ['Home Dashboard', 'Exercise Session', 'Daily Check-in', 'Progress Analytics'];
-        var screens = document.querySelectorAll('.phone-screen-img');
-        var dots = document.querySelectorAll('.phone-dot');
-        var phoneLabel = document.getElementById('phoneLabel');
-        var currentScreen = 0;
-
-        function showScreen(index) {
-          screens.forEach(function(s) { s.classList.remove('active'); });
-          dots.forEach(function(d) { d.classList.remove('active'); });
-          screens[index].classList.add('active');
-          dots[index].classList.add('active');
-          phoneLabel.textContent = screenLabels[index];
-          currentScreen = index;
-        }
-        setInterval(function() { showScreen((currentScreen + 1) % screens.length); }, 4000);
-        dots.forEach(function(dot) {
-          dot.addEventListener('click', function() {
-            showScreen(parseInt(this.getAttribute('data-dot')));
-          });
-        });
-
         // SMOOTH SCROLL FOR NAV LINKS
-        document.querySelectorAll('.nav-links a[href^="#"]').forEach(function(link) {
+        document.querySelectorAll('a[href^="#"]').forEach(function(link) {
           link.addEventListener('click', function(e) {
-            e.preventDefault();
-            var target = document.querySelector(this.getAttribute('href'));
-            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            var href = this.getAttribute('href');
+            if (href === '#') return;
+            var target = document.querySelector(href);
+            if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
           });
         });
       })();

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 
 function getApiBase() {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -153,6 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await apiCall('/api/auth/logout', { method: 'POST' });
     } catch {}
     setUser(null);
+    router.replace('/auth/login?from=logout');
   }, []);
 
   const updateAuthProfile = useCallback(async (data: Partial<AuthUser>) => {
