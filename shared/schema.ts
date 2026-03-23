@@ -83,6 +83,16 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   used: boolean("used").default(false),
 });
 
+export const dailyInsights = pgTable("daily_insights", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  insightText: text("insight_text").notNull(),
+  generatedDate: text("generated_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   password: true,

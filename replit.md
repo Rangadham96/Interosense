@@ -76,7 +76,16 @@ lib/
 - Crisis support toolkit with grounding exercises
 - Onboarding with condition selection and personalized plan summary
 
-## Recent Changes (Feb 2026)
+## Recent Changes (Mar 2026)
+- Added AI Advisor powered by Claude API (Anthropic) for personalized daily insights
+  - Backend: server/advisor.ts (Claude API service with crafted interoception coach prompt)
+  - Database: daily_insights table for once-per-day caching per user
+  - Endpoint: POST /api/advisor/insight (authenticated, returns cached or fresh insight)
+  - Storage: getTodayInsight/saveInsight in server/storage.ts
+  - Frontend: Home screen fetches AI insight via React Query, falls back to static quotes if API unavailable
+  - Environment: ANTHROPIC_API_KEY secret required; graceful fallback with startup warning if absent
+
+## Previous Changes (Feb 2026)
 - Added personalization engine with reactive advisorState
 - Rebuilt home screen as intelligent advisor dashboard with daily insight quotes (32 science-backed quotes)
 - Added clinical assessments (GAD-7, PHQ-9, PCL-5) with full flow

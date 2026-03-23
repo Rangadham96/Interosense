@@ -1,6 +1,6 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { db } from "./db";
-import { users, exerciseSessions, dailyCheckins, assessments, passwordResetTokens, type User, type InsertUser } from "../shared/schema";
+import { users, exerciseSessions, dailyCheckins, assessments, passwordResetTokens, dailyInsights, type User, type InsertUser } from "../shared/schema";
 
 export type ExerciseSession = typeof exerciseSessions.$inferSelect;
 export type DailyCheckin = typeof dailyCheckins.$inferSelect;
@@ -82,4 +82,22 @@ export async function getResetToken(token: string): Promise<PasswordResetToken |
 
 export async function markTokenUsed(id: string): Promise<void> {
   await db.update(passwordResetTokens).set({ used: true }).where(eq(passwordResetTokens.id, id));
+}
+
+export type DailyInsight = typeof dailyInsights.$inferSelect;
+
+export async function getTodayInsight(userId: string, generatedDate: string): Promise<DailyInsight | undefined> {
+  const [insight] = await db
+    .select()
+    .from(dailyInsights)
+    .where(and(eq(dailyInsights.userId, userId), eq(dailyInsights.generatedDate, generatedDate)));
+  return insight;
+}
+
+export async function saveInsight(userId: string, insightText: string, generatedDate: string): Promise<DailyInsight> {
+  const [insight] = await db
+    .insert(dailyInsights)
+    .values({ userId, insightText, generatedDate })
+    .returning();
+  return insight;
 }

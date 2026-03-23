@@ -6,17 +6,20 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { CATEGORY_INFO, ExerciseCategory } from '@/constants/exercises';
 import { CONDITIONS } from '@/constants/conditions';
 import { format, parseISO } from 'date-fns';
 import type { Recommendation, InsightCard } from '@/lib/personalization-engine';
+import { apiRequest } from '@/lib/query-client';
 
 const DAILY_SCIENCE_INSIGHTS = [
   { label: 'THE INSULA', text: 'Regular interoceptive practice measurably thickens the insular cortex — the region that translates body signals into conscious awareness.' },
@@ -120,6 +123,23 @@ export default function HomeScreen() {
     const dayIndex = Math.floor(Date.now() / 86400000) % DAILY_SCIENCE_INSIGHTS.length;
     return DAILY_SCIENCE_INSIGHTS[dayIndex];
   }, []);
+
+  const { data: aiInsightData, isLoading: aiInsightLoading } = useQuery<{ insight: string } | null>({
+    queryKey: ['/api/advisor/insight'],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest('POST', '/api/advisor/insight');
+        return await res.json();
+      } catch {
+        return null;
+      }
+    },
+    enabled: onboardingComplete && !isLoading,
+    staleTime: 1000 * 60 * 60,
+    retry: false,
+  });
+
+  const aiInsightText = aiInsightData?.insight || null;
 
   const topRecommendations = advisorState.recommendations.slice(0, 5);
   const topInsights = advisorState.insights.slice(0, 3);
@@ -361,14 +381,34 @@ export default function HomeScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Today's Science</Text>
-          <View style={styles.scienceCard}>
-            <View style={styles.scienceCardAccent} />
-            <View style={styles.scienceCardContent}>
-              <Text style={styles.scienceLabel}>TODAY'S SCIENCE</Text>
-              <Text style={styles.scienceHeading}>{todayScience.label}</Text>
-              <Text style={styles.scienceBody}>{todayScience.text}</Text>
+          {aiInsightText ? (
+            <View style={styles.aiInsightCard}>
+              <View style={styles.aiInsightAccent} />
+              <View style={styles.aiInsightContent}>
+                <View style={styles.aiInsightIconRow}>
+                  <Feather name="sun" size={16} color={Colors.primary} />
+                </View>
+                <Text style={styles.aiInsightBody}>{aiInsightText}</Text>
+                <Text style={styles.aiPoweredLabel}>Powered by AI</Text>
+              </View>
             </View>
-          </View>
+          ) : aiInsightLoading ? (
+            <View style={styles.aiInsightCard}>
+              <View style={styles.aiInsightAccent} />
+              <View style={[styles.aiInsightContent, { alignItems: 'center', paddingVertical: 24 }]}>
+                <ActivityIndicator size="small" color={Colors.primary} />
+              </View>
+            </View>
+          ) : (
+            <View style={styles.scienceCard}>
+              <View style={styles.scienceCardAccent} />
+              <View style={styles.scienceCardContent}>
+                <Text style={styles.scienceLabel}>TODAY'S SCIENCE</Text>
+                <Text style={styles.scienceHeading}>{todayScience.label}</Text>
+                <Text style={styles.scienceBody}>{todayScience.text}</Text>
+              </View>
+            </View>
+          )}
           {topInsights.length > 0 && <View style={{ height: 12 }} />}
           {topInsights.map(insight => (
             <InsightCardView key={insight.id} insight={insight} />
@@ -536,5 +576,40 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     lineHeight: 20,
+  },
+  aiInsightCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 18,
+    flexDirection: 'row' as const,
+    overflow: 'hidden' as const,
+    shadowColor: Colors.cardShadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  aiInsightAccent: {
+    width: 4,
+    backgroundColor: Colors.primary,
+  },
+  aiInsightContent: {
+    flex: 1,
+    padding: 18,
+  },
+  aiInsightIconRow: {
+    marginBottom: 10,
+  },
+  aiInsightBody: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 14,
+    color: Colors.text,
+    lineHeight: 22,
+    marginBottom: 10,
+  },
+  aiPoweredLabel: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 10,
+    color: Colors.textTertiary,
+    opacity: 0.7,
   },
 });

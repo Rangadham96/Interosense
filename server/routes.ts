@@ -14,7 +14,11 @@ import {
   getUserCheckins,
   createAssessment,
   getUserAssessments,
+  getTodayInsight,
+  saveInsight,
 } from "./storage";
+import { storage } from "./storage";
+import { generateInsight } from "./advisor";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const PgStore = connectPgSimple(session);
@@ -170,6 +174,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get assessments error:", error);
       return res.status(500).json({ message: "Failed to load assessments" });
+    }
+  });
+
+  app.post("/api/advisor/insight", async (req: Request, res: Response) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    try {
+      const today = new Date().toISOString().split("T")[0];
+
+      const cached = await getTodayInsight(req.session.userId, today);
+      if (cached) {
+        return res.status(200).json({ insight: cached.insightText, cached: true });
+      }
+
+      if (!process.env.ANTHROPIC_API_KEY) {
+        return res.status(503).json({ message: "AI advisor not configured" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      const sessions = await getUserSessions(req.session.userId);
+      const checkins = await getUserCheckins(req.session.userId);
+
+      const todayCheckin = checkins.find(c => c.date === today) || null;
+
+      const hour = new Date().getHours();
+      let timeOfDay = "morning";
+      if (hour >= 12 && hour < 17) timeOfDay = "afternoon";
+      else if (hour >= 17 && hour < 21) timeOfDay = "evening";
+      else if (hour >= 21) timeOfDay = "night";
+
+      const recentExercises = sessions.slice(0, 5).map(s => ({
+        title: s.exerciseTitle,
+        category: s.category,
+        completedAt: s.completedAt,
+      }));
+
+      const totalMinutes = sessions.reduce((sum, s) => sum + s.durationMinutes, 0);
+
+      const uniqueDays = new Set(sessions.map(s => s.completedAt.split("T")[0]));
+      const sortedDays = Array.from(uniqueDays).sort().reverse();
+      let currentStreak = 0;
+      const todayStr = today;
+      const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+      if (sortedDays[0] === todayStr || sortedDays[0] === yesterdayStr) {
+        currentStreak = 1;
+        for (let i = 1; i < sortedDays.length; i++) {
+          const d1 = new Date(sortedDays[i - 1]);
+          const d2 = new Date(sortedDays[i]);
+          const diff = Math.round((d1.getTime() - d2.getTime()) / 86400000);
+          if (diff === 1) currentStreak++;
+          else break;
+        }
+      }
+
+      const insightText = await generateInsight({
+        name: user?.name || "there",
+        conditions: (user?.conditions as string[]) || [],
+        todayCheckin: todayCheckin
+          ? {
+              awarenessScore: todayCheckin.awarenessScore,
+              energyLevel: todayCheckin.energyLevel,
+              sleepQuality: todayCheckin.sleepQuality,
+              stressLevel: todayCheckin.stressLevel,
+              mood: todayCheckin.mood,
+            }
+          : null,
+        recentExerciseHistory: recentExercises,
+        currentStreak,
+        totalSessions: sessions.length,
+        totalMinutes,
+        timeOfDay,
+        isNewUser: sessions.length === 0 && checkins.length === 0,
+      });
+
+      await saveInsight(req.session.userId, insightText, today);
+
+      return res.status(200).json({ insight: insightText, cached: false });
+    } catch (error) {
+      console.error("Advisor insight error:", error);
+      return res.status(500).json({ message: "Failed to generate insight" });
     }
   });
 

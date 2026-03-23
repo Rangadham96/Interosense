@@ -248,6 +248,10 @@ function setupErrorHandler(app: express.Application) {
 
   setupErrorHandler(app);
 
+  if (!process.env.ANTHROPIC_API_KEY) {
+    log("⚠️  ANTHROPIC_API_KEY is not set — AI advisor will use static fallback insights");
+  }
+
   const port = parseInt(process.env.PORT || "5000", 10);
   server.listen(
     {
