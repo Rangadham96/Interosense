@@ -23,6 +23,8 @@ export const users = pgTable("users", {
   isPremium: boolean("is_premium").default(false),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  interoceptiveBaseline: jsonb("interoceptive_baseline").$type<Record<string, string>>().default({}),
+  onboardingPlan: jsonb("onboarding_plan").$type<Record<string, unknown>[]>().default([]),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

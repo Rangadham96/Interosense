@@ -108,7 +108,7 @@ router.put("/api/auth/profile", async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const { name, conditions, experienceLevel, goals, dailyMinutes, gender, dateOfBirth, bio, profileImage } = req.body;
+    const { name, conditions, experienceLevel, goals, dailyMinutes, gender, dateOfBirth, bio, profileImage, interoceptiveBaseline, onboardingPlan } = req.body;
 
     const user = await storage.updateUser(req.session.userId, {
       ...(name !== undefined && { name }),
@@ -120,6 +120,8 @@ router.put("/api/auth/profile", async (req: Request, res: Response) => {
       ...(dateOfBirth !== undefined && { dateOfBirth }),
       ...(bio !== undefined && { bio }),
       ...(profileImage !== undefined && { profileImage }),
+      ...(interoceptiveBaseline !== undefined && { interoceptiveBaseline }),
+      ...(onboardingPlan !== undefined && { onboardingPlan }),
     });
 
     if (!user) {

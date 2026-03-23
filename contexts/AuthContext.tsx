@@ -33,6 +33,8 @@ interface AuthUser {
   bio: string | null;
   isPremium: boolean | null;
   createdAt: string | null;
+  interoceptiveBaseline?: Record<string, string> | null;
+  onboardingPlan?: Record<string, unknown>[] | null;
 }
 
 export interface ServerSyncData {
