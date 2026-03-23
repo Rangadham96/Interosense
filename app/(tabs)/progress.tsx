@@ -2,6 +2,7 @@ import { StyleSheet, Text, View, ScrollView, Platform, TouchableOpacity } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import GetHelpLink from '@/components/GetHelpLink';
 import { useMemo } from 'react';
 import { format, parseISO, startOfWeek, addDays, isSameDay } from 'date-fns';
 import { useApp } from '@/contexts/AppContext';
@@ -151,7 +152,10 @@ export default function ProgressScreen() {
     <View style={[styles.container, { paddingTop: topPadding }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.title}>Your Progress</Text>
+          <View style={styles.headerTopRow}>
+            <Text style={styles.title}>Your Progress</Text>
+            <GetHelpLink />
+          </View>
           <Text style={styles.subtitle}>Your interoceptive journey, visualised</Text>
         </View>
 
@@ -546,6 +550,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   scrollContent: { paddingHorizontal: 20 },
   header: { marginTop: 16, marginBottom: 24 },
+  headerTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   title: { fontSize: 28, fontFamily: 'Nunito_700Bold', color: Colors.text },
   subtitle: { fontSize: 15, fontFamily: 'Nunito_400Regular', color: Colors.textSecondary, marginTop: 4 },
   statsGrid: { gap: 12, marginBottom: 24 },

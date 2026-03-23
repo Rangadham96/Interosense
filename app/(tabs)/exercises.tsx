@@ -16,6 +16,7 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/contexts/AppContext';
+import GetHelpLink from '@/components/GetHelpLink';
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string }> = {
   beginner: { bg: '#E8F5E1', text: '#4A8C3F' },
@@ -128,7 +129,10 @@ export default function ExercisesScreen() {
   return (
     <View style={[styles.container, { paddingTop: topPadding }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Exercises</Text>
+        <View style={styles.headerTopRow}>
+          <Text style={styles.title}>Exercises</Text>
+          <GetHelpLink />
+        </View>
         <Text style={styles.subtitle}>30+ interoceptive exercises across 8 body-awareness categories</Text>
         <View style={styles.searchBar}>
           <Feather name="search" size={18} color={Colors.textTertiary} />
@@ -278,6 +282,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 8,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
   },
   title: {
     fontSize: 28,

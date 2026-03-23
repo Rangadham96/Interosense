@@ -17,17 +17,23 @@ import { ARTICLES, ARTICLE_CATEGORIES, ArticleCategory } from '@/constants/artic
 import Colors from '@/constants/colors';
 
 const CATEGORY_KEYS: ArticleCategory[] = ['getting-started', 'science', 'conditions', 'techniques', 'wellness'];
+const FEATURED_ARTICLE_ID = 'what-is-interoception';
 
 export default function ArticlesScreen() {
   const insets = useSafeAreaInsets();
-  const { bookmarks, toggleBookmark } = useApp();
+  const { bookmarks, toggleBookmark, articlesRead } = useApp();
   const topPadding = Platform.OS === 'web' ? 67 : insets.top;
 
   const [selectedCategory, setSelectedCategory] = useState<ArticleCategory | 'all'>('all');
   const [search, setSearch] = useState('');
 
+  const featuredArticle = useMemo(
+    () => (articlesRead.length < 3 ? ARTICLES.find(a => a.id === FEATURED_ARTICLE_ID) : null),
+    [articlesRead.length]
+  );
+
   const filteredArticles = useMemo(() => {
-    let result = ARTICLES;
+    let result = ARTICLES.filter(a => a.id !== FEATURED_ARTICLE_ID || articlesRead.length >= 3);
     if (selectedCategory !== 'all') {
       result = result.filter(a => a.category === selectedCategory);
     }
@@ -38,7 +44,7 @@ export default function ArticlesScreen() {
       );
     }
     return result;
-  }, [selectedCategory, search]);
+  }, [selectedCategory, search, articlesRead.length]);
 
   return (
     <View style={styles.container}>
@@ -50,9 +56,10 @@ export default function ArticlesScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
             <Feather name="arrow-left" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Articles</Text>
+          <Text style={styles.headerTitle}>Learn</Text>
           <View style={{ width: 40 }} />
         </View>
+        <Text style={styles.headerSub}>Deepen your interoceptive knowledge</Text>
       </LinearGradient>
 
       <View style={styles.searchContainer}>
@@ -104,6 +111,43 @@ export default function ArticlesScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {featuredArticle && !search && selectedCategory === 'all' && (
+          <>
+            <Text style={styles.sectionLabel}>START HERE</Text>
+            <TouchableOpacity
+              style={styles.featuredCard}
+              activeOpacity={0.8}
+              onPress={() => router.push(`/article/${featuredArticle.id}`)}
+            >
+              <LinearGradient
+                colors={[Colors.primary, Colors.primaryLight]}
+                style={styles.featuredGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <View style={styles.featuredIconRow}>
+                  <View style={styles.featuredIconCircle}>
+                    <Feather name={featuredArticle.iconName as any} size={22} color={Colors.primary} />
+                  </View>
+                  {articlesRead.includes(featuredArticle.id) && (
+                    <View style={styles.readBadgeFeatured}>
+                      <Feather name="check" size={11} color="#FFFFFF" />
+                      <Text style={styles.readBadgeFeaturedText}>Read</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.featuredTitle}>{featuredArticle.title}</Text>
+                <Text style={styles.featuredSubtitle}>{featuredArticle.subtitle}</Text>
+                <View style={styles.featuredMeta}>
+                  <Feather name="clock" size={13} color="rgba(255,255,255,0.8)" />
+                  <Text style={styles.featuredMetaText}>{featuredArticle.readTimeMinutes} min read</Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+            <Text style={styles.sectionLabel}>ALL ARTICLES</Text>
+          </>
+        )}
+
         {filteredArticles.length === 0 ? (
           <View style={styles.emptyState}>
             <Feather name="search" size={36} color={Colors.textTertiary} />
@@ -113,6 +157,7 @@ export default function ArticlesScreen() {
           filteredArticles.map((article) => {
             const catMeta = ARTICLE_CATEGORIES[article.category];
             const isBookmarked = bookmarks.includes(article.id);
+            const isRead = articlesRead.includes(article.id);
             return (
               <TouchableOpacity
                 key={article.id}
@@ -132,6 +177,12 @@ export default function ArticlesScreen() {
                     </View>
                     <Feather name="clock" size={12} color={Colors.textTertiary} />
                     <Text style={styles.readTime}>{article.readTimeMinutes} min</Text>
+                    {isRead && (
+                      <View style={styles.readBadge}>
+                        <Feather name="check" size={10} color={Colors.success} />
+                        <Text style={styles.readBadgeText}>Read</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
                 <TouchableOpacity
@@ -139,7 +190,7 @@ export default function ArticlesScreen() {
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
                   <Feather
-                    name={isBookmarked ? 'bookmark' : 'bookmark'}
+                    name="bookmark"
                     size={22}
                     color={isBookmarked ? Colors.primary : Colors.textTertiary}
                   />
@@ -179,6 +230,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     fontSize: 20,
     color: '#FFFFFF',
+  },
+  headerSub: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.75)',
+    marginTop: 6,
   },
   searchContainer: {
     paddingHorizontal: 20,
@@ -246,6 +303,83 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 100,
   },
+  sectionLabel: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 11,
+    color: Colors.textTertiary,
+    letterSpacing: 0.8,
+    marginBottom: 10,
+    marginTop: 4,
+  },
+  featuredCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 20,
+    ...Platform.select({
+      web: { boxShadow: '0 4px 16px rgba(107,91,149,0.18)' } as any,
+      default: {
+        shadowColor: Colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.18,
+        shadowRadius: 12,
+        elevation: 5,
+      },
+    }),
+  },
+  featuredGradient: {
+    padding: 22,
+  },
+  featuredIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  featuredIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  readBadgeFeatured: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  readBadgeFeaturedText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 12,
+    color: '#FFFFFF',
+  },
+  featuredTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 20,
+    color: '#FFFFFF',
+    marginBottom: 6,
+  },
+  featuredSubtitle: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.85)',
+    marginBottom: 14,
+    lineHeight: 20,
+  },
+  featuredMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  featuredMetaText: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+  },
   emptyState: {
     alignItems: 'center',
     paddingTop: 60,
@@ -303,6 +437,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexWrap: 'wrap',
   },
   categoryBadge: {
     backgroundColor: `${Colors.primary}14`,
@@ -320,5 +455,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_500Medium',
     fontSize: 12,
     color: Colors.textTertiary,
+  },
+  readBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: Colors.success + '18',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  readBadgeText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 11,
+    color: Colors.success,
   },
 });

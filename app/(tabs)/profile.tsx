@@ -16,6 +16,7 @@ import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { CONDITIONS } from '@/constants/conditions';
 import { format, differenceInCalendarDays } from 'date-fns';
+import GetHelpLink from '@/components/GetHelpLink';
 
 const FOUR_WEEK_PROGRAMME = [
   { week: 1, title: 'Foundation', description: 'Begin with heartbeat detection and diaphragmatic breathing to build your interoceptive baseline.' },
@@ -82,13 +83,16 @@ export default function ProfileScreen() {
             <View style={styles.avatarCircle}>
               <Text style={styles.avatarInitial}>{(profile?.name || 'U')[0].toUpperCase()}</Text>
             </View>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => router.push('/edit-profile' as any)}
-              activeOpacity={0.7}
-            >
-              <Feather name="edit-2" size={16} color="rgba(255,255,255,0.8)" />
-            </TouchableOpacity>
+            <View style={styles.heroTopRight}>
+              <GetHelpLink color="rgba(255,255,255,0.85)" />
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => router.push('/edit-profile' as any)}
+                activeOpacity={0.7}
+              >
+                <Feather name="edit-2" size={16} color="rgba(255,255,255,0.8)" />
+              </TouchableOpacity>
+            </View>
           </View>
           <Text style={styles.heroName}>{profile?.name || 'Your Profile'}</Text>
           <Text style={styles.heroDays}>Day {daysOnApp} of your journey</Text>
@@ -335,6 +339,7 @@ const styles = StyleSheet.create({
 
   heroCard: { borderRadius: 24, padding: 24, marginBottom: 24, marginTop: 8 },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
+  heroTopRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatarCircle: {
     width: 68, height: 68, borderRadius: 34, backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center', justifyContent: 'center',

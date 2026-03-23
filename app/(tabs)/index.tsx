@@ -183,14 +183,18 @@ export default function HomeScreen() {
         <View style={styles.heroTopRow}>
           <View style={styles.heroLeft}>
             <Text style={styles.greeting}>{greeting}</Text>
+            {profile?.primaryCondition && (
+              <Text style={styles.conditionLabel}>
+                {CONDITIONS.find(c => c.id === profile.primaryCondition)?.title}
+              </Text>
+            )}
             <Text style={styles.greetingSubtext}>{subtext}</Text>
           </View>
           <TouchableOpacity
-            style={styles.crisisButton}
             onPress={() => router.push('/crisis')}
             activeOpacity={0.7}
           >
-            <Feather name="shield" size={18} color="rgba(255,255,255,0.6)" />
+            <Text style={styles.getHelpLink}>Get Help</Text>
           </TouchableOpacity>
         </View>
 
@@ -403,7 +407,8 @@ const styles = StyleSheet.create({
   heroLeft: { flex: 1 },
   greeting: { fontFamily: 'Nunito_700Bold', fontSize: 22, color: '#FFFFFF' },
   greetingSubtext: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 4, lineHeight: 20 },
-  crisisButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
+  conditionLabel: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 },
+  getHelpLink: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, color: 'rgba(255,255,255,0.85)' },
   streakRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14 },
   streakText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: 'rgba(255,255,255,0.85)' },
   focusCard: {

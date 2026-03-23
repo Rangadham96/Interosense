@@ -18,6 +18,7 @@ import { useApp } from '@/contexts/AppContext';
 import { isToday, parseISO } from 'date-fns';
 import { apiPost } from '@/lib/api';
 import { router } from 'expo-router';
+import GetHelpLink from '@/components/GetHelpLink';
 
 type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -430,6 +431,10 @@ export default function CheckinScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: topPad }]}>
+      <View style={styles.topBar}>
+        <Text style={styles.topBarTitle}>Check-In</Text>
+        <GetHelpLink />
+      </View>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -608,6 +613,8 @@ const CIRCLE_SIZE = Math.min(32, (SCREEN_WIDTH - 80) / 10 - 4);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
+  topBarTitle: { fontFamily: 'Nunito_700Bold', fontSize: 20, color: Colors.text },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 40 },
   introScrollContent: { flexGrow: 1 },
   introGradient: { paddingHorizontal: 28, paddingTop: 48, paddingBottom: 40 },
