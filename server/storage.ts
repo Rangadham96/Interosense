@@ -1,6 +1,10 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { db } from "./db";
-import { users, type User, type InsertUser } from "../shared/schema";
+import { users, exerciseSessions, dailyCheckins, assessments, type User, type InsertUser } from "../shared/schema";
+
+export type ExerciseSession = typeof exerciseSessions.$inferSelect;
+export type DailyCheckin = typeof dailyCheckins.$inferSelect;
+export type Assessment = typeof assessments.$inferSelect;
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -36,3 +40,30 @@ export class DatabaseStorage implements IStorage {
 }
 
 export const storage = new DatabaseStorage();
+
+export async function createSession(data: Omit<ExerciseSession, "createdAt">): Promise<ExerciseSession> {
+  const [session] = await db.insert(exerciseSessions).values(data).returning();
+  return session;
+}
+
+export async function getUserSessions(userId: string): Promise<ExerciseSession[]> {
+  return db.select().from(exerciseSessions).where(eq(exerciseSessions.userId, userId)).orderBy(desc(exerciseSessions.completedAt));
+}
+
+export async function createCheckin(data: Omit<DailyCheckin, "createdAt">): Promise<DailyCheckin> {
+  const [checkin] = await db.insert(dailyCheckins).values(data).returning();
+  return checkin;
+}
+
+export async function getUserCheckins(userId: string): Promise<DailyCheckin[]> {
+  return db.select().from(dailyCheckins).where(eq(dailyCheckins.userId, userId)).orderBy(desc(dailyCheckins.date));
+}
+
+export async function createAssessment(data: Omit<Assessment, "createdAt">): Promise<Assessment> {
+  const [assessment] = await db.insert(assessments).values(data).returning();
+  return assessment;
+}
+
+export async function getUserAssessments(userId: string): Promise<Assessment[]> {
+  return db.select().from(assessments).where(eq(assessments.userId, userId)).orderBy(desc(assessments.completedAt));
+}

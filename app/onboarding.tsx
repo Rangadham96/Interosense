@@ -17,6 +17,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { CONDITIONS } from '@/constants/conditions';
+import { apiPut } from '@/lib/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -131,6 +132,15 @@ export default function OnboardingScreen() {
         createdAt: new Date().toISOString(),
         conditions: selectedConditions,
       });
+      try {
+        await apiPut('/api/auth/profile', {
+          conditions: selectedConditions,
+          experienceLevel: level,
+          dailyMinutes: String(dailyMinutes),
+        });
+      } catch (e) {
+        console.error('Failed to sync onboarding profile to server:', e);
+      }
       router.replace('/(tabs)');
     } catch (e) {
       console.error('Onboarding error:', e);

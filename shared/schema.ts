@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, jsonb, boolean, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -25,6 +25,52 @@ export const users = pgTable("users", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const exerciseSessions = pgTable("exercise_sessions", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  exerciseId: text("exercise_id").notNull(),
+  exerciseTitle: text("exercise_title").notNull(),
+  category: text("category").notNull(),
+  completedAt: text("completed_at").notNull(),
+  durationMinutes: integer("duration_minutes").notNull().default(0),
+  rating: integer("rating").notNull().default(0),
+  notes: text("notes").notNull().default(""),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const dailyCheckins = pgTable("daily_checkins", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  date: text("date").notNull(),
+  awarenessScore: integer("awareness_score").notNull().default(5),
+  energyLevel: integer("energy_level").notNull().default(5),
+  sleepQuality: integer("sleep_quality").notNull().default(5),
+  stressLevel: integer("stress_level").notNull().default(5),
+  mood: text("mood").notNull().default(""),
+  sensations: jsonb("sensations").$type<string[]>().notNull().default([]),
+  bodyAreas: jsonb("body_areas").$type<string[]>().notNull().default([]),
+  notes: text("notes").notNull().default(""),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const assessments = pgTable("assessments", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  scaleId: text("scale_id").notNull(),
+  scaleName: text("scale_name").notNull(),
+  completedAt: text("completed_at").notNull(),
+  totalScore: integer("total_score").notNull().default(0),
+  severity: text("severity").notNull().default(""),
+  answers: jsonb("answers").$type<number[]>().notNull().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({

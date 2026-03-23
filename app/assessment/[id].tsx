@@ -8,6 +8,7 @@ import Colors from '@/constants/colors';
 import { getScaleById, interpretScore } from '@/constants/clinical-scales';
 import { useApp } from '@/contexts/AppContext';
 import Svg, { Circle } from 'react-native-svg';
+import { apiPost } from '@/lib/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -62,21 +63,28 @@ export default function AssessmentScreen() {
     if (!scale || isSaving) return;
     setIsSaving(true);
     const interpretation = interpretScore(scale, totalScore);
+    const assessmentData = {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      scaleId: scale.id,
+      scaleName: scale.shortName,
+      completedAt: new Date().toISOString(),
+      totalScore,
+      severity: interpretation.severity,
+      answers,
+    };
     try {
-      await addAssessment({
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        scaleId: scale.id,
-        scaleName: scale.shortName,
-        completedAt: new Date().toISOString(),
-        totalScore,
-        severity: interpretation.severity,
-        answers,
-      });
-      router.back();
+      await addAssessment(assessmentData);
     } catch (e) {
       console.error('Failed to save assessment:', e);
       setIsSaving(false);
+      return;
     }
+    try {
+      await apiPost('/api/assessments', assessmentData);
+    } catch (e) {
+      console.error('Failed to sync assessment to server:', e);
+    }
+    router.back();
   }, [scale, totalScore, answers, addAssessment, isSaving]);
 
   if (!scale) {

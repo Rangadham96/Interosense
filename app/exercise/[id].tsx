@@ -28,6 +28,7 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { getExerciseById, EXERCISES, CATEGORY_INFO } from '@/constants/exercises';
 import { useApp } from '@/contexts/AppContext';
+import { apiPost } from '@/lib/api';
 
 type SessionPhase = 'prestart' | 'active' | 'complete';
 
@@ -163,17 +164,18 @@ export default function ExerciseSessionScreen() {
   const handleSave = useCallback(async () => {
     if (!exercise || isSaving) return;
     setIsSaving(true);
+    const sessionData = {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      exerciseId: exercise.id,
+      exerciseTitle: exercise.title,
+      category: exercise.category,
+      completedAt: new Date().toISOString(),
+      durationMinutes: exercise.durationMinutes,
+      rating: selectedRating,
+      notes: notes,
+    };
     try {
-      await addSession({
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        exerciseId: exercise.id,
-        exerciseTitle: exercise.title,
-        category: exercise.category,
-        completedAt: new Date().toISOString(),
-        durationMinutes: exercise.durationMinutes,
-        rating: selectedRating,
-        notes: notes,
-      });
+      await addSession(sessionData);
       setSaved(true);
       if (Platform.OS !== 'web') {
         try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
@@ -181,6 +183,12 @@ export default function ExerciseSessionScreen() {
     } catch (e) {
       console.error('Failed to save session:', e);
       setIsSaving(false);
+      return;
+    }
+    try {
+      await apiPost('/api/sessions', sessionData);
+    } catch (e) {
+      console.error('Failed to sync session to server:', e);
     }
   }, [exercise, addSession, selectedRating, notes, isSaving]);
 

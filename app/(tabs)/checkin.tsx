@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { isToday, parseISO } from 'date-fns';
+import { apiPost } from '@/lib/api';
 
 type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -184,7 +185,7 @@ export default function CheckinScreen() {
   };
 
   const handleSubmit = async () => {
-    await addCheckin({
+    const checkinData = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       date: new Date().toISOString(),
       awarenessScore: awareness,
@@ -195,8 +196,14 @@ export default function CheckinScreen() {
       sensations: selectedSensations,
       bodyAreas: selectedBodyAreas,
       notes: notes,
-    });
+    };
+    await addCheckin(checkinData);
     setSubmitted(true);
+    try {
+      await apiPost('/api/checkins', checkinData);
+    } catch (e) {
+      console.error('Failed to sync check-in to server:', e);
+    }
   };
 
   const toggleSensation = (s: string) => {

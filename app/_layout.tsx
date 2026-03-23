@@ -1,12 +1,12 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { queryClient } from "@/lib/query-client";
-import { AppProvider } from "@/contexts/AppContext";
+import { AppProvider, useApp } from "@/contexts/AppContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator } from "react-native";
@@ -23,9 +23,35 @@ import {
 SplashScreen.preventAutoHideAsync();
 
 function AuthGate() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, fetchServerData } = useAuth();
+  const { hydrateFromServer, clearActivityData } = useApp();
   const segments = useSegments();
   const router = useRouter();
+  const prevAuthRef = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const wasAuthenticated = prevAuthRef.current;
+    const isNowAuthenticated = isAuthenticated;
+    prevAuthRef.current = isNowAuthenticated;
+
+    if (isNowAuthenticated && wasAuthenticated !== true) {
+      fetchServerData().then(data => {
+        if (data) {
+          hydrateFromServer({
+            sessions: data.sessions,
+            checkins: data.checkins,
+            assessments: data.assessments,
+          });
+        }
+      });
+    }
+
+    if (!isNowAuthenticated && wasAuthenticated === true) {
+      clearActivityData();
+    }
+  }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -74,7 +100,7 @@ function AuthGate() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
     Nunito_500Medium,
     Nunito_600SemiBold,
@@ -83,12 +109,12 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded) {
+    if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <ErrorBoundary>

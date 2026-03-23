@@ -34,6 +34,12 @@ interface AuthUser {
   createdAt: string | null;
 }
 
+export interface ServerSyncData {
+  sessions: any[];
+  checkins: any[];
+  assessments: any[];
+}
+
 interface AuthContextValue {
   user: AuthUser | null;
   isLoading: boolean;
@@ -43,33 +49,10 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   updateAuthProfile: (data: Partial<AuthUser>) => Promise<{ success: boolean; message?: string }>;
   refreshUser: () => Promise<void>;
+  fetchServerData: () => Promise<ServerSyncData | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-async function setToken(key: string, value: string) {
-  if (Platform.OS === 'web') {
-    await AsyncStorage.setItem(key, value);
-  } else {
-    await SecureStore.setItemAsync(key, value);
-  }
-}
-
-async function getToken(key: string): Promise<string | null> {
-  if (Platform.OS === 'web') {
-    return AsyncStorage.getItem(key);
-  } else {
-    return SecureStore.getItemAsync(key);
-  }
-}
-
-async function removeToken(key: string) {
-  if (Platform.OS === 'web') {
-    await AsyncStorage.removeItem(key);
-  } else {
-    await SecureStore.deleteItemAsync(key);
-  }
-}
 
 async function apiCall(path: string, options: RequestInit = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -104,6 +87,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     refreshUser().finally(() => setIsLoading(false));
   }, [refreshUser]);
+
+  const fetchServerData = useCallback(async (): Promise<ServerSyncData | null> => {
+    try {
+      const [sessRes, checkRes, assessRes] = await Promise.all([
+        apiCall('/api/sessions'),
+        apiCall('/api/checkins'),
+        apiCall('/api/assessments'),
+      ]);
+
+      if (!sessRes.ok || !checkRes.ok || !assessRes.ok) return null;
+
+      const [sessData, checkData, assessData] = await Promise.all([
+        sessRes.json(),
+        checkRes.json(),
+        assessRes.json(),
+      ]);
+
+      return {
+        sessions: sessData.sessions ?? [],
+        checkins: checkData.checkins ?? [],
+        assessments: assessData.assessments ?? [],
+      };
+    } catch {
+      return null;
+    }
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     try {
@@ -172,7 +181,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     updateAuthProfile,
     refreshUser,
-  }), [user, isLoading, login, register, logout, updateAuthProfile, refreshUser]);
+    fetchServerData,
+  }), [user, isLoading, login, register, logout, updateAuthProfile, refreshUser, fetchServerData]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

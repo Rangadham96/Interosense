@@ -7,6 +7,14 @@ import * as fs from "fs";
 import * as path from "path";
 import { pool } from "./db";
 import authRouter from "./auth";
+import {
+  createSession,
+  getUserSessions,
+  createCheckin,
+  getUserCheckins,
+  createAssessment,
+  getUserAssessments,
+} from "./storage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const PgStore = connectPgSimple(session);
@@ -51,6 +59,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.status(200).send(html);
+  });
+
+  app.post("/api/sessions", async (req: Request, res: Response) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    try {
+      const { id, exerciseId, exerciseTitle, category, completedAt, durationMinutes, rating, notes } = req.body;
+      const session = await createSession({
+        id,
+        userId: req.session.userId,
+        exerciseId,
+        exerciseTitle,
+        category,
+        completedAt,
+        durationMinutes: durationMinutes ?? 0,
+        rating: rating ?? 0,
+        notes: notes ?? "",
+      });
+      return res.status(201).json({ session });
+    } catch (error) {
+      console.error("Create session error:", error);
+      return res.status(500).json({ message: "Failed to save session" });
+    }
+  });
+
+  app.get("/api/sessions", async (req: Request, res: Response) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    try {
+      const sessions = await getUserSessions(req.session.userId);
+      return res.status(200).json({ sessions });
+    } catch (error) {
+      console.error("Get sessions error:", error);
+      return res.status(500).json({ message: "Failed to load sessions" });
+    }
+  });
+
+  app.post("/api/checkins", async (req: Request, res: Response) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    try {
+      const { id, date, awarenessScore, energyLevel, sleepQuality, stressLevel, mood, sensations, bodyAreas, notes } = req.body;
+      const checkin = await createCheckin({
+        id,
+        userId: req.session.userId,
+        date,
+        awarenessScore: awarenessScore ?? 5,
+        energyLevel: energyLevel ?? 5,
+        sleepQuality: sleepQuality ?? 5,
+        stressLevel: stressLevel ?? 5,
+        mood: mood ?? "",
+        sensations: sensations ?? [],
+        bodyAreas: bodyAreas ?? [],
+        notes: notes ?? "",
+      });
+      return res.status(201).json({ checkin });
+    } catch (error) {
+      console.error("Create checkin error:", error);
+      return res.status(500).json({ message: "Failed to save check-in" });
+    }
+  });
+
+  app.get("/api/checkins", async (req: Request, res: Response) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    try {
+      const checkins = await getUserCheckins(req.session.userId);
+      return res.status(200).json({ checkins });
+    } catch (error) {
+      console.error("Get checkins error:", error);
+      return res.status(500).json({ message: "Failed to load check-ins" });
+    }
+  });
+
+  app.post("/api/assessments", async (req: Request, res: Response) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    try {
+      const { id, scaleId, scaleName, completedAt, totalScore, severity, answers } = req.body;
+      const assessment = await createAssessment({
+        id,
+        userId: req.session.userId,
+        scaleId,
+        scaleName,
+        completedAt,
+        totalScore: totalScore ?? 0,
+        severity: severity ?? "",
+        answers: answers ?? [],
+      });
+      return res.status(201).json({ assessment });
+    } catch (error) {
+      console.error("Create assessment error:", error);
+      return res.status(500).json({ message: "Failed to save assessment" });
+    }
+  });
+
+  app.get("/api/assessments", async (req: Request, res: Response) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    try {
+      const assessments = await getUserAssessments(req.session.userId);
+      return res.status(200).json({ assessments });
+    } catch (error) {
+      console.error("Get assessments error:", error);
+      return res.status(500).json({ message: "Failed to load assessments" });
+    }
   });
 
   const httpServer = createServer(app);

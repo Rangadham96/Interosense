@@ -136,6 +136,9 @@ export const Storage = {
   async getSessions(): Promise<SessionRecord[]> {
     return getJSON<SessionRecord[]>(KEYS.SESSIONS, []);
   },
+  async setSessions(sessions: SessionRecord[]): Promise<void> {
+    await setJSON(KEYS.SESSIONS, sessions);
+  },
   async addSession(session: SessionRecord): Promise<void> {
     const sessions = await this.getSessions();
     sessions.push(session);
@@ -144,6 +147,9 @@ export const Storage = {
 
   async getCheckins(): Promise<CheckinRecord[]> {
     return getJSON<CheckinRecord[]>(KEYS.CHECKINS, []);
+  },
+  async setCheckins(checkins: CheckinRecord[]): Promise<void> {
+    await setJSON(KEYS.CHECKINS, checkins);
   },
   async addCheckin(checkin: CheckinRecord): Promise<void> {
     const checkins = await this.getCheckins();
@@ -219,6 +225,9 @@ export const Storage = {
   async getAssessments(): Promise<AssessmentRecord[]> {
     return getJSON<AssessmentRecord[]>(KEYS.ASSESSMENTS, []);
   },
+  async setAssessments(assessments: AssessmentRecord[]): Promise<void> {
+    await setJSON(KEYS.ASSESSMENTS, assessments);
+  },
   async addAssessment(assessment: AssessmentRecord): Promise<void> {
     const assessments = await this.getAssessments();
     assessments.push(assessment);
@@ -252,5 +261,9 @@ export const Storage = {
       await setJSON(KEYS.EXERCISE_BOOKMARKS, bookmarks);
       return true;
     }
+  },
+
+  async clearActivityData(): Promise<void> {
+    await AsyncStorage.multiRemove([KEYS.SESSIONS, KEYS.CHECKINS, KEYS.ASSESSMENTS]);
   },
 };

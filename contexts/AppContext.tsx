@@ -47,6 +47,8 @@ interface AppActions {
   updateProfile: (profile: UserProfile) => Promise<void>;
   toggleExerciseBookmark: (exerciseId: string) => Promise<void>;
   refresh: () => Promise<void>;
+  hydrateFromServer: (data: { sessions?: SessionRecord[]; checkins?: CheckinRecord[]; assessments?: AssessmentRecord[] }) => void;
+  clearActivityData: () => Promise<void>;
 }
 
 type AppContextValue = AppState & AppActions;
@@ -284,6 +286,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const hydrateFromServer = useCallback((data: { sessions?: SessionRecord[]; checkins?: CheckinRecord[]; assessments?: AssessmentRecord[] }) => {
+    if (data.sessions !== undefined) {
+      setSessions(data.sessions);
+      Storage.setSessions(data.sessions).catch(() => {});
+    }
+    if (data.checkins !== undefined) {
+      setCheckins(data.checkins);
+      Storage.setCheckins(data.checkins).catch(() => {});
+    }
+    if (data.assessments !== undefined) {
+      setAssessments(data.assessments);
+      Storage.setAssessments(data.assessments).catch(() => {});
+    }
+  }, []);
+
+  const clearActivityData = useCallback(async () => {
+    await Storage.clearActivityData();
+    setSessions([]);
+    setCheckins([]);
+    setAssessments([]);
+  }, []);
+
   const value = useMemo<AppContextValue>(() => ({
     isLoading,
     onboardingComplete,
@@ -324,6 +348,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateProfile,
     toggleExerciseBookmark: toggleExerciseBookmarkCb,
     refresh: loadData,
+    hydrateFromServer,
+    clearActivityData,
   }), [
     isLoading, onboardingComplete, profile, sessions, checkins, bodyMarks, goals,
     bookmarks, exerciseBookmarks, articlesRead, settings, assessments, wearableData, unlockedAchievements,
@@ -332,6 +358,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     completeOnboarding, addSession, addCheckin, addBodyMark, clearBodyMarks,
     addGoal, updateGoals, toggleBookmark, markArticleRead, updateSettings,
     addAssessment, addWearableDataCb, updateProfile, toggleExerciseBookmarkCb, loadData,
+    hydrateFromServer, clearActivityData,
   ]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
