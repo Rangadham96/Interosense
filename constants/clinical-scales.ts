@@ -1,6 +1,30 @@
 export interface ScaleQuestion {
   id: number;
   text: string;
+  subscale?: string;
+  reverseScored?: boolean;
+}
+
+export interface Maia2Subscale {
+  key: string;
+  name: string;
+  description: string;
+  clinicalContext: string;
+  questionIds: number[];
+}
+
+export interface Maia2Scale {
+  id: 'maia2';
+  name: string;
+  shortName: string;
+  description: string;
+  citation: string;
+  disclaimer: string;
+  estimatedMinutes: number;
+  totalQuestions: number;
+  responseOptions: { label: string; value: number }[];
+  questions: ScaleQuestion[];
+  subscales: Maia2Subscale[];
 }
 
 export interface ScaleInterpretation {
@@ -166,4 +190,141 @@ export function getScaleById(id: string): ClinicalScale | undefined {
 
 export function interpretScore(scale: ClinicalScale, score: number): ScaleInterpretation {
   return scale.interpretations.find(i => score >= i.minScore && score <= i.maxScore) || scale.interpretations[scale.interpretations.length - 1];
+}
+
+export const MAIA2_SCALE: Maia2Scale = {
+  id: 'maia2',
+  name: 'Multidimensional Assessment of Interoceptive Awareness',
+  shortName: 'MAIA-2',
+  description: 'A validated 37-item questionnaire measuring 8 dimensions of interoceptive awareness. The only scientifically validated measure of body awareness that tracks genuine improvement over time.',
+  citation: 'Mehling, W. E., et al. (2018). The Multidimensional Assessment of Interoceptive Awareness, Version 2 (MAIA-2). PLOS ONE, 13(12), e0208034. Freely available for research and clinical use.',
+  disclaimer: 'MAIA-2 measures interoceptive awareness, not clinical symptoms. Results reflect your current level of body awareness and are not diagnostic. Higher scores indicate stronger body awareness in each dimension.',
+  estimatedMinutes: 10,
+  totalQuestions: 37,
+  responseOptions: [
+    { label: 'Never', value: 0 },
+    { label: 'Rarely', value: 1 },
+    { label: 'Sometimes', value: 2 },
+    { label: 'Often', value: 3 },
+    { label: 'Very Often', value: 4 },
+    { label: 'Always', value: 5 },
+  ],
+  subscales: [
+    {
+      key: 'noticing',
+      name: 'Noticing',
+      description: 'Awareness of uncomfortable, comfortable, and neutral body sensations',
+      clinicalContext: 'Noticing reflects your baseline sensitivity to bodily signals. Higher scores mean you naturally pick up on what your body is communicating — a foundation for all other dimensions.',
+      questionIds: [1, 2, 3, 4],
+    },
+    {
+      key: 'notDistracting',
+      name: 'Not-Distracting',
+      description: 'Tendency not to ignore or distract oneself from sensations of pain or discomfort',
+      clinicalContext: 'Not-Distracting measures whether you stay present with uncomfortable sensations rather than pushing them away. Growth here means developing a healthier relationship with physical discomfort.',
+      questionIds: [5, 6, 7, 8, 9, 10],
+    },
+    {
+      key: 'notWorrying',
+      name: 'Not-Worrying',
+      description: 'Tendency not to worry or experience emotional distress with sensations of pain or discomfort',
+      clinicalContext: 'Not-Worrying reflects emotional equanimity toward body sensations. Higher scores suggest you can notice discomfort without catastrophising — a key skill in pain management and anxiety.',
+      questionIds: [11, 12, 13, 14, 15],
+    },
+    {
+      key: 'attentionRegulation',
+      name: 'Attention Regulation',
+      description: 'Ability to sustain and control attention to body sensations',
+      clinicalContext: 'Attention Regulation is the capacity to deliberately focus on, sustain, and redirect attention within the body. It underpins all formal mindfulness and interoceptive training.',
+      questionIds: [16, 17, 18, 19, 20, 21, 22],
+    },
+    {
+      key: 'emotionalAwareness',
+      name: 'Emotional Awareness',
+      description: 'Awareness of the connection between body sensations and emotional states',
+      clinicalContext: 'Emotional Awareness captures the mind-body bridge — recognising that emotions live in the body. Strengthening this dimension improves emotional regulation and self-understanding.',
+      questionIds: [23, 24, 25, 26, 27],
+    },
+    {
+      key: 'selfRegulation',
+      name: 'Self-Regulation',
+      description: 'Ability to regulate distress by attention to body sensations',
+      clinicalContext: 'Self-Regulation measures whether you can actively use body awareness to calm emotional or physical distress. It is central to resilience and stress recovery.',
+      questionIds: [28, 29, 30, 31],
+    },
+    {
+      key: 'bodyListening',
+      name: 'Body Listening',
+      description: 'Active listening to the body for insight',
+      clinicalContext: 'Body Listening reflects the degree to which you consult your body as a source of wisdom. High scores characterise people who make health decisions informed by physical intuition.',
+      questionIds: [32, 33, 34],
+    },
+    {
+      key: 'trusting',
+      name: 'Trusting',
+      description: 'Experience of one\'s body as safe and trustworthy',
+      clinicalContext: 'Trusting is your sense of the body as a reliable, safe place to inhabit. Low scores are common in trauma and chronic illness; improvement here signals deep healing.',
+      questionIds: [35, 36, 37],
+    },
+  ],
+  questions: [
+    { id: 1, subscale: 'noticing', text: 'When I am tense I notice where the tension is located in my body.' },
+    { id: 2, subscale: 'noticing', text: 'I notice when I am uncomfortable in my body.' },
+    { id: 3, subscale: 'noticing', text: 'I notice where in my body I am comfortable.' },
+    { id: 4, subscale: 'noticing', text: 'I notice changes in my breathing, such as whether it slows down or speeds up.' },
+    { id: 5, subscale: 'notDistracting', reverseScored: true, text: 'I ignore physical tension or discomfort until they become more severe.' },
+    { id: 6, subscale: 'notDistracting', reverseScored: true, text: 'I distract myself from sensations of discomfort.' },
+    { id: 7, subscale: 'notDistracting', reverseScored: true, text: 'When I feel pain or discomfort, I try to power through it.' },
+    { id: 8, subscale: 'notDistracting', reverseScored: true, text: 'I try not to feel discomfort or pain.' },
+    { id: 9, subscale: 'notDistracting', reverseScored: true, text: 'When I feel unpleasant body sensations, I occupy myself with something else so I do not have to feel them.' },
+    { id: 10, subscale: 'notDistracting', reverseScored: true, text: 'When I feel physical pain, I become upset.' },
+    { id: 11, subscale: 'notWorrying', reverseScored: true, text: 'I start to worry that something is wrong if I feel any discomfort.' },
+    { id: 12, subscale: 'notWorrying', reverseScored: true, text: 'I can notice an unpleasant body sensation without worrying about it.' },
+    { id: 13, subscale: 'notWorrying', reverseScored: true, text: 'When I feel unpleasant body sensations, I become frightened.' },
+    { id: 14, subscale: 'notWorrying', reverseScored: true, text: 'When I am in physical pain, I cannot stand it.' },
+    { id: 15, subscale: 'notWorrying', reverseScored: true, text: 'I can stay calm and not worry when I have unpleasant feelings in my body.' },
+    { id: 16, subscale: 'attentionRegulation', text: 'I can pay attention to my breath without being distracted by things happening around me.' },
+    { id: 17, subscale: 'attentionRegulation', text: 'I can maintain awareness of my inner body sensations even when there is a lot going on around me.' },
+    { id: 18, subscale: 'attentionRegulation', text: 'When I am in conversation with someone, I can pay attention to my body sensations at the same time.' },
+    { id: 19, subscale: 'attentionRegulation', text: 'I can return awareness to my body if I am distracted.' },
+    { id: 20, subscale: 'attentionRegulation', text: 'I can refocus my attention from thinking to sensing my body.' },
+    { id: 21, subscale: 'attentionRegulation', text: 'I can maintain awareness of my whole body even when a part of me is in pain or discomfort.' },
+    { id: 22, subscale: 'attentionRegulation', text: 'I am able to consciously focus on my body as a whole.' },
+    { id: 23, subscale: 'emotionalAwareness', text: 'I notice how my body changes when I am angry.' },
+    { id: 24, subscale: 'emotionalAwareness', text: 'When something is wrong in my life, I can feel it in my body.' },
+    { id: 25, subscale: 'emotionalAwareness', text: 'I notice that my body feels different after a peaceful experience.' },
+    { id: 26, subscale: 'emotionalAwareness', text: 'I notice that my breathing becomes free and easy when I feel comfortable.' },
+    { id: 27, subscale: 'emotionalAwareness', text: 'I notice how my body changes when I feel happy.' },
+    { id: 28, subscale: 'selfRegulation', text: 'When I feel overwhelmed I can find a calm place inside.' },
+    { id: 29, subscale: 'selfRegulation', text: 'When I bring awareness to my body I feel a sense of calm.' },
+    { id: 30, subscale: 'selfRegulation', text: 'I can use my breath to reduce tension.' },
+    { id: 31, subscale: 'selfRegulation', text: 'When I am caught up in thoughts, I can calm my mind by focusing on my body/breathing.' },
+    { id: 32, subscale: 'bodyListening', text: 'I listen for information from my body about my emotional state.' },
+    { id: 33, subscale: 'bodyListening', text: 'When I am upset, I take time to explore how my body feels.' },
+    { id: 34, subscale: 'bodyListening', text: 'I listen to my body to inform me about what to do in difficult situations.' },
+    { id: 35, subscale: 'trusting', text: 'I am at home in my body.' },
+    { id: 36, subscale: 'trusting', text: 'I feel my body is a safe place.' },
+    { id: 37, subscale: 'trusting', text: 'I trust my body sensations.' },
+  ],
+};
+
+export function calculateMaia2Subscales(answers: number[]): Record<string, number> {
+  const scores: Record<string, number> = {};
+  for (const subscale of MAIA2_SCALE.subscales) {
+    const subscaleAnswers = subscale.questionIds.map(qid => {
+      const q = MAIA2_SCALE.questions.find(q => q.id === qid)!;
+      const rawAnswer = answers[qid - 1];
+      if (rawAnswer === undefined || rawAnswer < 0) return 0;
+      return q.reverseScored ? 5 - rawAnswer : rawAnswer;
+    });
+    const avg = subscaleAnswers.reduce((s, a) => s + a, 0) / subscaleAnswers.length;
+    scores[subscale.key] = Math.round(avg * 100) / 100;
+  }
+  return scores;
+}
+
+export function getMaia2OverallAverage(subscaleScores: Record<string, number>): number {
+  const values = Object.values(subscaleScores);
+  if (values.length === 0) return 0;
+  return Math.round(values.reduce((s, v) => s + v, 0) / values.length * 100) / 100;
 }

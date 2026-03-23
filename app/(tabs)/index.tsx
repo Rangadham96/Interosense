@@ -17,7 +17,8 @@ import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { CATEGORY_INFO, ExerciseCategory } from '@/constants/exercises';
 import { CONDITIONS } from '@/constants/conditions';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInDays } from 'date-fns';
+import Svg from 'react-native-svg';
 import type { Recommendation, InsightCard } from '@/lib/personalization-engine';
 import { apiRequest } from '@/lib/query-client';
 
@@ -106,6 +107,8 @@ export default function HomeScreen() {
     isLoading,
     advisorState,
     todayCheckedIn,
+    assessments,
+    totalSessions,
   } = useApp();
 
   useEffect(() => {
@@ -113,6 +116,18 @@ export default function HomeScreen() {
       router.replace('/onboarding');
     }
   }, [isLoading, onboardingComplete]);
+
+  const showMaia2Prompt = useMemo(() => {
+    const maia2 = assessments
+      .filter(a => a.scaleId === 'maia2')
+      .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
+    if (maia2.length === 0 && totalSessions >= 10) return true;
+    if (maia2.length > 0) {
+      const daysSince = differenceInDays(new Date(), parseISO(maia2[0].completedAt));
+      return daysSince >= 30;
+    }
+    return false;
+  }, [assessments, totalSessions]);
 
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
 
@@ -400,7 +415,7 @@ export default function HomeScreen() {
               </View>
             </View>
           ) : (
-            <View style={styles.scienceCard}>
+            <View style={styles.dailyInsightCard}>
               <View style={styles.scienceCardAccent} />
               <View style={styles.scienceCardContent}>
                 <Text style={styles.scienceLabel}>TODAY'S SCIENCE</Text>
@@ -422,6 +437,25 @@ export default function HomeScreen() {
               <RecommendationCard key={rec.id} rec={rec} onPress={() => handleRecPress(rec)} />
             ))}
           </View>
+        )}
+
+        {showMaia2Prompt && (
+          <TouchableOpacity
+            style={styles.maia2Banner}
+            onPress={() => router.push('/assessment/maia2' as any)}
+            activeOpacity={0.85}
+          >
+            <View style={styles.maia2BannerIcon}>
+              <Feather name="activity" size={18} color="#4A6FA5" />
+            </View>
+            <View style={styles.maia2BannerContent}>
+              <Text style={styles.maia2BannerTitle}>Measure Your Body Awareness</Text>
+              <Text style={styles.maia2BannerSubtitle}>
+                Take the MAIA-2 — the validated 8-dimension body awareness assessment
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={16} color="#4A6FA5" />
+          </TouchableOpacity>
         )}
 
         <TouchableOpacity
@@ -539,7 +573,20 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundSecondary, borderRadius: 12, padding: 12, marginBottom: 8,
   },
   crisisFooterText: { fontFamily: 'Nunito_500Medium', fontSize: 12, color: Colors.textTertiary, flex: 1 },
-  scienceCard: {
+  maia2Banner: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#EDF2FB', borderRadius: 14, padding: 14, marginBottom: 10,
+    borderWidth: 1, borderColor: '#C8D8F0',
+    shadowColor: Colors.cardShadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 6, elevation: 2,
+  },
+  maia2BannerIcon: {
+    width: 38, height: 38, borderRadius: 10, backgroundColor: '#D5E3F7',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  maia2BannerContent: { flex: 1 },
+  maia2BannerTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: '#2D4A7A', marginBottom: 2 },
+  maia2BannerSubtitle: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: '#4A6FA5', lineHeight: 15 },
+  dailyInsightCard: {
     backgroundColor: Colors.surface,
     borderRadius: 18,
     flexDirection: 'row',

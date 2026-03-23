@@ -91,6 +91,7 @@ export interface AssessmentRecord {
   totalScore: number;
   severity: string;
   answers: number[];
+  subscaleScores?: Record<string, number>;
 }
 
 export interface WearableDataPoint {

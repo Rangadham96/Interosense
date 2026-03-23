@@ -4,12 +4,12 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import GetHelpLink from '@/components/GetHelpLink';
 import { useMemo } from 'react';
-import { format, parseISO, startOfWeek, addDays, isSameDay } from 'date-fns';
+import { format, parseISO, startOfWeek, addDays, isSameDay, differenceInDays } from 'date-fns';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { ACHIEVEMENTS, TIER_COLORS } from '@/constants/achievements';
-import { CLINICAL_SCALES } from '@/constants/clinical-scales';
-import Svg, { Circle } from 'react-native-svg';
+import { CLINICAL_SCALES, MAIA2_SCALE, getMaia2OverallAverage } from '@/constants/clinical-scales';
+import RadarChart from '@/components/RadarChart';
 
 const CATEGORY_LABELS: Record<string, string> = {
   heartbeat: 'Heartbeat',
@@ -68,6 +68,7 @@ export default function ProgressScreen() {
     if (!assessments || assessments.length === 0) return [];
     const grouped: Record<string, typeof assessments> = {};
     assessments.forEach(a => {
+      if (a.scaleId === 'maia2') return;
       if (!grouped[a.scaleId]) grouped[a.scaleId] = [];
       grouped[a.scaleId].push(a);
     });
@@ -77,6 +78,56 @@ export default function ProgressScreen() {
       return { scaleId, scaleName: scale?.name || records[0].scaleName, records: sorted, scale };
     });
   }, [assessments]);
+
+  const maia2Assessments = useMemo(() => {
+    return assessments
+      .filter(a => a.scaleId === 'maia2')
+      .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
+  }, [assessments]);
+
+  const latestMaia2 = maia2Assessments[0] ?? null;
+  const previousMaia2 = maia2Assessments[1] ?? null;
+
+  const maia2RadarDimensions = useMemo(() => {
+    if (!latestMaia2?.subscaleScores) return null;
+    return MAIA2_SCALE.subscales.map(s => ({
+      key: s.key,
+      label: s.name,
+      value: latestMaia2.subscaleScores![s.key] ?? 0,
+      maxValue: 5,
+    }));
+  }, [latestMaia2]);
+
+  const maia2PrevRadarDimensions = useMemo(() => {
+    if (!previousMaia2?.subscaleScores) return undefined;
+    return MAIA2_SCALE.subscales.map(s => ({
+      key: s.key,
+      label: s.name,
+      value: previousMaia2.subscaleScores![s.key] ?? 0,
+      maxValue: 5,
+    }));
+  }, [previousMaia2]);
+
+  const maia2OverallScore = useMemo(() => {
+    if (!latestMaia2?.subscaleScores) return null;
+    return getMaia2OverallAverage(latestMaia2.subscaleScores);
+  }, [latestMaia2]);
+
+  const awarenessDisplayScore = useMemo(() => {
+    if (maia2OverallScore !== null) {
+      return Math.round(maia2OverallScore * 20);
+    }
+    return averageAwareness;
+  }, [maia2OverallScore, averageAwareness]);
+
+  const showMaia2Prompt = useMemo(() => {
+    if (maia2Assessments.length === 0 && totalSessions >= 10) return true;
+    if (maia2Assessments.length > 0) {
+      const daysSince = differenceInDays(new Date(), parseISO(maia2Assessments[0].completedAt));
+      return daysSince >= 30;
+    }
+    return false;
+  }, [maia2Assessments, totalSessions]);
 
   const categoryBreakdown = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -232,16 +283,21 @@ export default function ProgressScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Awareness Score Trend</Text>
+          <Text style={styles.sectionTitle}>Interoceptive Awareness Score</Text>
           <View style={styles.card}>
-            {checkins.length > 0 ? (
+            <View style={[styles.avgRow, { marginBottom: 6 }]}>
+              <Text style={styles.avgLabel}>{maia2OverallScore !== null ? 'MAIA-2' : 'Average'}</Text>
+              <Text style={styles.avgValue}>{maia2OverallScore !== null ? awarenessDisplayScore : averageAwareness}</Text>
+              <Text style={styles.avgOutOf}>{maia2OverallScore !== null ? '/100' : '/10'}</Text>
+            </View>
+            {maia2OverallScore !== null ? (
+              <Text style={styles.awarenessSubtitle}>
+                Scientifically validated score from MAIA-2. Based on {maia2Assessments.length} assessment{maia2Assessments.length !== 1 ? 's' : ''}.
+              </Text>
+            ) : checkins.length > 0 ? (
               <>
-                <View style={styles.avgRow}>
-                  <Text style={styles.avgLabel}>Average</Text>
-                  <Text style={styles.avgValue}>{averageAwareness}</Text>
-                  <Text style={styles.avgOutOf}>/10</Text>
-                </View>
-                <Text style={styles.chartContextLabel}>Your body awareness score over the last 7 check-ins</Text>
+                <Text style={styles.awarenessSubtitle}>Daily check-in average. Take the MAIA-2 for a validated score.</Text>
+                <View style={{ height: 14 }} />
                 <View style={styles.barChart}>
                   {last7Checkins.map((c, i) => {
                     const ratio = c.awarenessScore / 10;
@@ -249,7 +305,7 @@ export default function ProgressScreen() {
                     return (
                       <View key={c.id || i} style={styles.barColumn}>
                         <View style={styles.barTrack}>
-                          <View style={[styles.bar, { height: `${Math.max(ratio * 100, 5)}%`, backgroundColor: barColor }]} />
+                          <View style={[styles.bar, { height: `${Math.max(ratio * 100, 5)}%` as any, backgroundColor: barColor }]} />
                         </View>
                         <Text style={styles.barLabel}>{format(parseISO(c.date), 'dd')}</Text>
                       </View>
@@ -260,11 +316,90 @@ export default function ProgressScreen() {
             ) : (
               <View style={styles.emptyState}>
                 <Feather name="bar-chart-2" size={32} color={Colors.textTertiary} />
-                <Text style={styles.emptyText}>Complete check-ins to see your awareness trend</Text>
+                <Text style={styles.emptyText}>Complete check-ins or take the MAIA-2 assessment</Text>
               </View>
             )}
           </View>
         </View>
+
+        {showMaia2Prompt && (
+          <TouchableOpacity
+            style={styles.maia2Prompt}
+            onPress={() => router.push('/assessment/maia2' as any)}
+            activeOpacity={0.85}
+          >
+            <View style={styles.maia2PromptIcon}>
+              <Feather name="activity" size={20} color="#4A6FA5" />
+            </View>
+            <View style={styles.maia2PromptContent}>
+              <Text style={styles.maia2PromptTitle}>
+                {maia2Assessments.length === 0 ? 'Measure Your Body Awareness' : 'Monthly MAIA-2 Check-in'}
+              </Text>
+              <Text style={styles.maia2PromptSubtitle}>
+                {maia2Assessments.length === 0
+                  ? 'Take the validated MAIA-2 assessment to get your scientific body awareness score across 8 dimensions.'
+                  : "It's been 30+ days since your last MAIA-2. Track your progress with a new measurement."}
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={18} color="#4A6FA5" />
+          </TouchableOpacity>
+        )}
+
+        {latestMaia2 && maia2RadarDimensions && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Body Awareness Profile</Text>
+              <TouchableOpacity onPress={() => router.push('/assessment/maia2' as any)}>
+                <Text style={styles.seeAll}>Retake</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={[styles.card, styles.maia2Card]}>
+              <Text style={styles.maia2CardDate}>
+                {format(parseISO(latestMaia2.completedAt), 'MMM d, yyyy')} · MAIA-2
+              </Text>
+              <View style={styles.maia2RadarWrap}>
+                <RadarChart
+                  dimensions={maia2RadarDimensions}
+                  size={260}
+                  color={Colors.primary}
+                  secondaryColor={Colors.secondary}
+                  secondaryDimensions={maia2PrevRadarDimensions}
+                />
+              </View>
+              {maia2PrevRadarDimensions && previousMaia2 && (
+                <View style={styles.maia2Legend}>
+                  <View style={styles.maia2LegendItem}>
+                    <View style={[styles.maia2LegendDot, { backgroundColor: Colors.primary }]} />
+                    <Text style={styles.maia2LegendText}>{format(parseISO(latestMaia2.completedAt), 'MMM d')}</Text>
+                  </View>
+                  <View style={styles.maia2LegendItem}>
+                    <View style={[styles.maia2LegendDot, { backgroundColor: Colors.secondary, borderStyle: 'dashed' as const }]} />
+                    <Text style={styles.maia2LegendText}>{format(parseISO(previousMaia2.completedAt), 'MMM d')}</Text>
+                  </View>
+                </View>
+              )}
+              {previousMaia2?.subscaleScores && (
+                <View style={styles.maia2Comparisons}>
+                  <Text style={styles.maia2ComparisonTitle}>Month-over-Month</Text>
+                  {MAIA2_SCALE.subscales.map(s => {
+                    const current = latestMaia2.subscaleScores?.[s.key] ?? 0;
+                    const prev = previousMaia2.subscaleScores![s.key] ?? 0;
+                    const diff = current - prev;
+                    const arrow = diff > 0.1 ? '↑' : diff < -0.1 ? '↓' : '→';
+                    const arrowColor = diff > 0.1 ? Colors.success : diff < -0.1 ? Colors.error : Colors.textTertiary;
+                    return (
+                      <View key={s.key} style={styles.maia2CompRow}>
+                        <Text style={styles.maia2CompLabel}>{s.name}</Text>
+                        <Text style={[styles.maia2CompArrow, { color: arrowColor }]}>{arrow}</Text>
+                        <Text style={styles.maia2CompValues}>{prev.toFixed(1)} → {current.toFixed(1)}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+          </View>
+        )}
 
         {stressTrend.length > 0 && (
           <View style={styles.section}>
@@ -641,4 +776,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 14, padding: 16,
   },
   linkText: { flex: 1, fontSize: 15, fontFamily: 'Nunito_600SemiBold', color: Colors.text, marginLeft: 12 },
+  awarenessSubtitle: { fontSize: 12, fontFamily: 'Nunito_400Regular', color: Colors.textTertiary, marginBottom: 4 },
+  maia2Prompt: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#EDF2FB',
+    borderRadius: 16, padding: 16, marginBottom: 24, gap: 12,
+    borderWidth: 1, borderColor: '#C8D8F0',
+  },
+  maia2PromptIcon: {
+    width: 42, height: 42, borderRadius: 12, backgroundColor: '#D5E3F7',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  maia2PromptContent: { flex: 1 },
+  maia2PromptTitle: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: '#2D4A7A', marginBottom: 4 },
+  maia2PromptSubtitle: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: '#4A6FA5', lineHeight: 17 },
+  maia2Card: { alignItems: 'center' },
+  maia2CardDate: { fontFamily: 'Nunito_500Medium', fontSize: 12, color: Colors.textTertiary, marginBottom: 16, alignSelf: 'flex-start' },
+  maia2RadarWrap: { marginBottom: 12 },
+  maia2Legend: { flexDirection: 'row', gap: 16, marginBottom: 12 },
+  maia2LegendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  maia2LegendDot: { width: 10, height: 10, borderRadius: 5 },
+  maia2LegendText: { fontFamily: 'Nunito_500Medium', fontSize: 12, color: Colors.textSecondary },
+  maia2Comparisons: { width: '100%', borderTopWidth: 1, borderTopColor: Colors.borderLight, paddingTop: 14 },
+  maia2ComparisonTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: Colors.text, marginBottom: 8 },
+  maia2CompRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 3, gap: 6 },
+  maia2CompLabel: { fontFamily: 'Nunito_500Medium', fontSize: 12, color: Colors.textSecondary, flex: 1 },
+  maia2CompArrow: { fontFamily: 'Nunito_700Bold', fontSize: 14, width: 16, textAlign: 'center' },
+  maia2CompValues: { fontFamily: 'Nunito_600SemiBold', fontSize: 12, color: Colors.textTertiary, width: 80, textAlign: 'right' },
 });
