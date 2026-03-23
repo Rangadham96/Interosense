@@ -19,7 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { from } = useLocalSearchParams<{ from?: string }>();
+  const { from, banner } = useLocalSearchParams<{ from?: string; banner?: string }>();
   const { login } = useAuth();
   const topPadding = Platform.OS === 'web' ? 67 : insets.top;
 
@@ -77,6 +77,13 @@ export default function LoginScreen() {
           <View style={styles.formCard}>
             <Text style={styles.formTitle}>Welcome back</Text>
 
+            {banner ? (
+              <View style={styles.successBox}>
+                <Feather name="check-circle" size={16} color="#2E7D32" />
+                <Text style={styles.successText}>{banner}</Text>
+              </View>
+            ) : null}
+
             {error ? (
               <View style={styles.errorBox}>
                 <Feather name="alert-circle" size={16} color="#C62828" />
@@ -133,6 +140,10 @@ export default function LoginScreen() {
               ) : (
                 <Text style={styles.loginButtonText}>Continue →</Text>
               )}
+            </Pressable>
+
+            <Pressable style={styles.forgotLink} onPress={() => router.push('/auth/forgot-password')} testID="forgot-link">
+              <Text style={styles.forgotLinkText}>Forgot your password?</Text>
             </Pressable>
           </View>
 
@@ -201,6 +212,13 @@ const styles = StyleSheet.create({
   },
   loginButtonDisabled: { opacity: 0.7 },
   loginButtonText: { fontSize: 16, fontFamily: 'Nunito_700Bold', color: '#fff' },
+  forgotLink: { alignItems: 'center', marginTop: 14 },
+  forgotLinkText: { fontSize: 13, fontFamily: 'Nunito_600SemiBold', color: Colors.primary },
+  successBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#E8F5E9', borderRadius: 12, padding: 12, marginBottom: 16,
+  },
+  successText: { fontSize: 13, fontFamily: 'Nunito_500Medium', color: '#2E7D32', flex: 1 },
   switchLink: { alignItems: 'center', marginTop: 24, paddingBottom: 32 },
   switchText: { fontSize: 14, fontFamily: 'Nunito_400Regular', color: Colors.textSecondary },
   switchBold: { fontFamily: 'Nunito_700Bold', color: Colors.primary },

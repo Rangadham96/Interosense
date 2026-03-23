@@ -1,6 +1,6 @@
 import { eq, desc } from "drizzle-orm";
 import { db } from "./db";
-import { users, exerciseSessions, dailyCheckins, assessments, type User, type InsertUser } from "../shared/schema";
+import { users, exerciseSessions, dailyCheckins, assessments, passwordResetTokens, type User, type InsertUser } from "../shared/schema";
 
 export type ExerciseSession = typeof exerciseSessions.$inferSelect;
 export type DailyCheckin = typeof dailyCheckins.$inferSelect;
@@ -66,4 +66,20 @@ export async function createAssessment(data: Omit<Assessment, "createdAt">): Pro
 
 export async function getUserAssessments(userId: string): Promise<Assessment[]> {
   return db.select().from(assessments).where(eq(assessments.userId, userId)).orderBy(desc(assessments.completedAt));
+}
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+
+export async function createResetToken(userId: string, token: string, expiresAt: Date): Promise<PasswordResetToken> {
+  const [record] = await db.insert(passwordResetTokens).values({ userId, token, expiresAt }).returning();
+  return record;
+}
+
+export async function getResetToken(token: string): Promise<PasswordResetToken | undefined> {
+  const [record] = await db.select().from(passwordResetTokens).where(eq(passwordResetTokens.token, token));
+  return record;
+}
+
+export async function markTokenUsed(id: string): Promise<void> {
+  await db.update(passwordResetTokens).set({ used: true }).where(eq(passwordResetTokens.id, id));
 }
