@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -86,9 +87,11 @@ export default function RegisterScreen() {
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={styles.logoSection}>
-            <View style={styles.logoIconWrap}>
-              <Feather name="activity" size={32} color={Colors.primary} />
-            </View>
+            <Image
+              source={require('@/assets/images/logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <Text style={styles.appName}>Interosense</Text>
             <Text style={styles.tagline}>Sense your inner world</Text>
           </View>
@@ -229,16 +232,7 @@ const styles = StyleSheet.create({
   gradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
   content: { paddingHorizontal: 24, paddingTop: 16, flexGrow: 1 },
   logoSection: { alignItems: 'center', marginBottom: 20 },
-  logoIconWrap: {
-    width: 72, height: 72, borderRadius: 20,
-    backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center',
-    marginBottom: 12,
-    ...Platform.select({
-      ios: { shadowColor: Colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12 },
-      android: { elevation: 4 },
-      web: { boxShadow: '0 4px 16px rgba(107,91,149,0.15)' },
-    }),
-  },
+  logoImage: { width: 88, height: 88, marginBottom: 12 },
   appName: { fontSize: 28, fontFamily: 'Nunito_800ExtraBold', color: Colors.text },
   tagline: { fontSize: 14, fontFamily: 'Nunito_400Regular', color: Colors.textSecondary, marginTop: 4 },
   trustCard: {

@@ -65,8 +65,8 @@ export default function AboutScreen() {
       >
         <View style={styles.logoSection}>
           <Image
-            source={require('@/assets/images/icon.png')}
-            style={{ width: 80, height: 80, borderRadius: 20, marginBottom: 12 }}
+            source={require('@/assets/images/logo.png')}
+            style={{ width: 88, height: 88, marginBottom: 12 }}
             resizeMode="contain"
           />
           <Text style={styles.logoText}>Interosense</Text>

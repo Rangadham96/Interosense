@@ -61,7 +61,7 @@ export default function ForgotPasswordScreen() {
         <View style={styles.content}>
           <View style={styles.logoSection}>
             <Image
-              source={require('@/assets/images/icon.png')}
+              source={require('@/assets/images/logo.png')}
               style={styles.logoImage}
               resizeMode="contain"
             />
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   gradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 350 },
   content: { flex: 1, paddingHorizontal: 24, justifyContent: 'center' },
   logoSection: { alignItems: 'center', marginBottom: 32 },
-  logoImage: { width: 88, height: 88, borderRadius: 22, marginBottom: 16 },
+  logoImage: { width: 88, height: 88, marginBottom: 16 },
   appName: { fontSize: 32, fontFamily: 'Nunito_800ExtraBold', color: '#fff' },
   tagline: { fontSize: 15, fontFamily: 'Nunito_400Regular', color: 'rgba(255,255,255,0.8)', marginTop: 4 },
   formCard: {

@@ -57,8 +57,9 @@
       .nav-logo {
         font-size: 22px; font-weight: 800; color: var(--white);
         text-decoration: none; letter-spacing: -0.5px; transition: color 0.3s;
-        flex-shrink: 0; margin-right: 24px;
+        flex-shrink: 0; margin-right: 24px; display: flex; align-items: center; gap: 10px;
       }
+      .nav-logo img { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; }
       .nav.scrolled .nav-logo { color: var(--primary-dark); }
       .nav-links {
         display: flex; gap: 20px; list-style: none; align-items: center;
@@ -494,7 +495,7 @@
     <!-- NAV -->
     <nav class="nav" id="nav">
       <div class="nav-inner">
-        <a href="#" class="nav-logo">Interosense</a>
+        <a href="#" class="nav-logo"><img src="/assets/images/logo.png" alt="Interosense logo">Interosense</a>
         <ul class="nav-links">
           <li class="nav-text-link"><a href="#science">Science</a></li>
           <li class="nav-text-link"><a href="#how-it-works">How It Works</a></li>
@@ -801,7 +802,7 @@
 
     <!-- FOOTER -->
     <footer class="footer">
-      <div class="footer-logo">Interosense</div>
+      <div class="footer-logo" style="display:flex;align-items:center;gap:10px;"><img src="/assets/images/logo.png" alt="Interosense" style="width:36px;height:36px;object-fit:contain;">Interosense</div>
       <nav class="footer-nav">
         <a href="#science">Science</a>
         <a href="#how-it-works">How It Works</a>
