@@ -102,12 +102,30 @@ export default function SettingsScreen() {
 
   const handleClearData = () => {
     Alert.alert(
-      'Clear All Data',
-      'This will permanently delete all your sessions, check-ins, and progress. This cannot be undone.',
+      'Reset All Data',
+      'This will permanently delete all your sessions, check-ins, assessments, and progress. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Clear',
+          text: 'Yes, Reset',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.clear();
+            router.replace('/onboarding');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete My Account',
+      'This will permanently delete your profile and all data. You will need to start fresh if you come back. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Yes, Delete Everything',
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.clear();
@@ -124,7 +142,7 @@ export default function SettingsScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Feather name="arrow-left" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerTitle}>App Settings</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -143,7 +161,7 @@ export default function SettingsScreen() {
               <View style={styles.rowTextWrap}>
                 <Text style={styles.rowLabel}>Daily Reminders</Text>
                 <Text style={styles.rowSubtext}>
-                  {settings.notifications ? 'On' : 'Off'}
+                  {settings.notifications ? 'A gentle nudge to check in with your body each day' : 'Reminders are turned off'}
                 </Text>
               </View>
             </View>
@@ -167,7 +185,7 @@ export default function SettingsScreen() {
               </View>
               <View style={styles.rowTextWrap}>
                 <Text style={styles.rowLabel}>Reminder Time</Text>
-                <Text style={styles.rowSubtext}>Daily check-in reminder</Text>
+                <Text style={styles.rowSubtext}>When should we gently prompt you?</Text>
               </View>
             </View>
             <View style={styles.rowValueContainer}>
@@ -279,8 +297,25 @@ export default function SettingsScreen() {
                 <Feather name="trash-2" size={18} color={Colors.error} />
               </View>
               <View style={styles.rowTextWrap}>
-                <Text style={[styles.rowLabel, { color: Colors.error }]}>Clear All Data</Text>
-                <Text style={styles.rowSubtext}>Permanently delete all progress</Text>
+                <Text style={[styles.rowLabel, { color: Colors.error }]}>Reset App Data</Text>
+                <Text style={styles.rowSubtext}>Permanently delete all your progress and sessions</Text>
+              </View>
+            </View>
+            <Feather name="chevron-right" size={18} color={Colors.error} />
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity
+            style={styles.row}
+            onPress={handleDeleteAccount}
+            activeOpacity={0.6}
+          >
+            <View style={styles.rowLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: '#FDE8E8' }]}>
+                <Feather name="user-x" size={18} color={Colors.error} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={[styles.rowLabel, { color: Colors.error }]}>Delete My Account</Text>
+                <Text style={styles.rowSubtext}>Remove all data and start fresh</Text>
               </View>
             </View>
             <Feather name="chevron-right" size={18} color={Colors.error} />

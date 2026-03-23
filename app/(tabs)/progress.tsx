@@ -8,6 +8,7 @@ import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { ACHIEVEMENTS, TIER_COLORS } from '@/constants/achievements';
 import { CLINICAL_SCALES } from '@/constants/clinical-scales';
+import Svg, { Circle } from 'react-native-svg';
 
 const CATEGORY_LABELS: Record<string, string> = {
   heartbeat: 'Heartbeat',
@@ -19,6 +20,11 @@ const CATEGORY_LABELS: Record<string, string> = {
   gut: 'Gut Awareness',
   movement: 'Movement',
 };
+
+const GAUGE_SIZE = 120;
+const GAUGE_STROKE = 10;
+const GAUGE_RADIUS = (GAUGE_SIZE - GAUGE_STROKE) / 2;
+const GAUGE_CIRCUMFERENCE = 2 * Math.PI * GAUGE_RADIUS;
 
 export default function ProgressScreen() {
   const insets = useSafeAreaInsets();
@@ -79,6 +85,23 @@ export default function ProgressScreen() {
     return { entries, maxCount };
   }, [sessions]);
 
+  const topRatedExercises = useMemo(() => {
+    const ratingMap: Record<string, { title: string; totalRating: number; count: number }> = {};
+    sessions.forEach(s => {
+      if (s.rating && s.rating > 0) {
+        if (!ratingMap[s.exerciseId]) {
+          ratingMap[s.exerciseId] = { title: s.exerciseTitle, totalRating: 0, count: 0 };
+        }
+        ratingMap[s.exerciseId].totalRating += s.rating;
+        ratingMap[s.exerciseId].count += 1;
+      }
+    });
+    return Object.entries(ratingMap)
+      .map(([id, data]) => ({ id, title: data.title, avg: data.totalRating / data.count, count: data.count }))
+      .sort((a, b) => b.avg - a.avg)
+      .slice(0, 3);
+  }, [sessions]);
+
   const weeklyActivity = useMemo(() => {
     const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
     const days: { date: Date; count: number; label: string }[] = [];
@@ -94,12 +117,103 @@ export default function ProgressScreen() {
     return ACHIEVEMENTS.filter(a => unlockedAchievements.includes(a.id)).slice(0, 4);
   }, [unlockedAchievements]);
 
+  const interoceptiveScore = useMemo(() => {
+    if (checkins.length === 0) return null;
+    const recent = checkins.slice(-7);
+    const avgAwareness = recent.reduce((s, c) => s + c.awarenessScore, 0) / recent.length;
+    const avgEnergy = recent.reduce((s, c) => s + c.energyLevel, 0) / recent.length;
+    const avgStress = recent.reduce((s, c) => s + (c.stressLevel || 5), 0) / recent.length;
+    const score = Math.round((avgAwareness * 0.5 + avgEnergy * 0.3 + (10 - avgStress) * 0.2) * 10);
+    return Math.min(100, Math.max(0, score));
+  }, [checkins]);
+
+  const priorMonthScore = useMemo(() => {
+    if (checkins.length < 8) return null;
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+    const prior = checkins.filter(c => {
+      const d = parseISO(c.date);
+      return d >= sixtyDaysAgo && d < thirtyDaysAgo;
+    });
+    if (prior.length < 3) return null;
+    const avgA = prior.reduce((s, c) => s + c.awarenessScore, 0) / prior.length;
+    const avgE = prior.reduce((s, c) => s + c.energyLevel, 0) / prior.length;
+    const avgSt = prior.reduce((s, c) => s + (c.stressLevel || 5), 0) / prior.length;
+    return Math.min(100, Math.max(0, Math.round((avgA * 0.5 + avgE * 0.3 + (10 - avgSt) * 0.2) * 10)));
+  }, [checkins]);
+
+  const gaugeDashOffset = interoceptiveScore !== null
+    ? GAUGE_CIRCUMFERENCE * (1 - interoceptiveScore / 100)
+    : GAUGE_CIRCUMFERENCE;
+
   return (
     <View style={[styles.container, { paddingTop: topPadding }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.title}>Your Progress</Text>
-          <Text style={styles.subtitle}>Track your interoceptive journey</Text>
+          <Text style={styles.subtitle}>Your interoceptive journey, visualised</Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Interoceptive Awareness Score</Text>
+          <View style={styles.card}>
+            {interoceptiveScore !== null ? (
+              <View style={styles.scoreSection}>
+                <View style={styles.gaugeWrap}>
+                  <Svg width={GAUGE_SIZE} height={GAUGE_SIZE}>
+                    <Circle
+                      cx={GAUGE_SIZE / 2}
+                      cy={GAUGE_SIZE / 2}
+                      r={GAUGE_RADIUS}
+                      stroke={Colors.backgroundSecondary}
+                      strokeWidth={GAUGE_STROKE}
+                      fill="none"
+                    />
+                    <Circle
+                      cx={GAUGE_SIZE / 2}
+                      cy={GAUGE_SIZE / 2}
+                      r={GAUGE_RADIUS}
+                      stroke={Colors.primary}
+                      strokeWidth={GAUGE_STROKE}
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeDasharray={`${GAUGE_CIRCUMFERENCE}`}
+                      strokeDashoffset={gaugeDashOffset}
+                      transform={`rotate(-90 ${GAUGE_SIZE / 2} ${GAUGE_SIZE / 2})`}
+                    />
+                  </Svg>
+                  <View style={styles.gaugeCenter}>
+                    <Text style={styles.gaugeScore}>{interoceptiveScore}</Text>
+                    <Text style={styles.gaugeLabel}>/ 100</Text>
+                  </View>
+                </View>
+                <View style={styles.scoreDetails}>
+                  <Text style={styles.scoreTitle}>Your Score</Text>
+                  <Text style={styles.scoreDescription}>
+                    Based on your last {Math.min(checkins.length, 7)} check-ins
+                  </Text>
+                  {priorMonthScore !== null && (
+                    <View style={styles.comparisonRow}>
+                      <Feather
+                        name={interoceptiveScore > priorMonthScore ? 'trending-up' : 'trending-down'}
+                        size={14}
+                        color={interoceptiveScore > priorMonthScore ? Colors.success : Colors.error}
+                      />
+                      <Text style={[styles.comparisonText, { color: interoceptiveScore > priorMonthScore ? Colors.success : Colors.error }]}>
+                        {Math.abs(interoceptiveScore - priorMonthScore)} pts vs. prior month
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            ) : (
+              <View style={styles.emptyState}>
+                <Feather name="activity" size={32} color={Colors.textTertiary} />
+                <Text style={styles.emptyText}>Complete 7 check-ins to see your Interoceptive Awareness Score</Text>
+              </View>
+            )}
+          </View>
         </View>
 
         <View style={styles.statsGrid}>
@@ -114,7 +228,7 @@ export default function ProgressScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Awareness Score</Text>
+          <Text style={styles.sectionTitle}>Awareness Score Trend</Text>
           <View style={styles.card}>
             {checkins.length > 0 ? (
               <>
@@ -123,6 +237,7 @@ export default function ProgressScreen() {
                   <Text style={styles.avgValue}>{averageAwareness}</Text>
                   <Text style={styles.avgOutOf}>/10</Text>
                 </View>
+                <Text style={styles.chartContextLabel}>Your body awareness score over the last 7 check-ins</Text>
                 <View style={styles.barChart}>
                   {last7Checkins.map((c, i) => {
                     const ratio = c.awarenessScore / 10;
@@ -151,6 +266,7 @@ export default function ProgressScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Stress Trend</Text>
             <View style={styles.card}>
+              <Text style={styles.chartContextLabel}>Lower bars indicate calmer days. A downward trend over time is meaningful progress.</Text>
               <View style={styles.barChart}>
                 {stressTrend.map((c, i) => {
                   const ratio = (c.stressLevel || 0) / 10;
@@ -179,6 +295,7 @@ export default function ProgressScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Mood Distribution</Text>
             <View style={styles.card}>
+              <Text style={styles.chartContextLabel}>How your emotional states have distributed across all check-ins</Text>
               {moodDistribution.map(([mood, count]) => {
                 const total = checkins.filter(c => c.mood).length;
                 const pct = total > 0 ? Math.round((count / total) * 100) : 0;
@@ -196,9 +313,39 @@ export default function ProgressScreen() {
           </View>
         )}
 
+        {topRatedExercises.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>What Has Helped You Most</Text>
+            <View style={styles.card}>
+              <Text style={styles.chartContextLabel}>Your highest-rated exercises based on your own feedback</Text>
+              {topRatedExercises.map((ex, i) => (
+                <TouchableOpacity
+                  key={ex.id}
+                  style={styles.topExerciseRow}
+                  onPress={() => router.push(`/exercise/${ex.id}` as any)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.topExerciseRank}>
+                    <Text style={styles.topExerciseRankNum}>{i + 1}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.topExerciseTitle} numberOfLines={1}>{ex.title}</Text>
+                    <Text style={styles.topExerciseMeta}>{ex.count} session{ex.count !== 1 ? 's' : ''}</Text>
+                  </View>
+                  <View style={styles.starRow}>
+                    {[1,2,3,4,5].map(s => (
+                      <Feather key={s} name="star" size={12} color={s <= Math.round(ex.avg) ? Colors.warning : Colors.border} />
+                    ))}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
         {assessmentHistory.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Clinical Assessments</Text>
+            <Text style={styles.sectionTitle}>Clinical Assessment Trends</Text>
             {assessmentHistory.map(({ scaleId, scaleName, records, scale }) => {
               const latest = records[records.length - 1];
               const maxScore = scale ? scale.questions.length * 3 : 27;
@@ -243,12 +390,19 @@ export default function ProgressScreen() {
                 </View>
               );
             })}
+            <View style={styles.clinicalDisclaimer}>
+              <Feather name="info" size={13} color={Colors.textTertiary} />
+              <Text style={styles.clinicalDisclaimerText}>
+                These scores are for personal tracking only and are not a clinical diagnosis. Always speak with a qualified professional about your mental health.
+              </Text>
+            </View>
           </View>
         )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Exercise Categories</Text>
           <View style={styles.card}>
+            <Text style={styles.chartContextLabel}>The more diverse your practice, the broader your body awareness</Text>
             {categoryBreakdown.entries.length > 0 ? (
               categoryBreakdown.entries.map(([category, count]) => {
                 const color = Colors.category[category as keyof typeof Colors.category] || Colors.primary;
@@ -269,7 +423,8 @@ export default function ProgressScreen() {
             ) : (
               <View style={styles.emptyState}>
                 <Feather name="layers" size={32} color={Colors.textTertiary} />
-                <Text style={styles.emptyText}>Complete exercises to see category breakdown</Text>
+                <Text style={styles.emptyText}>Your story starts here</Text>
+                <Text style={styles.emptySubText}>Complete exercises to see your journey take shape</Text>
               </View>
             )}
           </View>
@@ -278,6 +433,7 @@ export default function ProgressScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>This Week</Text>
           <View style={styles.card}>
+            <Text style={styles.chartContextLabel}>Consistency over intensity — every session matters</Text>
             <View style={styles.heatmapRow}>
               {weeklyActivity.map((day, i) => {
                 const baseSize = 36;
@@ -403,7 +559,20 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontFamily: 'Nunito_700Bold', color: Colors.text, marginBottom: 12 },
   seeAll: { fontSize: 14, fontFamily: 'Nunito_600SemiBold', color: Colors.primary, marginBottom: 12 },
   card: { backgroundColor: Colors.surface, borderRadius: 16, padding: 20 },
-  avgRow: { flexDirection: 'row', alignItems: 'baseline', marginBottom: 20 },
+  chartContextLabel: { fontSize: 12, fontFamily: 'Nunito_400Regular', color: Colors.textTertiary, marginBottom: 14, lineHeight: 17 },
+
+  scoreSection: { flexDirection: 'row', alignItems: 'center', gap: 20 },
+  gaugeWrap: { width: GAUGE_SIZE, height: GAUGE_SIZE, justifyContent: 'center', alignItems: 'center' },
+  gaugeCenter: { position: 'absolute', alignItems: 'center' },
+  gaugeScore: { fontSize: 28, fontFamily: 'Nunito_800ExtraBold', color: Colors.primary },
+  gaugeLabel: { fontSize: 12, fontFamily: 'Nunito_500Medium', color: Colors.textTertiary },
+  scoreDetails: { flex: 1 },
+  scoreTitle: { fontSize: 16, fontFamily: 'Nunito_700Bold', color: Colors.text, marginBottom: 4 },
+  scoreDescription: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.textSecondary, lineHeight: 18, marginBottom: 10 },
+  comparisonRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  comparisonText: { fontSize: 13, fontFamily: 'Nunito_600SemiBold' },
+
+  avgRow: { flexDirection: 'row', alignItems: 'baseline', marginBottom: 8 },
   avgLabel: { fontSize: 14, fontFamily: 'Nunito_500Medium', color: Colors.textSecondary, marginRight: 8 },
   avgValue: { fontSize: 36, fontFamily: 'Nunito_800ExtraBold', color: Colors.primary },
   avgOutOf: { fontSize: 16, fontFamily: 'Nunito_500Medium', color: Colors.textTertiary, marginLeft: 2 },
@@ -413,7 +582,8 @@ const styles = StyleSheet.create({
   bar: { width: '70%', borderRadius: 6, minHeight: 4 },
   barLabel: { fontSize: 11, fontFamily: 'Nunito_500Medium', color: Colors.textTertiary, marginTop: 6 },
   emptyState: { alignItems: 'center', paddingVertical: 24, gap: 12 },
-  emptyText: { fontSize: 14, fontFamily: 'Nunito_400Regular', color: Colors.textTertiary, textAlign: 'center' },
+  emptyText: { fontSize: 14, fontFamily: 'Nunito_500Medium', color: Colors.textSecondary, textAlign: 'center' },
+  emptySubText: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.textTertiary, textAlign: 'center' },
   trendLegend: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 14 },
   legendDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
   legendText: { fontSize: 12, fontFamily: 'Nunito_500Medium', color: Colors.textSecondary },
@@ -422,6 +592,14 @@ const styles = StyleSheet.create({
   moodBarTrack: { flex: 1, height: 8, backgroundColor: Colors.backgroundSecondary, borderRadius: 4, overflow: 'hidden' as const },
   moodBarFill: { height: '100%', borderRadius: 4, backgroundColor: Colors.primary },
   moodPct: { width: 36, fontSize: 12, fontFamily: 'Nunito_600SemiBold', color: Colors.textSecondary, textAlign: 'right' },
+
+  topExerciseRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
+  topExerciseRank: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.primary + '15', alignItems: 'center', justifyContent: 'center' },
+  topExerciseRankNum: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: Colors.primary },
+  topExerciseTitle: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, color: Colors.text },
+  topExerciseMeta: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.textTertiary, marginTop: 2 },
+  starRow: { flexDirection: 'row', gap: 2 },
+
   assessmentName: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: Colors.text, marginBottom: 8 },
   assessmentMeta: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
   severityBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
@@ -434,6 +612,9 @@ const styles = StyleSheet.create({
   trendDate: { fontSize: 10, fontFamily: 'Nunito_400Regular', color: Colors.textTertiary },
   retakeBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 10, borderTopWidth: 1, borderTopColor: Colors.borderLight, marginTop: 8 },
   retakeBtnText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: Colors.primary },
+  clinicalDisclaimer: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: Colors.backgroundSecondary, borderRadius: 12, padding: 12, marginTop: 4 },
+  clinicalDisclaimerText: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.textTertiary, flex: 1, lineHeight: 18 },
+
   categoryRow: { marginBottom: 14 },
   categoryInfo: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
   categoryDot: { width: 10, height: 10, borderRadius: 5, marginRight: 10 },

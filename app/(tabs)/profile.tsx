@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,397 +6,416 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
-  Image,
+  Modal,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
-import { useAuth } from '@/contexts/AuthContext';
 import Colors from '@/constants/colors';
-import { format, parseISO } from 'date-fns';
+import { CONDITIONS } from '@/constants/conditions';
+import { format, differenceInCalendarDays } from 'date-fns';
 
-interface MenuItem {
-  icon: keyof typeof Feather.glyphMap;
-  iconBg: string;
-  title: string;
-  onPress: () => void;
-  badge?: number;
-}
+const FOUR_WEEK_PROGRAMME = [
+  { week: 1, title: 'Foundation', description: 'Begin with heartbeat detection and diaphragmatic breathing to build your interoceptive baseline.' },
+  { week: 2, title: 'Expansion', description: 'Introduce progressive body scanning and tension awareness to widen your body\'s vocabulary.' },
+  { week: 3, title: 'Integration', description: 'Connect body signals to emotional states through the heartbeat-emotion link and gut awareness practices.' },
+  { week: 4, title: 'Consolidation', description: 'Deepen your practice with advanced exercises and review your interoceptive growth through check-ins.' },
+];
 
-function MenuSection({ title, items }: { title: string; items: MenuItem[] }) {
+export default function ProfileScreen() {
+  const insets = useSafeAreaInsets();
+  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const bottomPadding = Platform.OS === 'web' ? 34 : insets.bottom;
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+
+  const {
+    profile,
+    sessions,
+    currentStreak,
+    totalSessions,
+    totalMinutes,
+    averageAwareness,
+    checkins,
+  } = useApp();
+
+  const firstName = profile?.name ? profile.name.split(' ')[0] : 'there';
+  const conditions = profile?.conditions || [];
+  const goals = profile?.goals || [];
+
+  const daysOnApp = useMemo(() => {
+    if (!profile) return 0;
+    const first = sessions.length > 0
+      ? new Date(sessions.reduce((earliest, s) => s.completedAt < earliest ? s.completedAt : earliest, sessions[0].completedAt))
+      : new Date();
+    return Math.max(1, differenceInCalendarDays(new Date(), first) + 1);
+  }, [sessions, profile]);
+
+  const conditionDetails = useMemo(() => {
+    return conditions.map(id => CONDITIONS.find(c => c.id === id)).filter(Boolean);
+  }, [conditions]);
+
+  const currentWeek = useMemo(() => {
+    if (daysOnApp <= 7) return 1;
+    if (daysOnApp <= 14) return 2;
+    if (daysOnApp <= 21) return 3;
+    return 4;
+  }, [daysOnApp]);
+
+  const handleSignOut = () => {
+    setShowSignOutModal(false);
+    router.replace('/onboarding');
+  };
+
   return (
-    <View style={styles.menuSection}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <View style={styles.menuCard}>
-        {items.map((item, index) => (
-          <React.Fragment key={item.title}>
-            {index > 0 && <View style={styles.menuDivider} />}
+    <View style={[styles.container, { paddingTop: topPadding }]}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding + 80 }]}>
+
+        <LinearGradient
+          colors={[Colors.primary, Colors.primaryDark]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroCard}
+        >
+          <View style={styles.heroTop}>
+            <View style={styles.avatarCircle}>
+              <Text style={styles.avatarInitial}>{(profile?.name || 'U')[0].toUpperCase()}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => router.push('/edit-profile' as any)}
+              activeOpacity={0.7}
+            >
+              <Feather name="edit-2" size={16} color="rgba(255,255,255,0.8)" />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.heroName}>{profile?.name || 'Your Profile'}</Text>
+          <Text style={styles.heroDays}>Day {daysOnApp} of your journey</Text>
+
+          <View style={styles.heroPills}>
+            <View style={styles.heroPill}>
+              <Feather name="zap" size={13} color="rgba(255,255,255,0.9)" />
+              <Text style={styles.heroPillText}>{currentStreak}d streak</Text>
+            </View>
+            <View style={styles.heroPill}>
+              <Feather name="activity" size={13} color="rgba(255,255,255,0.9)" />
+              <Text style={styles.heroPillText}>{totalSessions} sessions</Text>
+            </View>
+            <View style={styles.heroPill}>
+              <Feather name="eye" size={13} color="rgba(255,255,255,0.9)" />
+              <Text style={styles.heroPillText}>{averageAwareness.toFixed(1)} aware</Text>
+            </View>
+          </View>
+        </LinearGradient>
+
+        {conditionDetails.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Your Focus Areas</Text>
+            <View style={styles.conditionsWrap}>
+              {conditionDetails.map(cond => cond && (
+                <TouchableOpacity
+                  key={cond.id}
+                  style={[styles.conditionPill, { backgroundColor: cond.color + '15', borderColor: cond.color + '40' }]}
+                  onPress={() => router.push(`/condition/${cond.id}` as any)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.conditionDot, { backgroundColor: cond.color }]} />
+                  <Text style={[styles.conditionText, { color: cond.color }]}>{cond.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {goals.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Your Goals</Text>
+            <View style={styles.card}>
+              {goals.map((goal, i) => (
+                <View key={goal} style={[styles.goalRow, i < goals.length - 1 && styles.goalRowBorder]}>
+                  <Feather name="check-circle" size={16} color={Colors.success} />
+                  <Text style={styles.goalText}>{goal}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>4-Week Programme</Text>
+          <View style={styles.card}>
+            {FOUR_WEEK_PROGRAMME.map(week => {
+              const isActive = week.week === Math.min(currentWeek, 4);
+              const isCompleted = week.week < currentWeek;
+              return (
+                <View key={week.week} style={[styles.weekRow, week.week < 4 && styles.weekRowBorder]}>
+                  <View style={[styles.weekBadge, isActive && styles.weekBadgeActive, isCompleted && styles.weekBadgeCompleted]}>
+                    {isCompleted ? (
+                      <Feather name="check" size={14} color="#FFFFFF" />
+                    ) : (
+                      <Text style={[styles.weekBadgeText, isActive && styles.weekBadgeTextActive]}>{week.week}</Text>
+                    )}
+                  </View>
+                  <View style={styles.weekContent}>
+                    <Text style={[styles.weekTitle, isActive && styles.weekTitleActive]}>{`Week ${week.week}: ${week.title}`}</Text>
+                    <Text style={styles.weekDescription}>{week.description}</Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Profile Details</Text>
+          <View style={styles.card}>
+            <ProfileInfoRow label="Name" value={profile?.name || '—'} />
+            <ProfileInfoRow label="Experience" value={profile?.experienceLevel ? profile.experienceLevel.charAt(0).toUpperCase() + profile.experienceLevel.slice(1) : '—'} />
+            <ProfileInfoRow label="Member Since" value={sessions.length > 0 ? format(new Date(sessions.reduce((earliest, s) => s.completedAt < earliest ? s.completedAt : earliest, sessions[0].completedAt)), 'MMMM yyyy') : 'Today'} />
+            <ProfileInfoRow label="Total Practice Time" value={`${totalMinutes} min`} last />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>App</Text>
+          <View style={styles.card}>
+            <MenuRow
+              icon="sliders"
+              iconColor={Colors.primary}
+              label="App Settings"
+              onPress={() => router.push('/settings' as any)}
+            />
+            <View style={styles.menuDivider} />
+            <MenuRow
+              icon="bookmark"
+              iconColor={Colors.warning}
+              label="Saved Exercises"
+              onPress={() => router.push('/saved-exercises' as any)}
+            />
+            <View style={styles.menuDivider} />
+            <MenuRow
+              icon="target"
+              iconColor={Colors.success}
+              label="My Goals"
+              onPress={() => router.push('/goals' as any)}
+            />
+            <View style={styles.menuDivider} />
+            <MenuRow
+              icon="map"
+              iconColor={Colors.secondary}
+              label="Body Map History"
+              onPress={() => router.push('/bodymap' as any)}
+            />
+            <View style={styles.menuDivider} />
+            <MenuRow
+              icon="award"
+              iconColor={Colors.warning}
+              label="Achievements"
+              onPress={() => router.push('/achievements' as any)}
+            />
+            <View style={styles.menuDivider} />
+            <View style={styles.menuRowDisabled}>
+              <View style={[styles.menuIconWrap, { backgroundColor: Colors.backgroundSecondary }]}>
+                <Feather name="watch" size={18} color={Colors.textTertiary} />
+              </View>
+              <Text style={styles.menuLabelDisabled}>Wearable Integration</Text>
+              <View style={styles.comingSoonBadge}>
+                <Text style={styles.comingSoonText}>Coming Soon</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.card}>
+            <MenuRow
+              icon="help-circle"
+              iconColor={Colors.textSecondary}
+              label="Help & Support"
+              onPress={() => {}}
+            />
+            <View style={styles.menuDivider} />
+            <MenuRow
+              icon="shield"
+              iconColor={Colors.textSecondary}
+              label="Privacy Policy"
+              onPress={() => {}}
+            />
+            <View style={styles.menuDivider} />
             <TouchableOpacity
               style={styles.menuRow}
-              onPress={item.onPress}
-              activeOpacity={0.6}
+              onPress={() => setShowSignOutModal(true)}
+              activeOpacity={0.7}
             >
-              <View style={[styles.menuIconCircle, { backgroundColor: item.iconBg }]}>
-                <Feather name={item.icon} size={18} color="#FFFFFF" />
+              <View style={[styles.menuIconWrap, { backgroundColor: '#FFF0F0' }]}>
+                <Feather name="log-out" size={18} color={Colors.error} />
               </View>
-              <Text style={styles.menuLabel}>{item.title}</Text>
-              <View style={styles.menuRight}>
-                {item.badge !== undefined && item.badge > 0 && (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{item.badge}</Text>
-                  </View>
-                )}
-                <Feather name="chevron-right" size={20} color={Colors.textTertiary} />
-              </View>
+              <Text style={[styles.menuLabel, { color: Colors.error }]}>Sign Out</Text>
+              <Feather name="chevron-right" size={18} color={Colors.error + '80'} />
             </TouchableOpacity>
-          </React.Fragment>
-        ))}
-      </View>
+          </View>
+        </View>
+
+        <Text style={styles.versionText}>Interosense · v1.0</Text>
+      </ScrollView>
+
+      <Modal
+        visible={showSignOutModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSignOutModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowSignOutModal(false)}
+        >
+          <View style={styles.bottomSheet}>
+            <View style={styles.bottomSheetHandle} />
+            <Text style={styles.bottomSheetTitle}>Sign Out?</Text>
+            <Text style={styles.bottomSheetBody}>
+              Your data is saved to this device. Signing out will reset the app to the welcome screen. You will need to go through onboarding again.
+            </Text>
+            <TouchableOpacity
+              style={styles.signOutConfirmButton}
+              onPress={handleSignOut}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.signOutConfirmText}>Yes, Sign Out</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowSignOutModal(false)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
 
-export default function ProfileScreen() {
-  const insets = useSafeAreaInsets();
-  const {
-    profile,
-    totalSessions,
-    currentStreak,
-    unlockedAchievements,
-  } = useApp();
-  const { logout, user } = useAuth();
-
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
-
-  const initial = profile?.name ? profile.name.charAt(0).toUpperCase() : '?';
-  const memberSince = profile?.createdAt
-    ? format(parseISO(profile.createdAt), 'MMM yyyy')
-    : '';
-
-  const levelLabels: Record<string, string> = {
-    beginner: 'Beginner',
-    intermediate: 'Intermediate',
-    advanced: 'Advanced',
-  };
-
-  const activityItems: MenuItem[] = [
-    { icon: 'clock', iconBg: Colors.secondary, title: 'Session History', onPress: () => router.push('/session-history'), badge: totalSessions },
-    { icon: 'target', iconBg: Colors.primary, title: 'My Goals', onPress: () => router.push('/goals') },
-    { icon: 'award', iconBg: Colors.warning, title: 'Achievements', onPress: () => router.push('/achievements'), badge: unlockedAchievements.length },
-    { icon: 'map', iconBg: Colors.secondaryDark, title: 'Body Map', onPress: () => router.push('/bodymap') },
-    { icon: 'heart', iconBg: Colors.error, title: 'Health Data', onPress: () => router.push('/wearable') },
-  ];
-
-  const learnItems: MenuItem[] = [
-    { icon: 'book-open', iconBg: Colors.accent, title: 'Articles', onPress: () => router.push('/articles') },
-    { icon: 'bookmark', iconBg: Colors.primaryLight, title: 'Bookmarks', onPress: () => router.push('/bookmarks') },
-    { icon: 'search', iconBg: Colors.secondaryLight, title: 'Search', onPress: () => router.push('/search') },
-  ];
-
-  const personalItems: MenuItem[] = [
-    { icon: 'user', iconBg: Colors.primary, title: 'Edit Profile', onPress: () => router.push('/edit-profile') },
-    { icon: 'list', iconBg: Colors.accent, title: 'My Conditions', onPress: () => router.push('/edit-conditions') },
-    { icon: 'sliders', iconBg: Colors.secondary, title: 'Preferences', onPress: () => router.push('/edit-preferences') },
-  ];
-
-  const appItems: MenuItem[] = [
-    { icon: 'star', iconBg: '#F0C05A', title: 'Upgrade to Premium', onPress: () => router.push('/premium') },
-    { icon: 'settings', iconBg: Colors.textSecondary, title: 'Settings', onPress: () => router.push('/settings') },
-    { icon: 'info', iconBg: Colors.secondaryDark, title: 'About Interosense', onPress: () => router.push('/about') },
-    { icon: 'log-out', iconBg: '#E53935', title: 'Sign Out', onPress: () => logout() },
-  ];
-
+function ProfileInfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <LinearGradient
-          colors={[Colors.primary, Colors.primaryDark]}
-          style={[styles.headerGradient, { paddingTop: topPadding + 24 }]}
-        >
-          <View style={styles.avatarCircle}>
-            {profile?.profileImage ? (
-              <Image source={{ uri: profile.profileImage }} style={styles.avatarImage} />
-            ) : (
-              <Text style={styles.avatarText}>{initial}</Text>
-            )}
-          </View>
-          <Text style={styles.userName}>{profile?.name || user?.name || 'User'}</Text>
-          {user?.email && (
-            <Text style={styles.userEmail}>{user.email}</Text>
-          )}
-          {profile?.experienceLevel && (
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelBadgeText}>
-                {levelLabels[profile.experienceLevel] || profile.experienceLevel}
-              </Text>
-            </View>
-          )}
-          {memberSince ? (
-            <Text style={styles.memberSince}>Member since {memberSince}</Text>
-          ) : null}
-          {profile?.dailyMinutes ? (
-            <Text style={styles.dailyGoal}>{profile.dailyMinutes} minutes daily</Text>
-          ) : null}
-        </LinearGradient>
-
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{totalSessions}</Text>
-            <Text style={styles.statLabel}>Sessions</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{currentStreak}</Text>
-            <Text style={styles.statLabel}>Day Streak</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{unlockedAchievements.length}</Text>
-            <Text style={styles.statLabel}>Achievements</Text>
-          </View>
-        </View>
-
-        <MenuSection title="Activity" items={activityItems} />
-        <MenuSection title="Personal" items={personalItems} />
-        <MenuSection title="Learn" items={learnItems} />
-        <MenuSection title="App" items={appItems} />
-
-        <TouchableOpacity
-          style={styles.crisisCard}
-          onPress={() => router.push('/crisis')}
-          activeOpacity={0.7}
-        >
-          <View style={styles.crisisIconCircle}>
-            <Feather name="phone" size={18} color={Colors.secondary} />
-          </View>
-          <View style={styles.crisisTextWrap}>
-            <Text style={styles.crisisTitle}>Need immediate support?</Text>
-            <Text style={styles.crisisSubtitle}>Access crisis resources</Text>
-          </View>
-          <Feather name="chevron-right" size={20} color={Colors.textTertiary} />
-        </TouchableOpacity>
-
-        <View style={{ height: 40 }} />
-      </ScrollView>
+    <View style={[styles.infoRow, !last && styles.infoRowBorder]}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
     </View>
+  );
+}
+
+function MenuRow({
+  icon,
+  iconColor,
+  label,
+  onPress,
+}: {
+  icon: string;
+  iconColor: string;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity style={styles.menuRow} onPress={onPress} activeOpacity={0.7}>
+      <View style={[styles.menuIconWrap, { backgroundColor: iconColor + '15' }]}>
+        <Feather name={icon as any} size={18} color={iconColor} />
+      </View>
+      <Text style={styles.menuLabel}>{label}</Text>
+      <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 100,
-  },
-  headerGradient: {
-    paddingBottom: 32,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-  },
+  container: { flex: 1, backgroundColor: Colors.background },
+  scrollContent: { paddingHorizontal: 20 },
+
+  heroCard: { borderRadius: 24, padding: 24, marginBottom: 24, marginTop: 8 },
+  heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
   avatarCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.3)',
+    width: 68, height: 68, borderRadius: 34, backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center', justifyContent: 'center',
   },
-  avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  avatarInitial: { fontFamily: 'Nunito_700Bold', fontSize: 28, color: '#FFFFFF' },
+  editButton: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: {
-    fontFamily: 'Nunito_800ExtraBold',
-    fontSize: 32,
-    color: '#FFFFFF',
+  heroName: { fontFamily: 'Nunito_800ExtraBold', fontSize: 24, color: '#FFFFFF', marginBottom: 4 },
+  heroDays: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: 'rgba(255,255,255,0.8)', marginBottom: 18 },
+  heroPills: { flexDirection: 'row', gap: 8 },
+  heroPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16,
   },
-  userName: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 24,
-    color: '#FFFFFF',
-    marginBottom: 4,
+  heroPillText: { fontFamily: 'Nunito_600SemiBold', fontSize: 12, color: '#FFFFFF' },
+
+  section: { marginBottom: 24 },
+  sectionTitle: { fontFamily: 'Nunito_700Bold', fontSize: 17, color: Colors.text, marginBottom: 12 },
+  card: { backgroundColor: Colors.surface, borderRadius: 16, overflow: 'hidden' },
+  conditionsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  conditionPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
+  conditionDot: { width: 8, height: 8, borderRadius: 4 },
+  conditionText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
+
+  goalRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 14 },
+  goalRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
+  goalText: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: Colors.text, flex: 1, lineHeight: 20 },
+
+  weekRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, padding: 16 },
+  weekRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
+  weekBadge: {
+    width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: Colors.border,
+    alignItems: 'center', justifyContent: 'center', marginTop: 2,
   },
-  userEmail: {
-    fontFamily: 'Nunito_400Regular',
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.7)',
-    marginBottom: 8,
+  weekBadgeActive: { borderColor: Colors.primary, backgroundColor: Colors.primary + '10' },
+  weekBadgeCompleted: { borderColor: Colors.success, backgroundColor: Colors.success },
+  weekBadgeText: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: Colors.textTertiary },
+  weekBadgeTextActive: { color: Colors.primary },
+  weekContent: { flex: 1 },
+  weekTitle: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: Colors.textSecondary, marginBottom: 4 },
+  weekTitleActive: { color: Colors.text },
+  weekDescription: { fontFamily: 'Nunito_400Regular', fontSize: 13, color: Colors.textTertiary, lineHeight: 19 },
+
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
+  infoRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
+  infoLabel: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, color: Colors.textSecondary },
+  infoValue: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: Colors.text },
+
+  menuRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
+  menuRowDisabled: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
+  menuIconWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  menuLabel: { flex: 1, fontFamily: 'Nunito_600SemiBold', fontSize: 15, color: Colors.text },
+  menuLabelDisabled: { flex: 1, fontFamily: 'Nunito_600SemiBold', fontSize: 15, color: Colors.textTertiary },
+  menuDivider: { height: 1, backgroundColor: Colors.borderLight, marginLeft: 64 },
+  comingSoonBadge: { backgroundColor: Colors.backgroundSecondary, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  comingSoonText: { fontFamily: 'Nunito_500Medium', fontSize: 11, color: Colors.textTertiary },
+
+  versionText: {
+    fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.textTertiary, textAlign: 'center', marginVertical: 16,
   },
-  levelBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-    borderRadius: 20,
-    marginBottom: 10,
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  bottomSheet: {
+    backgroundColor: Colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    paddingHorizontal: 24, paddingTop: 16, paddingBottom: 40,
   },
-  levelBadgeText: {
-    fontFamily: 'Nunito_600SemiBold',
-    fontSize: 13,
-    color: '#FFFFFF',
+  bottomSheetHandle: {
+    width: 40, height: 4, borderRadius: 2, backgroundColor: Colors.border, alignSelf: 'center', marginBottom: 20,
   },
-  memberSince: {
-    fontFamily: 'Nunito_400Regular',
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.75)',
-    marginBottom: 2,
+  bottomSheetTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 22, color: Colors.text, marginBottom: 12, textAlign: 'center' },
+  bottomSheetBody: {
+    fontFamily: 'Nunito_400Regular', fontSize: 15, color: Colors.textSecondary, textAlign: 'center', lineHeight: 23, marginBottom: 28,
   },
-  dailyGoal: {
-    fontFamily: 'Nunito_500Medium',
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.75)',
+  signOutConfirmButton: {
+    backgroundColor: Colors.error, borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginBottom: 12,
   },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    marginHorizontal: 20,
-    marginTop: -20,
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 8,
-    shadowColor: Colors.cardShadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 12,
-    elevation: 4,
+  signOutConfirmText: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: '#FFFFFF' },
+  cancelButton: {
+    backgroundColor: Colors.backgroundSecondary, borderRadius: 14, paddingVertical: 14, alignItems: 'center',
   },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 22,
-    color: Colors.text,
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontFamily: 'Nunito_500Medium',
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  statDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: Colors.border,
-  },
-  menuSection: {
-    marginTop: 24,
-    paddingHorizontal: 20,
-  },
-  sectionTitle: {
-    fontFamily: 'Nunito_600SemiBold',
-    fontSize: 14,
-    color: Colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: 8,
-    marginLeft: 4,
-  },
-  menuCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    shadowColor: Colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 3,
-    overflow: 'hidden',
-  },
-  menuRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  menuIconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  menuLabel: {
-    flex: 1,
-    fontFamily: 'Nunito_600SemiBold',
-    fontSize: 16,
-    color: Colors.text,
-  },
-  menuRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: Colors.divider,
-    marginLeft: 64,
-  },
-  badge: {
-    backgroundColor: Colors.primary,
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  badgeText: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 12,
-    color: '#FFFFFF',
-  },
-  crisisCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    marginHorizontal: 20,
-    marginTop: 28,
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  crisisIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: `${Colors.secondary}18`,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  crisisTextWrap: {
-    flex: 1,
-  },
-  crisisTitle: {
-    fontFamily: 'Nunito_600SemiBold',
-    fontSize: 15,
-    color: Colors.text,
-    marginBottom: 2,
-  },
-  crisisSubtitle: {
-    fontFamily: 'Nunito_400Regular',
-    fontSize: 13,
-    color: Colors.textSecondary,
-  },
+  cancelButtonText: { fontFamily: 'Nunito_600SemiBold', fontSize: 15, color: Colors.textSecondary },
 });

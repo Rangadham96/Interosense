@@ -19,10 +19,6 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   withSpring,
-  withDelay,
-  withSequence,
-  Easing,
-  runOnJS,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -38,6 +34,25 @@ const TIMER_STROKE = 8;
 const TIMER_RADIUS = (TIMER_SIZE - TIMER_STROKE) / 2;
 const TIMER_CIRCUMFERENCE = 2 * Math.PI * TIMER_RADIUS;
 
+const EVIDENCE_LABELS: Record<string, { label: string; bg: string }> = {
+  MABT: { label: 'Strong Evidence', bg: '#4A8C3F20' },
+  breathwork: { label: 'Strong Evidence', bg: '#4A8C3F20' },
+  mindfulness: { label: 'Strong Evidence', bg: '#4A8C3F20' },
+  somatic: { label: 'Emerging Science', bg: '#B8860B20' },
+  exposure: { label: 'Strong Evidence', bg: '#4A8C3F20' },
+};
+
+const CATEGORY_SCIENCE_REFLECTIONS: Record<string, string> = {
+  heartbeat: 'Your insular cortex has been actively processing cardiac signals during this session. Research shows this strengthens the brain-heart connection that underlies emotional awareness.',
+  breathing: 'Your vagus nerve has been stimulated through this practice. Each slow exhale activated your parasympathetic system, reducing cortisol and increasing heart rate variability.',
+  bodyScanning: 'You have just completed a systematic interoceptive map of your body. The insular cortex processes each region you attended to, building a more precise internal body model.',
+  tension: 'By noticing and releasing tension, you have engaged your proprioceptive and interoceptive systems together. This integration is what makes somatic practices so powerful for stress.',
+  temperature: 'Thermal interoception engages your trigeminal nerve and insular cortex simultaneously. Developing this sensitivity improves all forms of body awareness.',
+  exposure: 'Controlled exposure to uncomfortable sensations builds distress tolerance. Your amygdala has learned, just slightly, that these signals are safe to feel.',
+  gut: 'The enteric nervous system you just connected with contains 500 million neurons. You have strengthened the gut-brain axis — a direct pathway to mood regulation.',
+  movement: 'Mindful movement engages proprioceptive receptors throughout your body, feeding rich sensory information to your cerebellum and insula simultaneously.',
+};
+
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
@@ -48,31 +63,25 @@ export default function ExerciseSessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { addSession, sessions, totalSessions, currentStreak, unlockedAchievements, exerciseBookmarks, toggleExerciseBookmark } = useApp();
+  const { addSession, sessions, totalSessions, currentStreak, unlockedAchievements, exerciseBookmarks, toggleExerciseBookmark, profile } = useApp();
   const exercise = getExerciseById(id);
 
   const [phase, setPhase] = useState<SessionPhase>('prestart');
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [selectedRating, setSelectedRating] = useState(0);
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [prevAchievementCount] = useState(unlockedAchievements.length);
+  const [showEscapeLink, setShowEscapeLink] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const celebrationScale = useSharedValue(0);
   const celebrationOpacity = useSharedValue(0);
-  const confettiPieces = useMemo(() => {
-    return Array.from({ length: 12 }, (_, i) => ({
-      id: i,
-      x: Math.random() * SCREEN_WIDTH,
-      delay: Math.random() * 600,
-      color: [Colors.primary, Colors.secondary, Colors.accent, Colors.warning, Colors.success][i % 5],
-      size: 6 + Math.random() * 6,
-    }));
-  }, []);
 
   useEffect(() => {
     if (phase === 'complete') {
@@ -107,15 +116,14 @@ export default function ExerciseSessionScreen() {
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      if (elapsedRef.current) clearInterval(elapsedRef.current);
     };
   }, []);
 
   useEffect(() => {
     if (phase !== 'active' || isPaused) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+      if (elapsedRef.current) { clearInterval(elapsedRef.current); elapsedRef.current = null; }
       return;
     }
 
@@ -134,11 +142,16 @@ export default function ExerciseSessionScreen() {
       });
     }, 1000);
 
+    elapsedRef.current = setInterval(() => {
+      setElapsedSeconds(prev => {
+        if (prev === 29) setShowEscapeLink(true);
+        return prev + 1;
+      });
+    }, 1000);
+
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+      if (elapsedRef.current) { clearInterval(elapsedRef.current); elapsedRef.current = null; }
     };
   }, [phase, isPaused, currentStepIndex, exercise]);
 
@@ -146,6 +159,8 @@ export default function ExerciseSessionScreen() {
     if (!exercise) return;
     setCurrentStepIndex(0);
     setTimeRemaining(exercise.steps[0].duration);
+    setElapsedSeconds(0);
+    setShowEscapeLink(false);
     setPhase('active');
     setIsPaused(false);
   }, [exercise]);
@@ -205,12 +220,17 @@ export default function ExerciseSessionScreen() {
     );
   }
 
+  const catInfo = CATEGORY_INFO[exercise.category as keyof typeof CATEGORY_INFO];
   const currentStep = exercise.steps[currentStepIndex];
   const stepDuration = currentStep?.duration ?? 1;
   const progress = stepDuration > 0 ? (stepDuration - timeRemaining) / stepDuration : 0;
   const strokeDashoffset = TIMER_CIRCUMFERENCE * (1 - progress);
   const overallProgress = (currentStepIndex + (phase === 'complete' ? 0 : progress)) / exercise.steps.length;
   const difficultyLabel = exercise.difficulty.charAt(0).toUpperCase() + exercise.difficulty.slice(1);
+  const evidence = EVIDENCE_LABELS[exercise.methodology] || { label: 'Emerging Science', bg: '#B8860B20' };
+  const hasContraindications = exercise.contraindications && exercise.contraindications.length > 0;
+  const userName = profile?.name ? profile.name.split(' ')[0] : '';
+  const categoryReflection = CATEGORY_SCIENCE_REFLECTIONS[exercise.category] || 'You have just completed an interoceptive practice session. Each session strengthens your body awareness pathways.';
 
   if (phase === 'prestart') {
     return (
@@ -242,6 +262,10 @@ export default function ExerciseSessionScreen() {
             </TouchableOpacity>
           </View>
 
+          <View style={styles.categoryLabel}>
+            <Text style={styles.categoryLabelText}>{(catInfo?.label || exercise.category).toUpperCase()}</Text>
+          </View>
+
           <View style={styles.prestartHeader}>
             <View style={styles.iconCircle}>
               <Feather name={exercise.iconName as any} size={32} color={Colors.primary} />
@@ -262,10 +286,25 @@ export default function ExerciseSessionScreen() {
             </View>
             <View style={styles.metaDot} />
             <View style={styles.metaItem}>
-              <Feather name="layers" size={16} color="rgba(255,255,255,0.7)" />
-              <Text style={styles.metaText}>{exercise.steps.length} steps</Text>
+              <Feather name="award" size={16} color="rgba(255,255,255,0.7)" />
+              <Text style={styles.metaText}>{evidence.label}</Text>
             </View>
           </View>
+
+          {hasContraindications && (
+            <View style={styles.contraindicationCard}>
+              <View style={styles.contraindicationHeader}>
+                <Feather name="alert-triangle" size={16} color="#B8860B" />
+                <Text style={styles.contraindicationTitle}>Before you begin — please read</Text>
+              </View>
+              {exercise.contraindications.map((c, i) => (
+                <View key={i} style={styles.benefitRow}>
+                  <Feather name="alert-circle" size={14} color="#E07A5F" />
+                  <Text style={styles.benefitText}>{c}</Text>
+                </View>
+              ))}
+            </View>
+          )}
 
           <View style={styles.benefitsCard}>
             <Text style={styles.benefitsTitle}>Benefits</Text>
@@ -277,19 +316,9 @@ export default function ExerciseSessionScreen() {
             ))}
           </View>
 
-          {exercise.scienceNote && (
-            <View style={styles.benefitsCard}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <Feather name="book-open" size={14} color={Colors.secondaryLight} />
-                <Text style={styles.benefitsTitle}>Science</Text>
-              </View>
-              <Text style={styles.benefitText}>{exercise.scienceNote}</Text>
-            </View>
-          )}
-
           {exercise.preparationTips && exercise.preparationTips.length > 0 && (
             <View style={styles.benefitsCard}>
-              <Text style={styles.benefitsTitle}>Preparation</Text>
+              <Text style={styles.benefitsTitle}>TO PREPARE</Text>
               {exercise.preparationTips.map((tip, i) => (
                 <View key={i} style={styles.benefitRow}>
                   <Feather name="info" size={14} color="rgba(255,255,255,0.5)" />
@@ -299,22 +328,32 @@ export default function ExerciseSessionScreen() {
             </View>
           )}
 
-          {exercise.contraindications && exercise.contraindications.length > 0 && (
-            <View style={[styles.benefitsCard, { backgroundColor: 'rgba(240,192,90,0.12)' }]}>
-              <Text style={styles.benefitsTitle}>Contraindications</Text>
-              {exercise.contraindications.map((c, i) => (
+          {exercise.expectedSensations && exercise.expectedSensations.length > 0 && (
+            <View style={styles.benefitsCard}>
+              <Text style={styles.benefitsTitle}>YOU MAY NOTICE</Text>
+              {exercise.expectedSensations.map((s, i) => (
                 <View key={i} style={styles.benefitRow}>
-                  <Feather name="alert-triangle" size={14} color={Colors.warning} />
-                  <Text style={styles.benefitText}>{c}</Text>
+                  <Feather name="eye" size={14} color="rgba(255,255,255,0.5)" />
+                  <Text style={styles.benefitText}>{s}</Text>
                 </View>
               ))}
+              <Text style={styles.sensationNormalisingText}>
+                Whatever you notice is valid information. There is no wrong way to sense.
+              </Text>
             </View>
           )}
 
-          {exercise.researchCitation && (
-            <Text style={{ fontFamily: 'Nunito_400Regular', fontSize: 11, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginBottom: 20, lineHeight: 15, paddingHorizontal: 8 }}>
-              {exercise.researchCitation}
-            </Text>
+          {exercise.scienceNote && (
+            <View style={styles.benefitsCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <Feather name="book-open" size={14} color={Colors.secondaryLight} />
+                <Text style={styles.benefitsTitle}>WHY THIS WORKS</Text>
+              </View>
+              <Text style={styles.benefitText}>{exercise.scienceNote}</Text>
+              {exercise.researchCitation && (
+                <Text style={styles.citationText}>{exercise.researchCitation}</Text>
+              )}
+            </View>
           )}
 
           <TouchableOpacity style={styles.beginButton} onPress={handleBegin} activeOpacity={0.85}>
@@ -328,7 +367,6 @@ export default function ExerciseSessionScreen() {
 
   if (phase === 'complete') {
     if (saved) {
-      const catInfo = CATEGORY_INFO[exercise.category as keyof typeof CATEGORY_INFO];
       return (
         <LinearGradient colors={[Colors.primary, '#3D2F6B']} style={styles.container}>
           <ScrollView
@@ -344,8 +382,18 @@ export default function ExerciseSessionScreen() {
               </View>
             </Animated.View>
 
-            <Text style={styles.completeTitle}>Session Complete</Text>
+            <Text style={styles.completeTitle}>
+              {userName ? `Well done, ${userName}` : 'Well done'}
+            </Text>
             <Text style={styles.completeSubtitle}>You finished {exercise.title}</Text>
+
+            <View style={styles.scienceReflectionCard}>
+              <View style={styles.scienceReflectionHeader}>
+                <Feather name="book-open" size={14} color={Colors.secondaryLight} />
+                <Text style={styles.scienceReflectionLabel}>{(catInfo?.label || exercise.category).toUpperCase()} — WHAT JUST HAPPENED</Text>
+              </View>
+              <Text style={styles.scienceReflectionText}>{categoryReflection}</Text>
+            </View>
 
             <View style={styles.statsRow}>
               <View style={styles.statBox}>
@@ -441,7 +489,7 @@ export default function ExerciseSessionScreen() {
                   hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
                 >
                   <Feather
-                    name={star <= selectedRating ? 'star' : 'star'}
+                    name="star"
                     size={36}
                     color={star <= selectedRating ? Colors.warning : 'rgba(255,255,255,0.3)'}
                     style={star <= selectedRating ? { opacity: 1 } : { opacity: 0.6 }}
@@ -545,6 +593,17 @@ export default function ExerciseSessionScreen() {
           </TouchableOpacity>
         </View>
 
+        {showEscapeLink && (
+          <TouchableOpacity
+            style={styles.escapeLink}
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+          >
+            <Feather name="heart" size={14} color="rgba(255,255,255,0.6)" />
+            <Text style={styles.escapeLinkText}>If you feel overwhelmed, it's okay to stop</Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           style={styles.activeCloseButton}
           onPress={() => router.back()}
@@ -593,7 +652,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    paddingHorizontal: 0,
     marginBottom: 0,
   },
   closeButton: {
@@ -602,14 +660,26 @@ const styles = StyleSheet.create({
   bookmarkButton: {
     padding: 4,
   },
+  categoryLabel: {
+    alignSelf: 'center',
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  categoryLabelText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 11,
+    color: Colors.secondaryLight,
+    letterSpacing: 2,
+    textTransform: 'uppercase' as const,
+  },
   prestartContent: {
     paddingHorizontal: 24,
     alignItems: 'center',
   },
   prestartHeader: {
     alignItems: 'center',
-    marginTop: 40,
-    marginBottom: 24,
+    marginTop: 20,
+    marginBottom: 20,
   },
   iconCircle: {
     width: 72,
@@ -636,7 +706,10 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: 24,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 4,
   },
   metaItem: {
     flexDirection: 'row',
@@ -648,25 +721,46 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: 'rgba(255,255,255,0.4)',
-    marginHorizontal: 12,
+    marginHorizontal: 8,
   },
   metaText: {
     fontFamily: 'Nunito_500Medium',
-    fontSize: 14,
+    fontSize: 13,
     color: 'rgba(255,255,255,0.8)',
+  },
+  contraindicationCard: {
+    backgroundColor: 'rgba(240,192,90,0.15)',
+    borderRadius: 16,
+    padding: 18,
+    width: '100%',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(240,192,90,0.3)',
+  },
+  contraindicationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  contraindicationTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 14,
+    color: '#B8860B',
   },
   benefitsCard: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 16,
     padding: 20,
     width: '100%',
-    marginBottom: 36,
+    marginBottom: 16,
   },
   benefitsTitle: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 16,
-    color: '#fff',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
     marginBottom: 14,
+    letterSpacing: 0.8,
   },
   benefitRow: {
     flexDirection: 'row',
@@ -679,6 +773,22 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: 'rgba(255,255,255,0.85)',
     flex: 1,
+    lineHeight: 22,
+  },
+  sensationNormalisingText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.55)',
+    fontStyle: 'italic' as const,
+    marginTop: 8,
+    lineHeight: 19,
+  },
+  citationText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.4)',
+    marginTop: 12,
+    lineHeight: 16,
   },
   beginButton: {
     flexDirection: 'row',
@@ -691,6 +801,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     width: '100%',
     maxWidth: 300,
+    marginTop: 8,
   },
   beginButtonText: {
     fontFamily: 'Nunito_700Bold',
@@ -762,7 +873,7 @@ const styles = StyleSheet.create({
   controlsRow: {
     flexDirection: 'row',
     gap: 40,
-    marginBottom: 24,
+    marginBottom: 12,
   },
   controlButton: {
     width: 56,
@@ -771,6 +882,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  escapeLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+  },
+  escapeLinkText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.55)',
+    textDecorationLine: 'underline',
   },
   activeCloseButton: {
     flexDirection: 'row',
@@ -808,20 +931,47 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'rgba(255,255,255,0.8)',
     textAlign: 'center',
-    marginBottom: 28,
+    marginBottom: 24,
+  },
+  scienceReflectionCard: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    padding: 18,
+    width: '100%',
+    marginBottom: 24,
+  },
+  scienceReflectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  scienceReflectionLabel: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 11,
+    color: Colors.secondaryLight,
+    letterSpacing: 0.8,
+  },
+  scienceReflectionText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.85)',
+    lineHeight: 21,
   },
   statsRow: {
     flexDirection: 'row',
-    gap: 20,
-    marginBottom: 32,
+    gap: 16,
+    marginBottom: 28,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
   statBox: {
     backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: 16,
     paddingVertical: 16,
-    paddingHorizontal: 28,
+    paddingHorizontal: 24,
     alignItems: 'center',
-    minWidth: 100,
+    minWidth: 90,
   },
   statValue: {
     fontFamily: 'Nunito_700Bold',

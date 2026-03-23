@@ -17,6 +17,7 @@ import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { isToday, parseISO } from 'date-fns';
 import { apiPost } from '@/lib/api';
+import { router } from 'expo-router';
 
 type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -28,37 +29,30 @@ function getTimeOfDay(): TimeOfDay {
   return 'night';
 }
 
-const TIME_GREETINGS: Record<TimeOfDay, { greeting: string; icon: string; subtitle: string }> = {
-  morning: { greeting: 'Good Morning', icon: 'sun', subtitle: 'Start your day with awareness' },
-  afternoon: { greeting: 'Good Afternoon', icon: 'cloud', subtitle: 'Take a midday body check' },
-  evening: { greeting: 'Good Evening', icon: 'sunset', subtitle: 'Reflect on your body\'s signals today' },
-  night: { greeting: 'Good Night', icon: 'moon', subtitle: 'How is your body winding down?' },
-};
-
 const TIME_HINTS: Record<TimeOfDay, Record<number, string>> = {
   morning: {
-    0: 'How connected to your body do you feel after waking up?',
-    1: 'How do you feel after waking up? Notice your body\'s natural energy.',
-    2: 'Reflect on last night\'s rest and how it affects your body now.',
-    3: 'Starting the day calm? Notice any anticipatory tension.',
+    0: 'Take a moment to notice how your body feels waking into this day.',
+    1: 'Notice any morning heaviness or lightness — your body is speaking.',
+    2: 'How did rest land in your body last night?',
+    3: 'Notice any anticipatory tension your body is already holding.',
   },
   afternoon: {
-    0: 'Pause and reconnect with your body at midday.',
-    1: 'How has your energy shifted since the morning?',
-    2: 'Is last night\'s sleep still affecting your afternoon?',
-    3: 'Has stress built up through the morning?',
+    0: 'Pause and reconnect. Your body has been carrying you all morning.',
+    1: 'How has your energy shifted since you woke up?',
+    2: 'How is last night\'s rest still affecting how you feel right now?',
+    3: 'Notice where the morning\'s demands have landed in your body.',
   },
   evening: {
-    0: 'Wind down and tune into your body after a full day.',
-    1: 'How much energy do you have left at the end of the day?',
-    2: 'How is your body recovering from last night\'s sleep?',
-    3: 'How has stress accumulated through the day?',
+    0: 'Wind down and tune in. What has your body absorbed today?',
+    1: 'How much energy does your body have left at the end of this day?',
+    2: 'How is your body recovering from last night?',
+    3: 'What stress has built through the day — and where does it live in you?',
   },
   night: {
     0: 'Check in with your body as you prepare for rest.',
-    1: 'How depleted or restless does your body feel right now?',
-    2: 'Are you feeling ready for sleep tonight?',
-    3: 'Let go of the day\'s tension. Notice what remains.',
+    1: 'Is your body restless or ready to release into sleep?',
+    2: 'Is your body settling toward rest tonight?',
+    3: 'Let go of the day. Notice what your body is still holding onto.',
   },
 };
 
@@ -84,7 +78,24 @@ const BODY_AREAS = [
   'stomach', 'arms', 'hands', 'hips', 'legs', 'feet',
 ];
 
+const STEP_QUESTIONS: Record<number, string> = {
+  0: 'How connected to your body do you feel right now?',
+  1: 'What is your energy like right now?',
+  2: 'How did you sleep last night?',
+  3: 'How much stress is your body carrying right now?',
+  4: 'Which word best captures your emotional weather right now?',
+  5: 'What sensations are you noticing in your body?',
+  6: 'Where in your body do you feel these sensations most?',
+  7: 'Is there anything else your body is trying to tell you today?',
+};
+
 const TOTAL_STEPS = 8;
+
+const CHECK_IN_BENEFITS = [
+  'Personalises your exercises for today',
+  'Tracks your interoceptive growth',
+  'Helps your nervous system find its baseline',
+];
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
@@ -147,11 +158,49 @@ function ScaleSelector({
   );
 }
 
+function getPersonalisedCompletion(awareness: number, energy: number, stress: number, mood: string): { heading: string; body: string } {
+  if (stress >= 7) {
+    return {
+      heading: 'Your nervous system is working hard right now',
+      body: 'High stress is information, not failure. Your body is doing its job. A short breathing exercise can help regulate your autonomic nervous system.',
+    };
+  }
+  if (energy <= 3) {
+    return {
+      heading: 'Your body is asking for rest today',
+      body: 'Low energy is your body\'s wisdom, not a weakness. Gentle interoceptive practice can help you reconnect without depleting you further.',
+    };
+  }
+  if (mood === 'anxious') {
+    return {
+      heading: 'Your body is in a state of alertness',
+      body: 'Anxiety lives in the body before it reaches the mind. A breathwork exercise can help slow your nervous system within 90 seconds.',
+    };
+  }
+  if (mood === 'sad') {
+    return {
+      heading: 'Your body is carrying something heavy today',
+      body: 'Sadness has a weight and texture we can learn to hold gently. Gentle movement and gut-awareness exercises can support your mood.',
+    };
+  }
+  if (awareness >= 7 && energy >= 6) {
+    return {
+      heading: 'You\'re in a strong state of body awareness today',
+      body: 'This is an excellent time for a more advanced interoceptive practice. Your body is open and ready.',
+    };
+  }
+  return {
+    heading: 'Thank you for checking in with yourself',
+    body: 'Regular body check-ins build the neural pathways of self-awareness over time. Even on ordinary days, you are growing.',
+  };
+}
+
 export default function CheckinScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const { addCheckin, todayCheckedIn, checkins } = useApp();
 
+  const [phase, setPhase] = useState<'intro' | 'steps' | 'submitted'>('intro');
   const [step, setStep] = useState(0);
   const [awareness, setAwareness] = useState(5);
   const [energy, setEnergy] = useState(5);
@@ -161,16 +210,15 @@ export default function CheckinScreen() {
   const [selectedSensations, setSelectedSensations] = useState<string[]>([]);
   const [selectedBodyAreas, setSelectedBodyAreas] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
-  const [submitted, setSubmitted] = useState(false);
   const [showAlreadyCheckedIn, setShowAlreadyCheckedIn] = useState(true);
   const timeOfDay = getTimeOfDay();
-  const greetingData = TIME_GREETINGS[timeOfDay];
 
   const todayCheckin = useMemo(() => {
     return checkins.find(c => isToday(parseISO(c.date)));
   }, [checkins]);
 
   const resetForm = () => {
+    setPhase('intro');
     setStep(0);
     setAwareness(5);
     setEnergy(5);
@@ -180,7 +228,6 @@ export default function CheckinScreen() {
     setSelectedSensations([]);
     setSelectedBodyAreas([]);
     setNotes('');
-    setSubmitted(false);
     setShowAlreadyCheckedIn(true);
   };
 
@@ -198,7 +245,7 @@ export default function CheckinScreen() {
       notes: notes,
     };
     await addCheckin(checkinData);
-    setSubmitted(true);
+    setPhase('submitted');
     try {
       await apiPost('/api/checkins', checkinData);
     } catch (e) {
@@ -242,7 +289,9 @@ export default function CheckinScreen() {
     return icons[step] || 'check';
   };
 
-  if (todayCheckedIn && showAlreadyCheckedIn && !submitted) {
+  const completion = useMemo(() => getPersonalisedCompletion(awareness, energy, stress, selectedMood), [awareness, energy, stress, selectedMood]);
+
+  if (todayCheckedIn && showAlreadyCheckedIn && phase !== 'submitted') {
     return (
       <View style={[styles.container, { paddingTop: topPad }]}>
         <ScrollView contentContainerStyle={styles.alreadyCheckedInContent} showsVerticalScrollIndicator={false}>
@@ -250,9 +299,9 @@ export default function CheckinScreen() {
             <View style={styles.checkIconContainer}>
               <Feather name="check-circle" size={56} color={Colors.success} />
             </View>
-            <Text style={styles.alreadyTitle}>Already Checked In Today</Text>
+            <Text style={styles.alreadyTitle}>You've already checked in today</Text>
             <Text style={styles.alreadySubtitle}>
-              You have already completed your daily check-in. Here is a summary:
+              Your body's signals have been recorded. Your exercises are personalised for today.
             </Text>
             {todayCheckin && (
               <View style={styles.summaryCard}>
@@ -272,6 +321,14 @@ export default function CheckinScreen() {
                 {todayCheckin.notes ? <SummaryRow label="Notes" value={todayCheckin.notes} /> : null}
               </View>
             )}
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => router.push('/(tabs)/exercises')}
+              activeOpacity={0.8}
+            >
+              <Feather name="arrow-right" size={18} color={Colors.textInverse} />
+              <Text style={styles.primaryButtonText}>See My Recommended Exercises</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.checkInAgainButton} onPress={() => setShowAlreadyCheckedIn(false)} activeOpacity={0.8}>
               <Feather name="refresh-cw" size={18} color={Colors.primary} />
               <Text style={styles.checkInAgainText}>Check In Again</Text>
@@ -282,29 +339,91 @@ export default function CheckinScreen() {
     );
   }
 
-  if (submitted) {
+  if (phase === 'submitted') {
     return (
       <View style={[styles.container, { paddingTop: topPad }]}>
-        <Animated.View entering={FadeIn.duration(400)} style={styles.successContainer}>
-          <View style={styles.successIconWrap}>
-            <Feather name="check-circle" size={64} color={Colors.success} />
+        <Animated.ScrollView entering={FadeIn.duration(400)} contentContainerStyle={styles.successScrollContent} showsVerticalScrollIndicator={false}>
+          <LinearGradient
+            colors={[Colors.primary, Colors.primaryDark]}
+            style={styles.successGradient}
+          >
+            <View style={styles.successIconWrap}>
+              <Feather name="check" size={36} color="#FFFFFF" />
+            </View>
+            <Text style={styles.successTitle}>Check-in Complete</Text>
+            <Text style={styles.successSubtitleGradient}>{completion.heading}</Text>
+          </LinearGradient>
+          <View style={styles.successBody}>
+            <View style={styles.successInsightCard}>
+              <Feather name="info" size={16} color={Colors.primary} style={{ marginTop: 2 }} />
+              <Text style={styles.successInsightText}>{completion.body}</Text>
+            </View>
+            <View style={styles.summaryCard}>
+              <SummaryRow label="Awareness" value={`${awareness}/10`} />
+              <SummaryRow label="Energy" value={`${energy}/10`} />
+              <SummaryRow label="Sleep" value={`${sleep}/10`} />
+              <SummaryRow label="Stress" value={`${stress}/10`} />
+              <SummaryRow label="Mood" value={selectedMood ? selectedMood.charAt(0).toUpperCase() + selectedMood.slice(1) : '-'} />
+              {selectedSensations.length > 0 && <SummaryRow label="Sensations" value={selectedSensations.join(', ')} />}
+              {selectedBodyAreas.length > 0 && <SummaryRow label="Body Areas" value={selectedBodyAreas.join(', ')} />}
+              {notes ? <SummaryRow label="Notes" value={notes} /> : null}
+            </View>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => router.push('/(tabs)/exercises')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.primaryButtonText}>See My Recommended Exercise →</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.checkInAgainButton, { marginTop: 12 }]} onPress={resetForm} activeOpacity={0.8}>
+              <Text style={styles.checkInAgainText}>Done</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.successTitle}>Check-in Complete</Text>
-          <Text style={styles.successSubtitle}>Your daily check-in has been recorded. This data helps personalize your recommendations.</Text>
-          <View style={styles.summaryCard}>
-            <SummaryRow label="Awareness" value={`${awareness}/10`} />
-            <SummaryRow label="Energy" value={`${energy}/10`} />
-            <SummaryRow label="Sleep" value={`${sleep}/10`} />
-            <SummaryRow label="Stress" value={`${stress}/10`} />
-            <SummaryRow label="Mood" value={selectedMood ? selectedMood.charAt(0).toUpperCase() + selectedMood.slice(1) : '-'} />
-            {selectedSensations.length > 0 && <SummaryRow label="Sensations" value={selectedSensations.join(', ')} />}
-            {selectedBodyAreas.length > 0 && <SummaryRow label="Body Areas" value={selectedBodyAreas.join(', ')} />}
-            {notes ? <SummaryRow label="Notes" value={notes} /> : null}
+        </Animated.ScrollView>
+      </View>
+    );
+  }
+
+  if (phase === 'intro') {
+    return (
+      <View style={[styles.container, { paddingTop: topPad }]}>
+        <ScrollView contentContainerStyle={styles.introScrollContent} showsVerticalScrollIndicator={false}>
+          <LinearGradient
+            colors={[Colors.primary, '#8B5CF6', Colors.secondary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.introGradient}
+          >
+            <View style={styles.introBadge}>
+              <Feather name="activity" size={16} color="rgba(255,255,255,0.9)" />
+              <Text style={styles.introBadgeText}>3 minutes</Text>
+            </View>
+            <Text style={styles.introTitle}>Daily Body Check-In</Text>
+            <Text style={styles.introSubtitle}>
+              Tuning into your body each day builds the neural pathways of self-awareness that underpin emotional health.
+            </Text>
+            <View style={styles.introBenefitsList}>
+              {CHECK_IN_BENEFITS.map((b, i) => (
+                <View key={i} style={styles.introBenefitRow}>
+                  <View style={styles.introBenefitIcon}>
+                    <Feather name="check" size={12} color={Colors.primary} />
+                  </View>
+                  <Text style={styles.introBenefitText}>{b}</Text>
+                </View>
+              ))}
+            </View>
+          </LinearGradient>
+          <View style={styles.introBottomContent}>
+            <Text style={styles.introStepsPreview}>8 quick questions about how your body feels right now</Text>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => setPhase('steps')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.primaryButtonText}>Begin Check-In →</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.primaryButton} onPress={resetForm} activeOpacity={0.8}>
-            <Text style={styles.primaryButtonText}>Done</Text>
-          </TouchableOpacity>
-        </Animated.View>
+        </ScrollView>
       </View>
     );
   }
@@ -316,17 +435,6 @@ export default function CheckinScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <LinearGradient
-          colors={[Colors.primary, Colors.primaryLight]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.greetingGradient}
-        >
-          <Feather name={greetingData.icon as any} size={28} color={Colors.textInverse} />
-          <Text style={styles.greetingText}>{greetingData.greeting}</Text>
-          <Text style={styles.greetingSubtitle}>{greetingData.subtitle}</Text>
-        </LinearGradient>
-
         <StepIndicator current={step} total={TOTAL_STEPS} />
         <Text style={styles.stepCountText}>Step {step + 1} of {TOTAL_STEPS}</Text>
 
@@ -339,39 +447,39 @@ export default function CheckinScreen() {
 
         {step === 0 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>{TIME_HINTS[timeOfDay][0] || 'How connected to your body do you feel right now?'}</Text>
-            <Text style={styles.stepHint}>Interoceptive awareness is your ability to sense internal body signals like heartbeat, breathing, and tension.</Text>
+            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[0]}</Text>
+            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][0] || 'Interoceptive awareness is your ability to sense your heartbeat, breathing, and inner tensions.'}</Text>
             <ScaleSelector value={awareness} onChange={setAwareness} leftLabel="Disconnected" rightLabel="Fully Aware" />
           </Animated.View>
         )}
 
         {step === 1 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>What is your energy level?</Text>
-            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][1] || 'Notice how energy manifests physically - heaviness in limbs, alertness, desire to move.'}</Text>
-            <ScaleSelector value={energy} onChange={setEnergy} leftLabel="Depleted" rightLabel="Energized" color={Colors.secondary} />
+            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[1]}</Text>
+            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][1] || 'Notice how energy manifests physically — heaviness in limbs, mental alertness, desire to move or rest.'}</Text>
+            <ScaleSelector value={energy} onChange={setEnergy} leftLabel="Depleted" rightLabel="Energised" color={Colors.secondary} />
           </Animated.View>
         )}
 
         {step === 2 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>How was your sleep?</Text>
-            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][2] || 'Sleep quality directly impacts interoceptive sensitivity and emotional regulation.'}</Text>
+            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[2]}</Text>
+            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][2] || 'Sleep quality directly shapes interoceptive sensitivity and emotional regulation throughout the day.'}</Text>
             <ScaleSelector value={sleep} onChange={setSleep} leftLabel="Very Poor" rightLabel="Excellent" color="#5A6FB5" />
           </Animated.View>
         )}
 
         {step === 3 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>What is your current stress level?</Text>
-            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][3] || 'Stress activates the autonomic nervous system. Notice physical cues: jaw tension, shallow breathing, elevated heart rate.'}</Text>
+            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[3]}</Text>
+            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][3] || 'Stress lives in the body first. Notice physical cues: jaw tension, shallow breathing, tight shoulders.'}</Text>
             <ScaleSelector value={stress} onChange={setStress} leftLabel="Very Calm" rightLabel="Very Stressed" color="#E07A5F" />
           </Animated.View>
         )}
 
         {step === 4 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>What best describes your mood?</Text>
+            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[4]}</Text>
             <View style={styles.moodGrid}>
               {MOODS.map(mood => {
                 const isSelected = selectedMood === mood.key;
@@ -393,8 +501,8 @@ export default function CheckinScreen() {
 
         {step === 5 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>What sensations are you noticing?</Text>
-            <Text style={styles.stepHint}>Select all that apply. Building awareness of sensations is a core interoceptive skill.</Text>
+            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[5]}</Text>
+            <Text style={styles.stepHint}>Select all that apply. Building sensation vocabulary is a core interoceptive skill. There are no wrong answers.</Text>
             <View style={styles.sensationContainer}>
               {SENSATIONS.map(s => {
                 const isSelected = selectedSensations.includes(s);
@@ -417,8 +525,8 @@ export default function CheckinScreen() {
 
         {step === 6 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>Where in your body do you notice these sensations?</Text>
-            <Text style={styles.stepHint}>Mapping sensations to body regions improves interoceptive accuracy over time.</Text>
+            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[6]}</Text>
+            <Text style={styles.stepHint}>Mapping sensations to body regions improves interoceptive accuracy over time. Select anywhere you notice something.</Text>
             <View style={styles.sensationContainer}>
               {BODY_AREAS.map(a => {
                 const isSelected = selectedBodyAreas.includes(a);
@@ -441,13 +549,13 @@ export default function CheckinScreen() {
 
         {step === 7 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>Any additional notes?</Text>
-            <Text style={styles.stepHint}>Record patterns, triggers, or anything noteworthy about your body awareness today.</Text>
+            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[7]}</Text>
+            <Text style={styles.stepHint}>Record any patterns, triggers, or observations. This is just for you.</Text>
             <TextInput
               style={styles.notesInput}
               multiline
               numberOfLines={4}
-              placeholder="Write anything you would like to note..."
+              placeholder="Write anything you would like to notice or remember..."
               placeholderTextColor={Colors.textTertiary}
               value={notes}
               onChangeText={setNotes}
@@ -476,7 +584,7 @@ export default function CheckinScreen() {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.primaryButton} onPress={handleSubmit} activeOpacity={0.8}>
-              <Text style={styles.primaryButtonText}>Submit</Text>
+              <Text style={styles.primaryButtonText}>Complete</Text>
               <Feather name="check" size={18} color={Colors.textInverse} />
             </TouchableOpacity>
           )}
@@ -501,18 +609,20 @@ const CIRCLE_SIZE = Math.min(32, (SCREEN_WIDTH - 80) / 10 - 4);
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 40 },
-  greetingGradient: {
-    borderRadius: 20, padding: 20, alignItems: 'center', marginBottom: 8, marginTop: 8,
-  },
-  greetingText: {
-    fontFamily: 'Nunito_700Bold', fontSize: 22, color: Colors.textInverse, marginTop: 8,
-  },
-  greetingSubtitle: {
-    fontFamily: 'Nunito_400Regular', fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: 4,
-  },
-  stepCountText: {
-    fontFamily: 'Nunito_500Medium', fontSize: 13, color: Colors.textTertiary, textAlign: 'center', marginBottom: 4,
-  },
+  introScrollContent: { flexGrow: 1 },
+  introGradient: { paddingHorizontal: 28, paddingTop: 48, paddingBottom: 40 },
+  introBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.2)', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 20 },
+  introBadgeText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: 'rgba(255,255,255,0.9)' },
+  introTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 30, color: '#FFFFFF', marginBottom: 12, lineHeight: 38 },
+  introSubtitle: { fontFamily: 'Nunito_400Regular', fontSize: 16, color: 'rgba(255,255,255,0.85)', lineHeight: 24, marginBottom: 28 },
+  introBenefitsList: { gap: 12 },
+  introBenefitRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  introBenefitIcon: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  introBenefitText: { fontFamily: 'Nunito_500Medium', fontSize: 15, color: 'rgba(255,255,255,0.9)', flex: 1, lineHeight: 22 },
+  introBottomContent: { padding: 28, gap: 20 },
+  introStepsPreview: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: Colors.textSecondary, textAlign: 'center' },
+
+  stepCountText: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: Colors.textTertiary, textAlign: 'center', marginBottom: 4 },
   stepIndicator: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5, marginTop: 16, marginBottom: 4 },
   stepDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.border },
   stepDotActive: { backgroundColor: Colors.primary, width: 20, borderRadius: 3 },
@@ -565,7 +675,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: { fontSize: 15, fontFamily: 'Nunito_600SemiBold', color: Colors.primary },
   primaryButton: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     paddingVertical: 14, paddingHorizontal: 28, borderRadius: 16, backgroundColor: Colors.primary,
   },
   primaryButtonDisabled: { opacity: 0.5 },
@@ -581,10 +691,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.primary, marginTop: 16,
   },
   checkInAgainText: { fontSize: 15, fontFamily: 'Nunito_600SemiBold', color: Colors.primary },
-  successContainer: { flex: 1, paddingHorizontal: 24, paddingTop: 40, alignItems: 'center' },
-  successIconWrap: { marginBottom: 20, width: 104, height: 104, borderRadius: 52, backgroundColor: '#F0F9EC', alignItems: 'center', justifyContent: 'center' },
-  successTitle: { fontSize: 26, fontFamily: 'Nunito_700Bold', color: Colors.text, marginBottom: 8 },
-  successSubtitle: { fontSize: 15, fontFamily: 'Nunito_400Regular', color: Colors.textSecondary, marginBottom: 28, textAlign: 'center', lineHeight: 22 },
+
+  successScrollContent: { flexGrow: 1 },
+  successGradient: { paddingHorizontal: 28, paddingTop: 40, paddingBottom: 36, alignItems: 'center' },
+  successIconWrap: { marginBottom: 20, width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  successTitle: { fontSize: 26, fontFamily: 'Nunito_700Bold', color: '#FFFFFF', marginBottom: 8, textAlign: 'center' },
+  successSubtitleGradient: { fontSize: 16, fontFamily: 'Nunito_500Medium', color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 24, paddingHorizontal: 8 },
+  successBody: { padding: 24 },
+  successInsightCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: Colors.primary + '10', borderRadius: 14, padding: 16, marginBottom: 20 },
+  successInsightText: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: Colors.text, flex: 1, lineHeight: 21 },
+
   summaryCard: {
     width: '100%', backgroundColor: Colors.surface, borderRadius: 16, padding: 20, marginBottom: 24,
     borderWidth: 1, borderColor: Colors.borderLight,

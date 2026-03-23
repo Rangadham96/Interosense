@@ -8,17 +8,27 @@ import {
   TouchableOpacity,
   FlatList,
   Platform,
+  Modal,
 } from 'react-native';
 import Colors from '@/constants/colors';
 import { EXERCISES, CATEGORY_INFO, ExerciseCategory, Exercise } from '@/constants/exercises';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useApp } from '@/contexts/AppContext';
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string }> = {
   beginner: { bg: '#E8F5E1', text: '#4A8C3F' },
   intermediate: { bg: '#FFF3D6', text: '#B8860B' },
   advanced: { bg: '#EDE7F6', text: '#6B5B95' },
+};
+
+const EVIDENCE_LABELS: Record<string, { label: string; color: string }> = {
+  MABT: { label: 'Strong Evidence', color: '#4A8C3F' },
+  breathwork: { label: 'Strong Evidence', color: '#4A8C3F' },
+  mindfulness: { label: 'Strong Evidence', color: '#4A8C3F' },
+  somatic: { label: 'Emerging Science', color: '#B8860B' },
+  exposure: { label: 'Strong Evidence', color: '#4A8C3F' },
 };
 
 const ALL_CATEGORIES: ExerciseCategory[] = [
@@ -37,6 +47,8 @@ export default function ExercisesScreen() {
   const topPadding = Platform.OS === 'web' ? 67 : insets.top;
   const [searchText, setSearchText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ExerciseCategory | 'all'>('all');
+  const [tooltipExercise, setTooltipExercise] = useState<Exercise | null>(null);
+  const { todayCheckedIn } = useApp();
 
   const filteredExercises = useMemo(() => {
     let results = EXERCISES;
@@ -58,6 +70,8 @@ export default function ExercisesScreen() {
     const catColor = Colors.category[item.category];
     const diffStyle = DIFFICULTY_COLORS[item.difficulty];
     const catInfo = CATEGORY_INFO[item.category];
+    const evidence = EVIDENCE_LABELS[item.methodology] || { label: 'Emerging Science', color: '#B8860B' };
+    const hasContraindications = item.contraindications && item.contraindications.length > 0;
 
     return (
       <TouchableOpacity
@@ -79,6 +93,17 @@ export default function ExercisesScreen() {
                 {item.subtitle}
               </Text>
             </View>
+            {hasContraindications && (
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  setTooltipExercise(item);
+                }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Feather name="alert-triangle" size={16} color="#B8860B" />
+              </TouchableOpacity>
+            )}
           </View>
           <View style={styles.cardBottom}>
             <View style={[styles.diffBadge, { backgroundColor: diffStyle.bg }]}>
@@ -86,15 +111,13 @@ export default function ExercisesScreen() {
                 {item.difficulty.charAt(0).toUpperCase() + item.difficulty.slice(1)}
               </Text>
             </View>
+            <View style={[styles.evidencePill, { backgroundColor: evidence.color + '15' }]}>
+              <View style={[styles.evidenceDot, { backgroundColor: evidence.color }]} />
+              <Text style={[styles.evidenceText, { color: evidence.color }]}>{evidence.label}</Text>
+            </View>
             <View style={styles.metaItem}>
               <Feather name="clock" size={13} color={Colors.textTertiary} />
               <Text style={styles.metaText}>{item.durationMinutes} min</Text>
-            </View>
-            <View style={styles.metaItem}>
-              <Feather name="star" size={13} color={Colors.textTertiary} />
-              <Text style={styles.metaText}>
-                {item.benefits.length} benefit{item.benefits.length !== 1 ? 's' : ''}
-              </Text>
             </View>
           </View>
         </View>
@@ -106,7 +129,7 @@ export default function ExercisesScreen() {
     <View style={[styles.container, { paddingTop: topPadding }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Exercises</Text>
-        <Text style={styles.subtitle}>Build your interoceptive awareness</Text>
+        <Text style={styles.subtitle}>30+ interoceptive exercises across 8 body-awareness categories</Text>
         <View style={styles.searchBar}>
           <Feather name="search" size={18} color={Colors.textTertiary} />
           <TextInput
@@ -123,6 +146,13 @@ export default function ExercisesScreen() {
           )}
         </View>
       </View>
+
+      {todayCheckedIn && (
+        <View style={styles.checkinBanner}>
+          <Feather name="check-circle" size={16} color={Colors.success} />
+          <Text style={styles.checkinBannerText}>Based on your check-in, your exercises are personalised for today</Text>
+        </View>
+      )}
 
       <View style={styles.filterSection}>
         <ScrollView
@@ -209,6 +239,32 @@ export default function ExercisesScreen() {
           </Text>
         </View>
       )}
+
+      <Modal
+        visible={!!tooltipExercise}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setTooltipExercise(null)}
+      >
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setTooltipExercise(null)}>
+          <View style={styles.tooltipCard}>
+            <View style={styles.tooltipHeader}>
+              <Feather name="alert-triangle" size={18} color="#B8860B" />
+              <Text style={styles.tooltipTitle}>Before you begin — please read</Text>
+            </View>
+            <Text style={styles.tooltipExerciseName}>{tooltipExercise?.title}</Text>
+            {tooltipExercise?.contraindications.map((c, i) => (
+              <View key={i} style={styles.tooltipRow}>
+                <Feather name="alert-circle" size={14} color="#E07A5F" />
+                <Text style={styles.tooltipText}>{c}</Text>
+              </View>
+            ))}
+            <TouchableOpacity style={styles.tooltipClose} onPress={() => setTooltipExercise(null)}>
+              <Text style={styles.tooltipCloseText}>Understood</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -230,10 +286,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: 'Nunito_400Regular',
     color: Colors.textSecondary,
     marginBottom: 16,
+    lineHeight: 20,
   },
   searchBar: {
     flexDirection: 'row',
@@ -250,6 +307,25 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_400Regular',
     color: Colors.text,
     padding: 0,
+  },
+  checkinBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginTop: 4,
+    marginBottom: 4,
+    backgroundColor: Colors.success + '15',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  checkinBannerText: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 13,
+    color: Colors.success,
+    flex: 1,
+    lineHeight: 18,
   },
   filterSection: {
     paddingTop: 12,
@@ -311,7 +387,7 @@ const styles = StyleSheet.create({
   cardContent: {
     flex: 1,
     padding: 14,
-    gap: 12,
+    gap: 10,
   },
   cardTop: {
     flexDirection: 'row',
@@ -342,7 +418,8 @@ const styles = StyleSheet.create({
   cardBottom: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
+    flexWrap: 'wrap',
   },
   diffBadge: {
     paddingHorizontal: 10,
@@ -351,6 +428,23 @@ const styles = StyleSheet.create({
   },
   diffText: {
     fontSize: 11,
+    fontFamily: 'Nunito_600SemiBold',
+  },
+  evidencePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  evidenceDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  evidenceText: {
+    fontSize: 10,
     fontFamily: 'Nunito_600SemiBold',
   },
   metaItem: {
@@ -381,5 +475,65 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 40,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  tooltipCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  tooltipHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  tooltipTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 15,
+    color: '#B8860B',
+  },
+  tooltipExerciseName: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: Colors.text,
+    marginBottom: 14,
+  },
+  tooltipRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginBottom: 10,
+  },
+  tooltipText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 14,
+    color: Colors.textSecondary,
+    flex: 1,
+    lineHeight: 20,
+  },
+  tooltipClose: {
+    marginTop: 16,
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  tooltipCloseText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 15,
+    color: '#FFFFFF',
   },
 });

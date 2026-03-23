@@ -16,43 +16,51 @@ import Colors from '@/constants/colors';
 import { CATEGORY_INFO, ExerciseCategory } from '@/constants/exercises';
 import { CONDITIONS } from '@/constants/conditions';
 import { format, parseISO } from 'date-fns';
-import Svg from 'react-native-svg';
 import type { Recommendation, InsightCard } from '@/lib/personalization-engine';
 
-const DAILY_QUOTES: { text: string; source: string }[] = [
-  { text: "Interoception is the sense that allows us to answer the question, 'How do I feel?' It is the foundation of self-awareness.", source: "A.D. Craig, Neuroscientist" },
-  { text: "The body keeps the score. If the memory of trauma is encoded in the viscera, in heartbreaking and gut-wrenching emotions, then the pathway to recovery is found through the body.", source: "Bessel van der Kolk, MD" },
-  { text: "Awareness of internal bodily signals is a key component of emotional experience and regulation.", source: "Lisa Feldman Barrett, PhD" },
-  { text: "Mindfulness is paying attention, on purpose, in the present moment, non-judgmentally, as if your life depended on it.", source: "Jon Kabat-Zinn, PhD" },
-  { text: "The capacity to notice what you are feeling at any given moment is the cornerstone of emotional intelligence.", source: "Daniel Goleman, PhD" },
-  { text: "Between stimulus and response there is a space. In that space is our freedom and power to choose our response.", source: "Viktor Frankl, MD, PhD" },
-  { text: "People with greater interoceptive accuracy tend to experience emotions more intensely and make more intuitive decisions.", source: "Hugo Critchley, Neuroscientist" },
-  { text: "Resilience is not about bouncing back. It is about learning to move forward with a deeper understanding of yourself.", source: "Ann Masten, PhD" },
-  { text: "The mind and body are not separate entities. What affects one profoundly affects the other.", source: "Candace Pert, PhD" },
-  { text: "Your heartbeat is a constant companion. Learning to listen to it is the first step in body awareness.", source: "Sarah Garfinkel, PhD" },
-  { text: "Feelings are not just the shady side of reason; they are the foundation upon which it is built.", source: "Antonio Damasio, MD, PhD" },
-  { text: "The greatest weapon against stress is our ability to choose one thought over another, grounded in bodily awareness.", source: "William James, Psychologist" },
-  { text: "Interoceptive awareness acts as a bridge between the conscious mind and the body's physiological state.", source: "Sahib Khalsa, MD, PhD" },
-  { text: "Every cell in your body is eavesdropping on your thoughts. Awareness of this connection is empowerment.", source: "Deepak Chopra, MD" },
-  { text: "Self-regulation begins with body regulation. You cannot manage what you cannot feel.", source: "Stephen Porges, PhD" },
-  { text: "The breath is the intersection of biology and psychology, the bridge between the conscious and unconscious.", source: "Herbert Benson, MD" },
-  { text: "Tuning into the body's signals is not a luxury. It is a fundamental requirement for psychological well-being.", source: "Peter Levine, PhD" },
-  { text: "Our bodies communicate to us clearly and specifically, if we are willing to listen.", source: "Shakti Gawain, Author" },
-  { text: "Neuroplasticity means your brain is always changing. Each moment of mindful attention reshapes neural pathways.", source: "Richard Davidson, PhD" },
-  { text: "The quality of our breath expresses our inner feelings. Conscious breathing calms the autonomic nervous system.", source: "Tich Nhat Hanh" },
-  { text: "Emotions are not mental states that happen to have bodily expressions. They are bodily states that happen to be mentally interpreted.", source: "Lisa Feldman Barrett, PhD" },
-  { text: "Chronic stress rewires the brain. Interoceptive practice helps restore the balance between alertness and calm.", source: "Bruce McEwen, PhD" },
-  { text: "When we pay attention to our bodies, we discover a wealth of intelligence that the thinking mind alone cannot access.", source: "Jon Kabat-Zinn, PhD" },
-  { text: "The vagus nerve is the body's superhighway for calming signals. Practices that engage it build resilience over time.", source: "Stephen Porges, PhD" },
-  { text: "Mindful awareness of the body is the doorway to understanding the patterns that shape our lives.", source: "Daniel Siegel, MD" },
-  { text: "Heart rate variability reflects the flexibility of our autonomic nervous system. Greater flexibility means greater resilience.", source: "Fred Shaffer, PhD" },
-  { text: "Somatic awareness is not about fixing the body. It is about listening to what the body already knows.", source: "Thomas Hanna, PhD" },
-  { text: "The interoceptive system provides a moment-by-moment map of the body's internal landscape, essential for homeostasis.", source: "A.D. Craig, Neuroscientist" },
-  { text: "Compassion for oneself begins with noticing the body's distress without judgment and responding with care.", source: "Kristin Neff, PhD" },
-  { text: "Each time you notice a sensation and stay with it, you strengthen the neural circuits of self-awareness.", source: "Norman Farb, PhD" },
-  { text: "The body is not something we have. It is something we are. Reconnecting with it is reconnecting with ourselves.", source: "Maurice Merleau-Ponty, Philosopher" },
-  { text: "Attention to interoceptive signals can reduce alexithymia and improve one's capacity to identify and describe emotions.", source: "Olga Pollatos, PhD" },
+const DAILY_SCIENCE_INSIGHTS = [
+  { label: 'THE INSULA', text: 'Regular interoceptive practice measurably thickens the insular cortex — the region that translates body signals into conscious awareness.' },
+  { label: 'VAGUS NERVE', text: 'Your vagus nerve carries 80% of signals from gut to brain. Just 5 minutes of slow breathing activates your rest-and-digest system.' },
+  { label: 'HRV & RESILIENCE', text: 'Heart rate variability (HRV) is your body\'s resilience score. Box breathing can raise it by 10–15% in a single session.' },
+  { label: 'NEUROPLASTICITY', text: 'Each moment of mindful body attention reshapes neural pathways. Two weeks of daily practice produces measurable changes.' },
+  { label: 'GUT-BRAIN AXIS', text: 'Your gut produces 95% of your body\'s serotonin. Gut awareness exercises directly support mood through the enteric nervous system.' },
+  { label: 'INTEROCEPTION', text: 'People with greater interoceptive accuracy tend to experience emotions more intensely and make more intuitive decisions (Critchley, 2004).' },
+  { label: 'BREATH & EMOTION', text: 'Your breathing pattern directly reflects your emotional state — and changing your breath can change your feelings within 90 seconds.' },
 ];
+
+function getTimeOfDayGreeting(name: string): { greeting: string; subtext: string } {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) {
+    return {
+      greeting: `Good morning, ${name}`,
+      subtext: `${name} — how is your body this morning?`,
+    };
+  }
+  if (hour >= 12 && hour < 17) {
+    return {
+      greeting: `Good afternoon, ${name}`,
+      subtext: `${name} — how are you feeling right now?`,
+    };
+  }
+  if (hour >= 17 && hour < 21) {
+    return {
+      greeting: `Good evening, ${name}`,
+      subtext: `${name} — how has your body carried you today?`,
+    };
+  }
+  return {
+    greeting: `Good night, ${name}`,
+    subtext: `${name} — how is your body winding down?`,
+  };
+}
+
+const EVIDENCE_LABELS: Record<string, string> = {
+  MABT: 'Strong Evidence',
+  breathwork: 'Strong Evidence',
+  mindfulness: 'Strong Evidence',
+  somatic: 'Emerging Science',
+  exposure: 'Strong Evidence',
+};
 
 function InsightCardView({ insight }: { insight: InsightCard }) {
   return (
@@ -105,9 +113,12 @@ export default function HomeScreen() {
 
   const webTopPadding = Platform.OS === 'web' ? 67 : 0;
 
-  const dailyQuote = useMemo(() => {
-    const dayIndex = Math.floor(Date.now() / 86400000) % DAILY_QUOTES.length;
-    return DAILY_QUOTES[dayIndex];
+  const userName = profile?.name ? profile.name.split(' ')[0] : 'there';
+  const { greeting, subtext } = useMemo(() => getTimeOfDayGreeting(userName), [userName]);
+
+  const todayScience = useMemo(() => {
+    const dayIndex = Math.floor(Date.now() / 86400000) % DAILY_SCIENCE_INSIGHTS.length;
+    return DAILY_SCIENCE_INSIGHTS[dayIndex];
   }, []);
 
   const topRecommendations = advisorState.recommendations.slice(0, 5);
@@ -135,13 +146,28 @@ export default function HomeScreen() {
     }
   };
 
-  const conditionNames = useMemo(() => {
-    if (!profile?.conditions?.length) return null;
-    return profile.conditions
-      .map(id => CONDITIONS.find(c => c.id === id)?.name)
-      .filter(Boolean)
-      .join(', ');
-  }, [profile]);
+  const compassionateStreakMessage = useMemo(() => {
+    if (currentStreak === 0) {
+      const recentSessions = sessions.filter(s => {
+        const d = new Date(s.completedAt);
+        const now = new Date();
+        const diff = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
+        return diff <= 30;
+      });
+      if (recentSessions.length > 0) {
+        return `You have ${recentSessions.length} session${recentSessions.length !== 1 ? 's' : ''} this month — every practice counts`;
+      }
+      return 'Your journey begins with a single breath';
+    }
+    if (currentStreak === 1) return '1 day of practice — a powerful beginning';
+    if (currentStreak < 7) return `${currentStreak} days of consistent awareness — keep going`;
+    if (currentStreak < 14) return `${currentStreak} days — your neural pathways are strengthening`;
+    if (currentStreak < 30) return `${currentStreak} days — remarkable dedication to yourself`;
+    return `${currentStreak} days — you are genuinely rewiring your brain`;
+  }, [currentStreak, sessions]);
+
+  const nextExercise = advisorState.nextExercise;
+  const evidenceBadge = nextExercise ? (EVIDENCE_LABELS[nextExercise.methodology] || 'Emerging Science') : '';
 
   return (
     <ScrollView
@@ -156,10 +182,8 @@ export default function HomeScreen() {
       >
         <View style={styles.heroTopRow}>
           <View style={styles.heroLeft}>
-            <Text style={styles.greeting}>{advisorState.greeting}</Text>
-            {conditionNames && (
-              <Text style={styles.conditionLabel}>Focus: {conditionNames}</Text>
-            )}
+            <Text style={styles.greeting}>{greeting}</Text>
+            <Text style={styles.greetingSubtext}>{subtext}</Text>
           </View>
           <TouchableOpacity
             style={styles.crisisButton}
@@ -172,7 +196,7 @@ export default function HomeScreen() {
 
         <View style={styles.streakRow}>
           <Feather name="trending-up" size={14} color={Colors.warning} />
-          <Text style={styles.streakText}>{advisorState.streakMessage}</Text>
+          <Text style={styles.streakText}>{compassionateStreakMessage}</Text>
         </View>
 
         <View style={styles.focusCard}>
@@ -205,12 +229,63 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {advisorState.nextExercise && (
+        {!todayCheckedIn ? (
+          <TouchableOpacity
+            style={styles.checkinPromptCard}
+            onPress={() => router.push('/(tabs)/checkin')}
+            activeOpacity={0.85}
+          >
+            <LinearGradient
+              colors={['#6B5B95', '#8B5CF6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.checkinGradient}
+            >
+              <View style={styles.checkinPromptContent}>
+                <View style={styles.checkinPromptLeft}>
+                  <Text style={styles.checkinPromptLabel}>DAILY CHECK-IN</Text>
+                  <Text style={styles.checkinPromptTitle}>How is your body right now?</Text>
+                  <Text style={styles.checkinPromptSubtitle}>Take 3 minutes to tune in</Text>
+                </View>
+                <View style={styles.checkinPromptIcon}>
+                  <Feather name="plus-circle" size={28} color="#FFFFFF" />
+                </View>
+              </View>
+              <View style={styles.checkinBenefitsRow}>
+                <View style={styles.checkinBenefit}>
+                  <Feather name="check" size={12} color="rgba(255,255,255,0.8)" />
+                  <Text style={styles.checkinBenefitText}>Personalises your exercises</Text>
+                </View>
+                <View style={styles.checkinBenefit}>
+                  <Feather name="check" size={12} color="rgba(255,255,255,0.8)" />
+                  <Text style={styles.checkinBenefitText}>Tracks your progress</Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.checkinDoneCard}>
+            <View style={styles.checkinDoneLeft}>
+              <View style={styles.checkinDoneIconWrap}>
+                <Feather name="check-circle" size={22} color={Colors.success} />
+              </View>
+              <View>
+                <Text style={styles.checkinDoneTitle}>Check-in complete</Text>
+                <Text style={styles.checkinDoneSubtitle}>Your exercises are personalised for today</Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/checkin')} activeOpacity={0.7}>
+              <Text style={styles.checkinDoneLink}>View</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {nextExercise && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recommended Next</Text>
+            <Text style={styles.sectionTitle}>Recommended for You</Text>
             <TouchableOpacity
               style={styles.nextExerciseCard}
-              onPress={() => router.push(`/exercise/${advisorState.nextExercise!.id}`)}
+              onPress={() => router.push(`/exercise/${nextExercise!.id}`)}
               activeOpacity={0.7}
             >
               <LinearGradient
@@ -221,20 +296,21 @@ export default function HomeScreen() {
               >
                 <View style={styles.nextExerciseHeader}>
                   <View style={styles.methodBadge}>
-                    <Text style={styles.methodText}>{advisorState.nextExercise.methodology}</Text>
+                    <Text style={styles.methodText}>{nextExercise.methodology}</Text>
                   </View>
-                  <View style={styles.difficultyBadge}>
-                    <Text style={styles.difficultyText}>{advisorState.nextExercise.difficulty}</Text>
+                  <View style={styles.evidenceBadge}>
+                    <Feather name="award" size={10} color="rgba(255,255,255,0.9)" />
+                    <Text style={styles.evidenceText}>{evidenceBadge}</Text>
                   </View>
                 </View>
-                <Text style={styles.nextExerciseTitle}>{advisorState.nextExercise.title}</Text>
-                <Text style={styles.nextExerciseSubtitle}>{advisorState.nextExercise.subtitle}</Text>
+                <Text style={styles.nextExerciseTitle}>{nextExercise.title}</Text>
+                <Text style={styles.nextExerciseSubtitle}>{nextExercise.subtitle}</Text>
                 <View style={styles.nextExerciseMeta}>
                   <Feather name="clock" size={13} color="rgba(255,255,255,0.7)" />
-                  <Text style={styles.nextExerciseDuration}>{advisorState.nextExercise.durationMinutes} min</Text>
-                  <Feather name={advisorState.nextExercise.iconName as any} size={13} color="rgba(255,255,255,0.7)" />
+                  <Text style={styles.nextExerciseDuration}>{nextExercise.durationMinutes} min</Text>
+                  <Feather name={nextExercise.iconName as any} size={13} color="rgba(255,255,255,0.7)" />
                   <Text style={styles.nextExerciseDuration}>
-                    {CATEGORY_INFO[advisorState.nextExercise.category]?.label}
+                    {CATEGORY_INFO[nextExercise.category]?.label}
                   </Text>
                 </View>
                 <View style={styles.startButton}>
@@ -280,15 +356,13 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Insights</Text>
-          <View style={styles.dailyInsightCard}>
-            <View style={styles.dailyInsightAccent} />
-            <View style={styles.dailyInsightContent}>
-              <View style={styles.dailyInsightIconRow}>
-                <Feather name="compass" size={16} color={Colors.primary} />
-              </View>
-              <Text style={styles.dailyInsightQuote}>{dailyQuote.text}</Text>
-              <Text style={styles.dailyInsightSource}>{dailyQuote.source}</Text>
+          <Text style={styles.sectionTitle}>Today's Science</Text>
+          <View style={styles.scienceCard}>
+            <View style={styles.scienceCardAccent} />
+            <View style={styles.scienceCardContent}>
+              <Text style={styles.scienceLabel}>TODAY'S SCIENCE</Text>
+              <Text style={styles.scienceHeading}>{todayScience.label}</Text>
+              <Text style={styles.scienceBody}>{todayScience.text}</Text>
             </View>
           </View>
           {topInsights.length > 0 && <View style={{ height: 12 }} />}
@@ -323,12 +397,12 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1, backgroundColor: '#FAFAFE' },
   hero: { paddingHorizontal: 24, paddingBottom: 40 },
   heroTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   heroLeft: { flex: 1 },
   greeting: { fontFamily: 'Nunito_700Bold', fontSize: 22, color: '#FFFFFF' },
-  conditionLabel: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 },
+  greetingSubtext: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 4, lineHeight: 20 },
   crisisButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
   streakRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14 },
   streakText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: 'rgba(255,255,255,0.85)' },
@@ -346,6 +420,30 @@ const styles = StyleSheet.create({
   },
   statNumber: { fontFamily: 'Nunito_800ExtraBold', fontSize: 20, color: Colors.text },
   statLabel: { fontFamily: 'Nunito_500Medium', fontSize: 10, color: Colors.textSecondary },
+
+  checkinPromptCard: { borderRadius: 20, overflow: 'hidden', marginBottom: 24 },
+  checkinGradient: { borderRadius: 20 },
+  checkinPromptContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20 },
+  checkinPromptLeft: { flex: 1 },
+  checkinPromptLabel: { fontFamily: 'Nunito_700Bold', fontSize: 10, color: 'rgba(255,255,255,0.75)', letterSpacing: 1.2, marginBottom: 4 },
+  checkinPromptTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 20, color: '#FFFFFF', marginBottom: 4 },
+  checkinPromptSubtitle: { fontFamily: 'Nunito_400Regular', fontSize: 13, color: 'rgba(255,255,255,0.8)' },
+  checkinPromptIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginLeft: 12 },
+  checkinBenefitsRow: { flexDirection: 'row', gap: 16, paddingHorizontal: 20, paddingBottom: 16 },
+  checkinBenefit: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  checkinBenefitText: { fontFamily: 'Nunito_500Medium', fontSize: 12, color: 'rgba(255,255,255,0.8)' },
+
+  checkinDoneCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#F0F9F0', borderRadius: 16, padding: 16, marginBottom: 24,
+    borderWidth: 1, borderColor: Colors.success + '40',
+  },
+  checkinDoneLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  checkinDoneIconWrap: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.success + '20', alignItems: 'center', justifyContent: 'center' },
+  checkinDoneTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: Colors.text },
+  checkinDoneSubtitle: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  checkinDoneLink: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, color: Colors.success },
+
   section: { marginBottom: 24 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionTitle: { fontFamily: 'Nunito_700Bold', fontSize: 17, color: Colors.text, marginBottom: 12 },
@@ -354,8 +452,8 @@ const styles = StyleSheet.create({
   nextExerciseHeader: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   methodBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12 },
   methodText: { fontFamily: 'Nunito_600SemiBold', fontSize: 11, color: '#FFFFFF', textTransform: 'uppercase' as const },
-  difficultyBadge: { backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12 },
-  difficultyText: { fontFamily: 'Nunito_500Medium', fontSize: 11, color: 'rgba(255,255,255,0.9)', textTransform: 'capitalize' as const },
+  evidenceBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12 },
+  evidenceText: { fontFamily: 'Nunito_500Medium', fontSize: 11, color: 'rgba(255,255,255,0.9)' },
   nextExerciseTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 20, color: '#FFFFFF' },
   nextExerciseSubtitle: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   nextExerciseMeta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
@@ -367,14 +465,14 @@ const styles = StyleSheet.create({
   startButtonText: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: Colors.primary },
   actionsGrid: { flexDirection: 'row', flexWrap: 'nowrap', gap: 10 },
   actionCard: {
-    flex: 1, minWidth: 60, backgroundColor: Colors.surface, borderRadius: 14,
+    flex: 1, minWidth: 60, backgroundColor: Colors.surface, borderRadius: 16,
     paddingVertical: 14, alignItems: 'center', gap: 8,
     shadowColor: Colors.cardShadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 6, elevation: 2,
   },
   actionIcon: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   actionLabel: { fontFamily: 'Nunito_600SemiBold', fontSize: 10, color: Colors.text, textAlign: 'center' },
   insightCard: {
-    backgroundColor: Colors.surface, borderRadius: 14, padding: 16, marginBottom: 10,
+    backgroundColor: Colors.surface, borderRadius: 16, padding: 16, marginBottom: 10,
     borderLeftWidth: 4,
     shadowColor: Colors.cardShadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 6, elevation: 2,
   },
@@ -382,7 +480,7 @@ const styles = StyleSheet.create({
   insightTitle: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: Colors.text, flex: 1 },
   insightBody: { fontFamily: 'Nunito_400Regular', fontSize: 13, color: Colors.textSecondary, lineHeight: 19 },
   recCard: {
-    backgroundColor: Colors.surface, borderRadius: 14, padding: 14, marginBottom: 8,
+    backgroundColor: Colors.surface, borderRadius: 16, padding: 14, marginBottom: 8,
     flexDirection: 'row', alignItems: 'center', gap: 12,
     shadowColor: Colors.cardShadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 6, elevation: 2,
   },
@@ -396,7 +494,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundSecondary, borderRadius: 12, padding: 12, marginBottom: 8,
   },
   crisisFooterText: { fontFamily: 'Nunito_500Medium', fontSize: 12, color: Colors.textTertiary, flex: 1 },
-  dailyInsightCard: {
+  scienceCard: {
     backgroundColor: Colors.surface,
     borderRadius: 18,
     flexDirection: 'row',
@@ -407,28 +505,31 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
   },
-  dailyInsightAccent: {
+  scienceCardAccent: {
     width: 4,
-    backgroundColor: Colors.accent,
+    backgroundColor: Colors.primary,
   },
-  dailyInsightContent: {
+  scienceCardContent: {
     flex: 1,
     padding: 18,
   },
-  dailyInsightIconRow: {
-    marginBottom: 10,
+  scienceLabel: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 10,
+    color: Colors.primary,
+    letterSpacing: 1.2,
+    marginBottom: 4,
   },
-  dailyInsightQuote: {
-    fontFamily: 'Nunito_400Regular',
-    fontSize: 14,
+  scienceHeading: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 15,
     color: Colors.text,
-    fontStyle: 'italic' as const,
-    lineHeight: 22,
-    marginBottom: 10,
+    marginBottom: 6,
   },
-  dailyInsightSource: {
-    fontFamily: 'Nunito_600SemiBold',
-    fontSize: 12,
-    color: Colors.textTertiary,
+  scienceBody: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 20,
   },
 });
