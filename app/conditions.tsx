@@ -20,7 +20,8 @@ export default function ConditionsScreen() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={[styles.header, { paddingTop: webTopPadding + insets.top + 12 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Feather name="arrow-left" size={22} color={Colors.text} />
+          <Feather name="arrow-left" size={20} color={Colors.primary} />
+          <Text style={styles.backBtnText}>Back</Text>
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.headerTitle}>Condition Library</Text>
@@ -95,7 +96,8 @@ export default function ConditionsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: { paddingHorizontal: 20, paddingBottom: 16 },
-  backBtn: { width: 40, height: 40, justifyContent: 'center' },
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  backBtnText: { fontFamily: 'Nunito_600SemiBold', fontSize: 16, color: Colors.primary },
   headerContent: { marginTop: 4 },
   headerTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 26, color: Colors.text },
   headerSubtitle: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: Colors.textSecondary, marginTop: 6, lineHeight: 20 },

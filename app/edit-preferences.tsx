@@ -59,8 +59,10 @@ export default function EditPreferencesScreen() {
           onPress={() => router.back()}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           activeOpacity={0.7}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
         >
-          <Feather name="arrow-left" size={24} color={Colors.text} />
+          <Feather name="arrow-left" size={20} color={Colors.primary} />
+          <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Preferences</Text>
         <TouchableOpacity
@@ -176,6 +178,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
+  },
+  backButtonText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: Colors.primary,
   },
   headerTitle: {
     fontFamily: 'Nunito_700Bold',

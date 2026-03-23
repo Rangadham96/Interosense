@@ -257,7 +257,8 @@ export default function SearchScreen() {
           onPress={() => router.back()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Feather name="arrow-left" size={22} color={Colors.text} />
+          <Feather name="arrow-left" size={20} color={Colors.primary} />
+          <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
         <View style={styles.searchBar}>
           <Feather name="search" size={17} color={Colors.textTertiary} />
@@ -292,11 +293,11 @@ export default function SearchScreen() {
       {showEmpty ? (
         <View style={styles.emptyState}>
           <View style={styles.emptyIconWrap}>
-            <Feather name="search" size={40} color={Colors.textTertiary} />
+            <Feather name="search" size={40} color={Colors.primary} />
           </View>
-          <Text style={styles.emptyTitle}>No results found</Text>
+          <Text style={styles.emptyTitle}>Nothing found for "{searchText}"</Text>
           <Text style={styles.emptySubtitle}>
-            Try a different search term or browse categories
+            Try searching 'breathing' or 'anxiety' to find exercises and articles
           </Text>
         </View>
       ) : (
@@ -328,17 +329,14 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: Colors.surface,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-    elevation: 2,
+    gap: 6,
+  },
+  backText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: Colors.primary,
   },
   searchBar: {
     flex: 1,

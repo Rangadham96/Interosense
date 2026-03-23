@@ -412,6 +412,7 @@ export default function HomeScreen() {
               <View style={styles.aiInsightAccent} />
               <View style={[styles.aiInsightContent, { alignItems: 'center', paddingVertical: 24 }]}>
                 <ActivityIndicator size="small" color={Colors.primary} />
+                <Text style={{ fontFamily: 'Nunito_500Medium', fontSize: 13, color: Colors.textSecondary, marginTop: 10 }}>Analyzing your patterns...</Text>
               </View>
             </View>
           ) : (

@@ -264,8 +264,11 @@ export default function ProgressScreen() {
               </View>
             ) : (
               <View style={styles.emptyState}>
-                <Feather name="activity" size={32} color={Colors.textTertiary} />
+                <Feather name="activity" size={32} color={Colors.primary} />
                 <Text style={styles.emptyText}>Complete 7 check-ins to see your Interoceptive Awareness Score</Text>
+                <TouchableOpacity style={styles.emptyActionBtn} onPress={() => router.push('/(tabs)/checkin')}>
+                  <Text style={styles.emptyActionText}>Start a Check-In</Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>
@@ -315,8 +318,11 @@ export default function ProgressScreen() {
               </>
             ) : (
               <View style={styles.emptyState}>
-                <Feather name="bar-chart-2" size={32} color={Colors.textTertiary} />
+                <Feather name="bar-chart-2" size={32} color={Colors.primary} />
                 <Text style={styles.emptyText}>Complete check-ins or take the MAIA-2 assessment</Text>
+                <TouchableOpacity style={styles.emptyActionBtn} onPress={() => router.push('/(tabs)/checkin')}>
+                  <Text style={styles.emptyActionText}>Start a Check-In</Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>
@@ -561,9 +567,12 @@ export default function ProgressScreen() {
               })
             ) : (
               <View style={styles.emptyState}>
-                <Feather name="layers" size={32} color={Colors.textTertiary} />
+                <Feather name="layers" size={32} color={Colors.primary} />
                 <Text style={styles.emptyText}>Your story starts here</Text>
                 <Text style={styles.emptySubText}>Complete exercises to see your journey take shape</Text>
+                <TouchableOpacity style={styles.emptyActionBtn} onPress={() => router.push('/(tabs)/exercises')}>
+                  <Text style={styles.emptyActionText}>Browse Exercises</Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>
@@ -619,8 +628,12 @@ export default function ProgressScreen() {
               </View>
             ) : (
               <View style={styles.emptyState}>
-                <Feather name="award" size={32} color={Colors.textTertiary} />
-                <Text style={styles.emptyText}>{unlockedAchievements.length} of {ACHIEVEMENTS.length} unlocked</Text>
+                <Feather name="award" size={32} color={Colors.primary} />
+                <Text style={styles.emptyText}>Your first milestone is within reach</Text>
+                <Text style={styles.emptySubText}>Complete exercises and check-ins to unlock achievements</Text>
+                <TouchableOpacity style={styles.emptyActionBtn} onPress={() => router.push('/achievements' as any)}>
+                  <Text style={styles.emptyActionText}>View Milestones</Text>
+                </TouchableOpacity>
               </View>
             )}
           </View>
@@ -724,6 +737,8 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', paddingVertical: 24, gap: 12 },
   emptyText: { fontSize: 14, fontFamily: 'Nunito_500Medium', color: Colors.textSecondary, textAlign: 'center' },
   emptySubText: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.textTertiary, textAlign: 'center' },
+  emptyActionBtn: { backgroundColor: Colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, marginTop: 4 },
+  emptyActionText: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: Colors.textInverse },
   trendLegend: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 14 },
   legendDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
   legendText: { fontSize: 12, fontFamily: 'Nunito_500Medium', color: Colors.textSecondary },

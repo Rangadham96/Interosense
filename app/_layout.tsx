@@ -9,7 +9,7 @@ import { queryClient } from "@/lib/query-client";
 import { AppProvider, useApp } from "@/contexts/AppContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { StatusBar } from "expo-status-bar";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Text } from "react-native";
 import Colors from "@/constants/colors";
 import {
   useFonts,
@@ -67,8 +67,9 @@ function AuthGate() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background }}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background, gap: 16 }}>
+        <ActivityIndicator size="large" color="#6B5B95" />
+        <Text style={{ fontFamily: 'Nunito_500Medium', fontSize: 15, color: '#6B7394' }}>Preparing your experience...</Text>
       </View>
     );
   }

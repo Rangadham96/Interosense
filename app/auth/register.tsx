@@ -66,7 +66,7 @@ export default function RegisterScreen() {
       if (msg.toLowerCase().includes('exist') || msg.toLowerCase().includes('already')) {
         setError('Looks like you already have an account. Try signing in instead?');
       } else {
-        setError("Something went wrong on our end. Please try again in a moment.");
+        setError("We couldn't create your account right now. Please try again in a moment.");
       }
     }
   };

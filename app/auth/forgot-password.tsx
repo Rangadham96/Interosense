@@ -39,7 +39,7 @@ export default function ForgotPasswordScreen() {
       await apiRequest('POST', '/api/auth/forgot-password', { email: email.trim() });
       setSubmitted(true);
     } catch (err: any) {
-      setError(err?.message || 'Something went wrong. Please try again.');
+      setError(err?.message || 'We couldn\'t send the reset link right now. Please try again in a moment.');
     } finally {
       setLoading(false);
     }

@@ -438,7 +438,8 @@ export default function CrisisScreen() {
     <View style={[styles.container, { backgroundColor: '#FFFFFF' }]}>
       <View style={[styles.navBar, { paddingTop: topInset + 8 }]}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
-          <Feather name="arrow-left" size={24} color={Colors.text} />
+          <Feather name="arrow-left" size={20} color={Colors.primary} />
+          <Text style={styles.backBtnText}>Back</Text>
         </Pressable>
         <Text style={styles.navTitle}>Crisis Support</Text>
         <View style={{ width: 40 }} />
@@ -662,7 +663,8 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.borderLight,
     backgroundColor: '#FFFFFF',
   },
-  backBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  backBtnText: { fontFamily: 'Nunito_600SemiBold', fontSize: 16, color: Colors.primary },
   navTitle: { fontFamily: 'Nunito_700Bold', fontSize: 18, color: Colors.text },
   scroll: { flex: 1, backgroundColor: '#FFFFFF' },
   heroCard: {

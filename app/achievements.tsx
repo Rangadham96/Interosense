@@ -7,6 +7,7 @@ import {
   FlatList,
   Platform,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,6 +33,50 @@ const TIER_ORDER: Record<AchievementTier, number> = {
   gold: 2,
   silver: 3,
   bronze: 4,
+};
+
+const BADGE_MEANINGS: Record<string, string> = {
+  'first-session': 'You took the first step. That is always the hardest one.',
+  'five-sessions': 'Five sessions in — your body is beginning to listen.',
+  'ten-sessions': 'Ten practices completed. You are building something real.',
+  'twenty-five-sessions': 'Twenty-five sessions. This is no longer a habit — it is part of who you are.',
+  'fifty-sessions': 'Fifty sessions. You have dedicated genuine time to knowing yourself.',
+  'hundred-sessions': 'A hundred practices. Extraordinary commitment to your own awareness.',
+  'streak-3': 'Three days in a row. Consistency is where change really begins.',
+  'streak-7': 'A full week of practice. Your nervous system is responding.',
+  'streak-14': 'Two weeks of daily practice. Your neural pathways are strengthening.',
+  'streak-30': 'Thirty consecutive days. This level of dedication is rare and meaningful.',
+  'streak-60': 'Sixty days unbroken. You have transformed practice into identity.',
+  'explore-2': 'You stepped beyond the familiar. Curiosity is the root of awareness.',
+  'explore-4': 'Four categories explored — your body literacy is widening.',
+  'explore-6': 'You have touched every corner of interoceptive practice.',
+  'checkin-5': 'Five check-ins completed. You are learning to listen inward.',
+  'checkin-15': 'Fifteen check-ins — your body data is telling a story.',
+  'checkin-30': 'Thirty check-ins. You know your body better than most people ever will.',
+  'minutes-30': 'Thirty minutes of practice. Time you gave entirely to yourself.',
+  'minutes-120': 'Two hours of body awareness — a meaningful investment in your health.',
+  'minutes-300': 'Five hours of practice. The science shows change at this level.',
+  'minutes-600': 'Ten hours. You are in rare territory — this is genuine mastery.',
+  'awareness-5': 'You reached the mid-point of interoceptive awareness. Keep going.',
+  'awareness-7': 'A high awareness score. Your body signals are getting clearer.',
+  'awareness-9': 'Near-peak awareness. You are in the top tier of practitioners.',
+  'read-3': 'Three articles read. Understanding deepens every practice.',
+  'read-8': 'Eight articles — you are building the science behind the feeling.',
+  'read-15': 'Every article read. Your knowledge is as strong as your practice.',
+  'first-bodymap': 'You mapped your body\'s experience. That takes real courage to look.',
+  'night-owl': 'Late-night practice shows true dedication to the work.',
+  'early-bird': 'Rising to practice before the day begins — that is commitment.',
+};
+
+const REQUIREMENT_TEXT: Record<string, (v: number) => string> = {
+  sessions: (v) => `Complete ${v} exercise${v !== 1 ? 's' : ''}`,
+  streak: (v) => `Practice ${v} days in a row`,
+  categories: (v) => `Try exercises from ${v} categories`,
+  checkins: (v) => `Complete ${v} check-ins`,
+  minutes: (v) => v >= 60 ? `Practice for ${v / 60 % 1 === 0 ? v / 60 : (v / 60).toFixed(1)} hours total` : `Practice for ${v} minutes total`,
+  awareness: (v) => `Reach awareness score of ${v}`,
+  articles: (v) => `Read ${v} article${v !== 1 ? 's' : ''}`,
+  exercises: (v) => `Complete ${v} exercises`,
 };
 
 export default function AchievementsScreen() {
@@ -64,35 +109,55 @@ export default function AchievementsScreen() {
     return list;
   }, [selectedCategory, unlockedAchievements]);
 
-  const renderAchievement = ({ item, index }: { item: Achievement; index: number }) => {
+  const renderAchievement = ({ item }: { item: Achievement }) => {
     const unlocked = isUnlocked(item.id);
     const tierColor = TIER_COLORS[item.tier];
+    const meaning = BADGE_MEANINGS[item.id];
+    const reqText = REQUIREMENT_TEXT[item.requirement.type]?.(item.requirement.value) || item.description;
 
     return (
       <View style={[
         styles.achievementCard,
-        { opacity: unlocked ? 1 : 0.5 },
-        index % 2 === 0 ? { marginRight: 6 } : { marginLeft: 6 },
+        unlocked ? styles.achievementCardUnlocked : styles.achievementCardLocked,
       ]}>
         <View style={[
           styles.badgeCircle,
-          { backgroundColor: unlocked ? tierColor : Colors.backgroundSecondary },
+          unlocked
+            ? { backgroundColor: tierColor }
+            : { backgroundColor: Colors.backgroundSecondary },
         ]}>
           {unlocked ? (
             <Feather
               name={item.iconName as keyof typeof Feather.glyphMap}
               size={24}
-              color={unlocked ? '#FFFFFF' : Colors.textTertiary}
+              color="#FFFFFF"
             />
           ) : (
-            <Feather name="lock" size={24} color={Colors.textTertiary} />
+            <Feather name="lock" size={22} color={Colors.textTertiary} />
           )}
         </View>
-        <Text style={styles.achievementTitle} numberOfLines={2}>{item.title}</Text>
-        <Text style={styles.achievementDesc} numberOfLines={2}>{item.description}</Text>
-        <Text style={[styles.tierLabel, { color: tierColor }]}>
-          {item.tier.charAt(0).toUpperCase() + item.tier.slice(1)}
+
+        {unlocked && (
+          <View style={styles.checkBadge}>
+            <Feather name="check" size={10} color="#FFFFFF" />
+          </View>
+        )}
+
+        <Text style={[styles.achievementTitle, !unlocked && styles.lockedText]} numberOfLines={2}>
+          {item.title}
         </Text>
+
+        {unlocked && meaning ? (
+          <Text style={styles.meaningText} numberOfLines={3}>{meaning}</Text>
+        ) : (
+          <Text style={styles.requirementText} numberOfLines={2}>{reqText}</Text>
+        )}
+
+        <View style={[styles.tierPill, { backgroundColor: unlocked ? tierColor + '20' : Colors.backgroundSecondary }]}>
+          <Text style={[styles.tierLabel, { color: unlocked ? tierColor : Colors.textTertiary }]}>
+            {item.tier.charAt(0).toUpperCase() + item.tier.slice(1)}
+          </Text>
+        </View>
       </View>
     );
   };
@@ -100,16 +165,21 @@ export default function AchievementsScreen() {
   return (
     <View style={[styles.container, { paddingTop: topInset }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Feather name="arrow-left" size={24} color={Colors.text} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Achievements</Text>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={12}>
+          <Feather name="arrow-left" size={20} color={Colors.primary} />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
+        <View style={{ flex: 1 }} />
+      </View>
+
+      <View style={styles.titleSection}>
+        <Text style={styles.pageTitle}>Milestones</Text>
+        <Text style={styles.pageSubtitle}>Every milestone reflects a real skill you have built</Text>
       </View>
 
       <View style={styles.statsBar}>
         <View style={styles.statsTextRow}>
-          <Text style={styles.statsLabel}>{totalUnlocked} of {totalAchievements} unlocked</Text>
+          <Text style={styles.statsLabel}>{totalUnlocked} of {totalAchievements} earned</Text>
           <Text style={styles.statsPercent}>{progressPercent}%</Text>
         </View>
         <View style={styles.statsProgressBg}>
@@ -157,14 +227,36 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
-  headerTitle: {
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  backText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: Colors.primary,
+  },
+  titleSection: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  pageTitle: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 20,
+    fontSize: 24,
     color: Colors.text,
+    marginBottom: 4,
+  },
+  pageSubtitle: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 15,
+    color: Colors.textSecondary,
+    lineHeight: 21,
   },
   statsBar: {
     marginHorizontal: 20,
@@ -236,6 +328,7 @@ const styles = StyleSheet.create({
   },
   columnWrapper: {
     marginBottom: 12,
+    gap: 12,
   },
   achievementCard: {
     flex: 1,
@@ -244,7 +337,19 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
+    position: 'relative',
+  },
+  achievementCardUnlocked: {
+    borderColor: Colors.primary + '30',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  achievementCardLocked: {
     borderColor: Colors.borderLight,
+    opacity: 0.55,
   },
   badgeCircle: {
     width: 56,
@@ -252,26 +357,57 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
+  },
+  checkBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: Colors.success,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   achievementTitle: {
-    fontFamily: 'Nunito_600SemiBold',
-    fontSize: 14,
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 13,
     color: Colors.text,
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
+    lineHeight: 18,
   },
-  achievementDesc: {
+  lockedText: {
+    color: Colors.textSecondary,
+  },
+  meaningText: {
     fontFamily: 'Nunito_400Regular',
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.textSecondary,
     textAlign: 'center',
+    lineHeight: 15,
     marginBottom: 8,
-    lineHeight: 16,
+    flex: 1,
+  },
+  requirementText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 11,
+    color: Colors.textTertiary,
+    textAlign: 'center',
+    lineHeight: 15,
+    marginBottom: 8,
+    flex: 1,
+  },
+  tierPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+    marginTop: 4,
   },
   tierLabel: {
     fontFamily: 'Nunito_600SemiBold',
-    fontSize: 11,
+    fontSize: 10,
     textTransform: 'capitalize',
   },
 });

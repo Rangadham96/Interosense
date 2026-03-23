@@ -280,8 +280,9 @@ export default function WearableScreen() {
           style={[styles.headerGradient, headerShadow, { paddingTop: topPadding + 16 }]}
         >
           <View style={styles.headerRow}>
-            <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-              <Feather name="arrow-left" size={24} color="#FFFFFF" />
+            <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Feather name="arrow-left" size={20} color="#FFFFFF" />
+              <Text style={styles.backBtnTextWhite}>Back</Text>
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Health Data</Text>
             <Feather name="heart" size={22} color="#FFFFFF" />
@@ -473,6 +474,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  backBtnTextWhite: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: '#FFFFFF',
   },
   headerTitle: {
     fontFamily: 'Nunito_700Bold',

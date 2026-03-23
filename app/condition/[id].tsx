@@ -34,7 +34,8 @@ export default function ConditionDetailScreen() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={[styles.headerBar, { paddingTop: webTopPadding + insets.top + 8 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Feather name="arrow-left" size={22} color={Colors.text} />
+          <Feather name="arrow-left" size={20} color={Colors.primary} />
+          <Text style={styles.backBtnText}>Back</Text>
         </TouchableOpacity>
       </View>
 
@@ -198,7 +199,8 @@ function Section({ title, iconName, content }: { title: string; iconName: string
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   headerBar: { paddingHorizontal: 16 },
-  backBtn: { width: 40, height: 40, justifyContent: 'center' },
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  backBtnText: { fontFamily: 'Nunito_600SemiBold', fontSize: 16, color: Colors.primary },
   heroSection: { alignItems: 'center', paddingHorizontal: 24, paddingBottom: 28, paddingTop: 8 },
   heroIcon: { width: 72, height: 72, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   heroTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 26, color: Colors.text, textAlign: 'center' },

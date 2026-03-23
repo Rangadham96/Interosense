@@ -66,7 +66,7 @@ export default function ResetPasswordScreen() {
         router.replace({ pathname: '/auth/login', params: { banner: 'Your password has been updated. Please sign in.' } });
       }, 1500);
     } catch (err: any) {
-      const msg = err?.message || 'Something went wrong. Please try again.';
+      const msg = err?.message || 'We couldn\'t reset your password right now. Please try again in a moment.';
       if (msg.toLowerCase().includes('expired') || msg.toLowerCase().includes('already been used')) {
         setExpired(true);
       } else {

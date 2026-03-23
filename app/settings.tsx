@@ -77,7 +77,7 @@ export default function SettingsScreen() {
       }
       Alert.alert('Export Complete', 'Your data has been exported successfully.');
     } catch (e) {
-      Alert.alert('Export Failed', 'There was an error exporting your data. Please try again.');
+      Alert.alert('Export Issue', 'We couldn\'t export your data right now. Please try again in a moment.');
     } finally {
       setIsExporting(false);
     }
@@ -140,7 +140,8 @@ export default function SettingsScreen() {
     <View style={[styles.container, { paddingTop: topPadding }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Feather name="arrow-left" size={24} color={Colors.text} />
+          <Feather name="arrow-left" size={20} color={Colors.primary} />
+          <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>App Settings</Text>
         <View style={{ width: 40 }} />
@@ -454,10 +455,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
+  },
+  backButtonText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: Colors.primary,
   },
   headerTitle: {
     fontSize: 20,

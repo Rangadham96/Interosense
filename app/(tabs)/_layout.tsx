@@ -25,7 +25,7 @@ function NativeTabLayout() {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="checkin">
         <Icon sf={{ default: "plus.circle", selected: "plus.circle.fill" }} />
-        <Label>Check-in</Label>
+        <Label>Check-In</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="progress">
         <Icon sf={{ default: "chart.bar", selected: "chart.bar.fill" }} />
@@ -49,8 +49,8 @@ function ClassicTabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textTertiary,
+        tabBarActiveTintColor: '#6B5B95',
+        tabBarInactiveTintColor: '#9CA3AF',
         tabBarLabelStyle: {
           fontFamily: "Nunito_600SemiBold",
           fontSize: 11,
@@ -101,7 +101,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="checkin"
         options={{
-          title: "Check-in",
+          title: "Check-In",
           tabBarIcon: ({ color, size }) => (
             <Feather name="plus-circle" size={size} color={color} />
           ),

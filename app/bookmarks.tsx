@@ -24,28 +24,28 @@ export default function BookmarksScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={[Colors.primary, Colors.primaryDark]}
-        style={[styles.header, { paddingTop: topPadding + 16 }]}
-      >
-        <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Feather name="arrow-left" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Bookmarks</Text>
-          <View style={{ width: 40 }} />
-        </View>
-      </LinearGradient>
+      <View style={[styles.header, { paddingTop: topPadding + 8 }]}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Feather name="arrow-left" size={20} color={Colors.primary} />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Bookmarks</Text>
+        <View style={{ width: 60 }} />
+      </View>
 
       {bookmarkedArticles.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={styles.emptyIconCircle}>
-            <Feather name="bookmark" size={40} color={Colors.textTertiary} />
+            <Feather name="bookmark" size={36} color={Colors.primary} />
           </View>
-          <Text style={styles.emptyTitle}>No bookmarks yet</Text>
+          <Text style={styles.emptyTitle}>Your saved reading, all in one place</Text>
           <Text style={styles.emptySubtitle}>
-            Save articles you want to read later by tapping the bookmark icon
+            Save articles and exercises you want to return to — tap the bookmark icon on any article
           </Text>
+          <TouchableOpacity style={styles.emptyActionButton} onPress={() => router.push('/articles' as any)}>
+            <Feather name="book-open" size={16} color={Colors.textInverse} />
+            <Text style={styles.emptyActionText}>Browse Articles</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <ScrollView
@@ -97,26 +97,25 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
-    paddingBottom: 20,
+    paddingBottom: 12,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
   backBtn: {
-    width: 40,
-    height: 40,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 12,
+  },
+  backText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: Colors.primary,
   },
   headerTitle: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 20,
-    color: '#FFFFFF',
+    fontSize: 24,
+    color: Colors.text,
+    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
@@ -129,22 +128,24 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: 36,
   },
   emptyIconCircle: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: Colors.primary + '12',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
   },
   emptyTitle: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 20,
+    fontSize: 18,
     color: Colors.text,
     marginBottom: 8,
+    textAlign: 'center',
+    lineHeight: 24,
   },
   emptySubtitle: {
     fontFamily: 'Nunito_400Regular',
@@ -152,6 +153,21 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
+    marginBottom: 24,
+  },
+  emptyActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 14,
+  },
+  emptyActionText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 16,
+    color: Colors.textInverse,
   },
   card: {
     flexDirection: 'row',

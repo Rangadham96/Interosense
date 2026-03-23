@@ -164,12 +164,16 @@ export default function SessionHistoryScreen() {
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIconCircle}>
-        <Feather name="calendar" size={36} color={Colors.textTertiary} />
+        <Feather name="play-circle" size={36} color={Colors.primary} />
       </View>
-      <Text style={styles.emptyTitle}>No sessions yet</Text>
+      <Text style={styles.emptyTitle}>Your first exercise is waiting</Text>
       <Text style={styles.emptySubtitle}>
-        Complete your first exercise to start building your history
+        It only takes 3 minutes. Every session is recorded here so you can watch your journey grow.
       </Text>
+      <TouchableOpacity style={styles.emptyActionButton} onPress={() => router.push('/(tabs)/exercises')}>
+        <Feather name="play" size={16} color={Colors.textInverse} />
+        <Text style={styles.emptyActionText}>Start an Exercise</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -181,10 +185,11 @@ export default function SessionHistoryScreen() {
           style={styles.backButton}
           activeOpacity={0.6}
         >
-          <Feather name="arrow-left" size={24} color={Colors.text} />
+          <Feather name="arrow-left" size={20} color={Colors.primary} />
+          <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Session History</Text>
-        <View style={styles.backButton} />
+        <View style={{ width: 60 }} />
       </View>
 
       <FlatList
@@ -219,10 +224,14 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.borderLight,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
+  },
+  backText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: Colors.primary,
   },
   headerTitle: {
     flex: 1,
@@ -378,28 +387,44 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: 36,
   },
   emptyIconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: Colors.backgroundSecondary,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.primary + '12',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   emptyTitle: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 18,
     color: Colors.text,
     marginBottom: 8,
+    textAlign: 'center',
   },
   emptySubtitle: {
     fontFamily: 'Nunito_400Regular',
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  emptyActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 14,
+  },
+  emptyActionText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 16,
+    color: Colors.textInverse,
   },
 });

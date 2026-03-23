@@ -158,22 +158,31 @@ export default function GoalsScreen() {
   return (
     <View style={[styles.container, { paddingTop: topInset }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Feather name="arrow-left" size={24} color={Colors.text} />
+        <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12}>
+          <Feather name="arrow-left" size={20} color={Colors.primary} />
+          <Text style={styles.backText}>Back</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>My Goals</Text>
-        <Pressable onPress={() => setModalVisible(true)} hitSlop={12}>
-          <Feather name="plus" size={24} color={Colors.primary} />
+        <Pressable onPress={() => setModalVisible(true)} hitSlop={12} style={styles.addButton}>
+          <Feather name="plus" size={20} color={Colors.primary} />
         </Pressable>
+      </View>
+
+      <View style={styles.titleSection}>
+        <Text style={styles.pageTitle}>Goals & Intentions</Text>
+        <Text style={styles.pageSubtitle}>Research shows if-then plans increase follow-through by 2–3×</Text>
       </View>
 
       {updatedGoals.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={styles.emptyIconCircle}>
-            <Feather name="target" size={40} color={Colors.textTertiary} />
+            <Feather name="target" size={36} color={Colors.primary} />
           </View>
-          <Text style={styles.emptyTitle}>No goals yet</Text>
-          <Text style={styles.emptySubtitle}>Tap the + button to set your first goal</Text>
+          <Text style={styles.emptyTitle}>Set a small intention for this week</Text>
+          <Text style={styles.emptySubtitle}>Even one clear goal meaningfully increases the chance you will follow through</Text>
+          <Pressable style={styles.emptyActionButton} onPress={() => setModalVisible(true)}>
+            <Feather name="plus" size={16} color={Colors.textInverse} />
+            <Text style={styles.emptyActionText}>Add Your First Goal</Text>
+          </Pressable>
         </View>
       ) : (
         <FlatList
@@ -263,12 +272,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
-  headerTitle: {
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  backText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: Colors.primary,
+  },
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleSection: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
+  },
+  pageTitle: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 20,
+    fontSize: 24,
     color: Colors.text,
+    marginBottom: 4,
+  },
+  pageSubtitle: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 15,
+    color: Colors.textSecondary,
+    lineHeight: 21,
   },
   listContent: {
     paddingHorizontal: 20,
@@ -335,27 +375,47 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 36,
     paddingBottom: 60,
   },
   emptyIconCircle: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: Colors.primary + '12',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   emptyTitle: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 18,
     color: Colors.text,
-    marginBottom: 6,
+    marginBottom: 8,
+    textAlign: 'center',
+    lineHeight: 24,
   },
   emptySubtitle: {
     fontFamily: 'Nunito_400Regular',
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  emptyActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 14,
+  },
+  emptyActionText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 16,
+    color: Colors.textInverse,
   },
   modalOverlay: {
     flex: 1,

@@ -65,7 +65,8 @@ export default function ArticleDetailScreen() {
       <View style={[styles.container, { paddingTop: topInset }]}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.headerBtn} hitSlop={12}>
-            <Feather name="arrow-left" size={24} color={Colors.text} />
+            <Feather name="arrow-left" size={20} color={Colors.primary} />
+            <Text style={styles.backBtnText}>Back</Text>
           </Pressable>
         </View>
         <View style={styles.notFound}>
@@ -89,7 +90,8 @@ export default function ArticleDetailScreen() {
     <View style={[styles.container, { paddingTop: topInset }]}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.headerBtn} hitSlop={12}>
-          <Feather name="arrow-left" size={24} color={Colors.text} />
+          <Feather name="arrow-left" size={20} color={Colors.primary} />
+          <Text style={styles.backBtnText}>Back</Text>
         </Pressable>
         <Pressable onPress={() => toggleBookmark(id)} style={styles.headerBtn} hitSlop={12}>
           <Feather
@@ -185,11 +187,15 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   headerBtn: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
     position: 'relative',
+  },
+  backBtnText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: Colors.primary,
   },
   bookmarkFill: {
     position: 'absolute',

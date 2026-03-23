@@ -50,7 +50,8 @@ export default function AboutScreen() {
       >
         <View style={styles.headerRow}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Feather name="arrow-left" size={24} color="#FFFFFF" />
+            <Feather name="arrow-left" size={20} color="#FFFFFF" />
+            <Text style={styles.backBtnText}>Back</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>About</Text>
           <View style={{ width: 40 }} />
@@ -128,10 +129,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   backBtn: {
-    width: 40,
-    height: 40,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
+  },
+  backBtnText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: '#FFFFFF',
   },
   headerTitle: {
     fontFamily: 'Nunito_700Bold',

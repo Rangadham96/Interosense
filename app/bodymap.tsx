@@ -171,7 +171,8 @@ export default function BodyMapScreen() {
     <View style={[styles.container, { paddingTop: topInset }]}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
-          <Feather name="arrow-left" size={24} color={Colors.text} />
+          <Feather name="arrow-left" size={20} color={Colors.primary} />
+          <Text style={styles.backBtnText}>Back</Text>
         </Pressable>
         <Text style={styles.headerTitle}>Body Map</Text>
         <Pressable onPress={handleClearAll} hitSlop={8}>
@@ -392,10 +393,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+  },
+  backBtnText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: Colors.primary,
   },
   headerTitle: {
     fontFamily: 'Nunito_700Bold',

@@ -152,7 +152,8 @@ export default function EditProfileScreen() {
           style={styles.headerBtn}
           activeOpacity={0.6}
         >
-          <Feather name="arrow-left" size={24} color={Colors.text} />
+          <Feather name="arrow-left" size={20} color={Colors.primary} />
+          <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit Profile</Text>
         <TouchableOpacity
@@ -417,10 +418,14 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   headerBtn: {
-    width: 40,
-    height: 40,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
+  },
+  backButtonText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 16,
+    color: Colors.primary,
   },
   headerTitle: {
     fontFamily: 'Nunito_700Bold',
