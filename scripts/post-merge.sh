@@ -3,4 +3,4 @@ set -e
 
 npm install --legacy-peer-deps
 
-npm run db:push --force 2>/dev/null || true
+yes "" | npx drizzle-kit push 2>&1 || true
