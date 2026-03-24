@@ -6,15 +6,12 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
  * @returns {string} The API base URL
  */
 export function getApiUrl(): string {
-  let host = process.env.EXPO_PUBLIC_DOMAIN;
-
-  if (!host) {
-    throw new Error("EXPO_PUBLIC_DOMAIN is not set");
+  const host = process.env.EXPO_PUBLIC_DOMAIN;
+  if (host) {
+    return new URL(`https://${host}`).href;
   }
-
-  let url = new URL(`https://${host}`);
-
-  return url.href;
+  // Fallback: relative URL (works when served directly from the backend on the same origin)
+  return "";
 }
 
 async function throwIfResNotOk(res: Response) {
@@ -24,15 +21,20 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+function buildUrl(path: string): string {
+  const base = getApiUrl();
+  if (!base) return path; // relative URL — works when served from same origin
+  return new URL(path, base).toString();
+}
+
 export async function apiRequest(
   method: string,
   route: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const baseUrl = getApiUrl();
-  const url = new URL(route, baseUrl);
+  const url = buildUrl(route);
 
-  const res = await fetch(url.toString(), {
+  const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -49,10 +51,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const baseUrl = getApiUrl();
-    const url = new URL(queryKey.join("/") as string, baseUrl);
+    const url = buildUrl(queryKey.join("/") as string);
 
-    const res = await fetch(url.toString(), {
+    const res = await fetch(url, {
       credentials: "include",
     });
 

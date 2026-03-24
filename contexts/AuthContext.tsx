@@ -5,16 +5,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 
 function getApiBase() {
+  // EXPO_PUBLIC_DOMAIN is injected by Metro at bundle time (set to $REPLIT_DEV_DOMAIN:5000)
+  // Use it on all platforms when available so API calls always reach the backend
+  if (process.env.EXPO_PUBLIC_DOMAIN) {
+    return `https://${process.env.EXPO_PUBLIC_DOMAIN}`;
+  }
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    const origin = window.location.origin;
-    if (origin.includes('replit.app') || origin.includes('replit.dev') || window.location.port === '5000') {
-      return '';
-    }
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    const { hostname, port } = window.location;
+    // Serving directly from the backend on port 5000 — relative URLs work
+    if (port === '5000') return '';
+    // Local development pointing to local backend
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return 'http://localhost:5000';
     }
+    // Deployed/hosted environment — assume same origin serves both app and API
+    return '';
   }
-  return process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : 'http://localhost:5000';
+  return 'http://localhost:5000';
 }
 const API_BASE = getApiBase();
 
