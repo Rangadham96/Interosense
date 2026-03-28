@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "1h7bgEVLa6n8YOobTTZHi"
+uri = "file://INTEROSENSE_COMPREHENSIVE_OVERVIEW.md"
+type = "text"
+title = "Interosense — Comprehensive Product Overview"
