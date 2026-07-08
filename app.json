@@ -52,13 +52,7 @@
         }
       ],
       "expo-font",
-      "expo-web-browser",
-      [
-        "react-native-health",
-        {
-          "isClinicalDataEnabled": false
-        }
-      ]
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

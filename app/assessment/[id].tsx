@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,6 +10,7 @@ import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Svg, { Circle } from 'react-native-svg';
 import { apiPost } from '@/lib/api';
+import { EXERCISES } from '@/constants/exercises';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -265,6 +266,25 @@ export default function AssessmentScreen() {
     );
   }
 
+  const pcl5Recommendations = useMemo(() => {
+    if (id !== 'pcl5' || phase !== 'results') return [];
+    const hyperarousalScore = answers.slice(14, 20).reduce((s, a) => s + (a >= 0 ? a : 0), 0);
+    const reexperiencingScore = answers.slice(0, 5).reduce((s, a) => s + (a >= 0 ? a : 0), 0);
+    const avoidanceScore = answers.slice(5, 7).reduce((s, a) => s + (a >= 0 ? a : 0), 0);
+
+    const recs: string[] = [];
+    if (hyperarousalScore >= 8) {
+      recs.push('vagal-toning-breath', 'physiological-sigh', 'humming-vagal-activation');
+    } else if (reexperiencingScore >= 8) {
+      recs.push('somatic-grounding', 'safety-anchoring', 'titration-practice');
+    } else if (avoidanceScore >= 4) {
+      recs.push('pendulation-exercise', 'window-of-tolerance-checkin', 'resourcing');
+    } else {
+      recs.push('somatic-grounding', 'orienting-response', 'window-of-tolerance-checkin');
+    }
+    return recs.map(rid => EXERCISES.find(e => e.id === rid)).filter(Boolean).slice(0, 3) as typeof EXERCISES;
+  }, [id, phase, answers]);
+
   const interpretation = interpretScore(scale, totalScore);
   const scorePercent = totalScore / scale.maxScore;
   const ringSize = 140;
@@ -324,6 +344,38 @@ export default function AssessmentScreen() {
 
         <Text style={styles.citationResult}>{scale.citation}</Text>
 
+        {id === 'pcl5' && pcl5Recommendations.length > 0 && (
+          <View style={styles.pcl5RecsCard}>
+            <View style={styles.pcl5RecsHeader}>
+              <Feather name="anchor" size={15} color="#8FAF8A" />
+              <Text style={styles.pcl5RecsTitle}>Recommended Practices</Text>
+            </View>
+            <Text style={styles.pcl5RecsSubtitle}>
+              Based on your response pattern, these trauma-informed exercises may be helpful:
+            </Text>
+            {pcl5Recommendations.map(ex => (
+              <TouchableOpacity
+                key={ex.id}
+                style={styles.pcl5RecRow}
+                activeOpacity={0.8}
+                onPress={() => router.push(`/exercise/${ex.id}` as any)}
+              >
+                <View style={styles.pcl5RecIcon}>
+                  <Feather name={ex.iconName as any} size={16} color="#5A7A58" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.pcl5RecTitle}>{ex.title}</Text>
+                  <Text style={styles.pcl5RecMeta}>{ex.durationMinutes} min  {ex.difficulty}</Text>
+                </View>
+                <Feather name="chevron-right" size={14} color="rgba(255,255,255,0.4)" />
+              </TouchableOpacity>
+            ))}
+            <Text style={styles.pcl5RecsDisclaimer}>
+              These are supportive practices, not clinical treatment. Use alongside professional care.
+            </Text>
+          </View>
+        )}
+
         <TouchableOpacity
           style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
           onPress={handleSave}
@@ -366,6 +418,31 @@ const styles = StyleSheet.create({
   prevSeverity: { fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
   disclaimerBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 24 },
   disclaimerText: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: 'rgba(255,255,255,0.5)', flex: 1, lineHeight: 16 },
+
+  pcl5RecsCard: {
+    width: '100%',
+    backgroundColor: 'rgba(143,175,138,0.15)',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(143,175,138,0.3)',
+  },
+  pcl5RecsHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  pcl5RecsTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: '#8FAF8A' },
+  pcl5RecsSubtitle: { fontFamily: 'Nunito_400Regular', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 14, lineHeight: 19 },
+  pcl5RecRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, marginBottom: 8,
+  },
+  pcl5RecIcon: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: 'rgba(143,175,138,0.25)', alignItems: 'center', justifyContent: 'center',
+  },
+  pcl5RecTitle: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, color: '#FFF' },
+  pcl5RecMeta: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2 },
+  pcl5RecsDisclaimer: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 16, marginTop: 8 },
 
   premiumGate: {
     width: '100%',

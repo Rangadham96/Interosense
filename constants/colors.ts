@@ -45,6 +45,8 @@ const Colors = {
     exposure: '#7FB069',
     gut: '#C4A484',
     movement: '#6AABCF',
+    nervousSystem: '#88B3B5',
+    traumaInformed: '#8FAF8A',
   } as Record<string, string>,
 
   intensity: {

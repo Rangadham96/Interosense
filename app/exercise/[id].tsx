@@ -25,6 +25,7 @@ import Colors from '@/constants/colors';
 import { getExerciseById, EXERCISES, CATEGORY_INFO } from '@/constants/exercises';
 import { useApp } from '@/contexts/AppContext';
 import { apiPost } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
 
 type SessionPhase = 'prestart' | 'active' | 'complete';
 
@@ -79,6 +80,12 @@ export default function ExerciseSessionScreen() {
   const [showEscapeLink, setShowEscapeLink] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const { data: practiceCountsData } = useQuery<{ counts: Record<string, number> }>({
+    queryKey: ['/api/exercises/counts'],
+    staleTime: 5 * 60 * 1000,
+  });
+  const practiceCount = practiceCountsData?.counts?.[id] ?? 0;
 
   const celebrationScale = useSharedValue(0);
   const celebrationOpacity = useSharedValue(0);
@@ -291,6 +298,13 @@ export default function ExerciseSessionScreen() {
             </View>
           </View>
 
+          {practiceCount > 0 && (
+            <View style={styles.practiceCountBadge}>
+              <Feather name="users" size={13} color="rgba(255,255,255,0.65)" />
+              <Text style={styles.practiceCountText}>{practiceCount} {practiceCount === 1 ? 'person practiced' : 'people practiced'} this week</Text>
+            </View>
+          )}
+
           {hasContraindications && (
             <View style={styles.contraindicationCard}>
               <View style={styles.contraindicationHeader}>
@@ -409,6 +423,13 @@ export default function ExerciseSessionScreen() {
                 <Text style={styles.statLabel}>Day Streak</Text>
               </View>
             </View>
+
+            {practiceCount > 0 && (
+              <View style={styles.practiceCountBadge}>
+                <Feather name="users" size={13} color="rgba(255,255,255,0.55)" />
+                <Text style={styles.practiceCountText}>{practiceCount} {practiceCount === 1 ? 'person practiced' : 'people practiced'} this exercise this week</Text>
+              </View>
+            )}
 
             {newAchievements.length > 0 && (
               <View style={styles.achievementUnlock}>
@@ -727,6 +748,22 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_500Medium',
     fontSize: 13,
     color: 'rgba(255,255,255,0.8)',
+  },
+  practiceCountBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    marginBottom: 16,
+  },
+  practiceCountText: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.65)',
   },
   contraindicationCard: {
     backgroundColor: 'rgba(240,192,90,0.15)',

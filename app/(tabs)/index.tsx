@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Platform,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -101,6 +102,7 @@ export default function HomeScreen() {
     profile,
     sessions,
     currentStreak,
+    longestStreak,
     totalMinutes,
     averageAwareness,
     todaySessionCount,
@@ -112,6 +114,22 @@ export default function HomeScreen() {
     totalSessions,
     wearableData,
   } = useApp();
+
+  const STREAK_MILESTONES = [7, 14, 30, 60];
+  const isMilestone = STREAK_MILESTONES.includes(currentStreak);
+  const milestoneScale = useRef(new Animated.Value(1)).current;
+  const milestoneOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isMilestone && currentStreak > 0) {
+      milestoneOpacity.setValue(0);
+      milestoneScale.setValue(0.7);
+      Animated.parallel([
+        Animated.spring(milestoneScale, { toValue: 1, useNativeDriver: true, tension: 60, friction: 6 }),
+        Animated.timing(milestoneOpacity, { toValue: 1, duration: 350, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [currentStreak]);
 
   const wearableContext = useMemo(() => getWearableContext(wearableData), [wearableData]);
 
@@ -241,6 +259,19 @@ export default function HomeScreen() {
           <Feather name="trending-up" size={14} color={Colors.warning} />
           <Text style={styles.streakText}>{compassionateStreakMessage}</Text>
         </View>
+
+        {isMilestone && currentStreak > 0 && (
+          <Animated.View style={[styles.milestoneBadge, { opacity: milestoneOpacity, transform: [{ scale: milestoneScale }] }]}>
+            <Feather name="star" size={13} color="#F59E0B" />
+            <Text style={styles.milestoneBadgeText}>{currentStreak}-day milestone reached</Text>
+          </Animated.View>
+        )}
+
+        {longestStreak > 0 && currentStreak < longestStreak && (
+          <View style={styles.personalBestRow}>
+            <Text style={styles.personalBestText}>Personal best: {longestStreak} days</Text>
+          </View>
+        )}
 
         <View style={styles.focusCard}>
           <Feather name="target" size={14} color={Colors.primary} />
@@ -490,6 +521,15 @@ const styles = StyleSheet.create({
   getHelpLink: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, color: 'rgba(255,255,255,0.85)' },
   streakRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14 },
   streakText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: 'rgba(255,255,255,0.85)' },
+  milestoneBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: 'rgba(245,158,11,0.2)', borderRadius: 20,
+    paddingHorizontal: 12, paddingVertical: 5, alignSelf: 'flex-start', marginTop: 8,
+    borderWidth: 1, borderColor: 'rgba(245,158,11,0.35)',
+  },
+  milestoneBadgeText: { fontFamily: 'Nunito_700Bold', fontSize: 12, color: '#F59E0B' },
+  personalBestRow: { marginTop: 4 },
+  personalBestText: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: 'rgba(255,255,255,0.5)' },
   focusCard: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 16,
     backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, padding: 14,

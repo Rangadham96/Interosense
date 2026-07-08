@@ -43,6 +43,8 @@ const ALL_CATEGORIES: ExerciseCategory[] = [
   'exposure',
   'gut',
   'movement',
+  'nervousSystem',
+  'traumaInformed',
 ];
 
 export default function ExercisesScreen() {
@@ -201,10 +203,19 @@ export default function ExercisesScreen() {
         <TouchableOpacity style={styles.premiumBanner} activeOpacity={0.8} onPress={() => router.push('/premium' as any)}>
           <Feather name="star" size={15} color={Colors.warning} />
           <Text style={styles.premiumBannerText}>
-            {FREE_LIMITS.exercises} free exercises — unlock all 25+ with Premium
+            {FREE_LIMITS.exercises} free exercises — unlock all 37+ with Premium
           </Text>
           <Feather name="chevron-right" size={15} color={Colors.warning} />
         </TouchableOpacity>
+      )}
+
+      {(selectedCategory === 'traumaInformed' || selectedCategory === 'all') && (
+        <View style={styles.clinicianNote}>
+          <Feather name="anchor" size={14} color="#5A7A58" />
+          <Text style={styles.clinicianNoteText}>
+            Trauma-Informed practices are based on Somatic Experiencing (Peter Levine), Polyvagal Theory (Stephen Porges), and MABT. Best used alongside professional support for significant trauma histories.
+          </Text>
+        </View>
       )}
 
       <View style={styles.filterSection}>
@@ -553,6 +564,27 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Nunito_600SemiBold',
     color: Colors.warning,
+  },
+  clinicianNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginHorizontal: 20,
+    marginTop: 4,
+    marginBottom: 4,
+    backgroundColor: '#EAF2EA',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#C2DAC0',
+  },
+  clinicianNoteText: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 12,
+    color: '#3A5E38',
+    flex: 1,
+    lineHeight: 17,
   },
   emptyState: {
     flex: 1,

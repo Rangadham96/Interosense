@@ -1,4 +1,4 @@
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, gte } from "drizzle-orm";
 import { db } from "./db";
 import { users, exerciseSessions, dailyCheckins, assessments, passwordResetTokens, dailyInsights, type User, type InsertUser } from "../shared/schema";
 
@@ -106,4 +106,18 @@ export async function saveInsight(userId: string, insightText: string, generated
     .values({ userId, insightText, generatedDate })
     .returning();
   return insight;
+}
+
+export async function getExercisePracticeCounts(): Promise<Record<string, number>> {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const rows = await db
+    .select({ exerciseId: exerciseSessions.exerciseId })
+    .from(exerciseSessions)
+    .where(gte(exerciseSessions.completedAt, sevenDaysAgo));
+
+  const counts: Record<string, number> = {};
+  for (const row of rows) {
+    counts[row.exerciseId] = (counts[row.exerciseId] || 0) + 1;
+  }
+  return counts;
 }

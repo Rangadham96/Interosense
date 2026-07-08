@@ -17,6 +17,7 @@ import {
   getUserAssessments,
   getTodayInsight,
   saveInsight,
+  getExercisePracticeCounts,
 } from "./storage";
 import { storage } from "./storage";
 import { generateInsight } from "./advisor";
@@ -176,6 +177,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get assessments error:", error);
       return res.status(500).json({ message: "Failed to load assessments" });
+    }
+  });
+
+  app.get("/api/exercises/counts", async (req: Request, res: Response) => {
+    try {
+      const counts = await getExercisePracticeCounts();
+      return res.status(200).json({ counts });
+    } catch (error) {
+      console.error("Exercise counts error:", error);
+      return res.status(500).json({ message: "Failed to load practice counts" });
     }
   });
 
