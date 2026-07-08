@@ -384,8 +384,7 @@ export default function OnboardingScreen() {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      const generatedPlan = plan;
-      await updateAuthProfile({ onboardingPlan: generatedPlan as unknown as Record<string, unknown>[] });
+      await updateAuthProfile({ onboardingPlan: plan as unknown as Record<string, unknown>[] });
       await completeOnboarding({
         name,
         goals: [],
@@ -394,15 +393,6 @@ export default function OnboardingScreen() {
         createdAt: new Date().toISOString(),
         conditions: selectedConditions,
       });
-      try {
-        await apiPut('/api/auth/profile', {
-          conditions: selectedConditions,
-          experienceLevel: level,
-          dailyMinutes: String(dailyMinutes),
-        });
-      } catch (e) {
-        console.error('Failed to sync onboarding profile to server:', e);
-      }
       router.replace('/(tabs)');
     } catch (e) {
       console.error('Onboarding error:', e);

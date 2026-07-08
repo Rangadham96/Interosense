@@ -13,6 +13,7 @@ import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Colors from '@/constants/colors';
 import { CONDITIONS } from '@/constants/conditions';
 import { format, differenceInCalendarDays } from 'date-fns';
@@ -30,6 +31,7 @@ export default function ProfileScreen() {
   const topPadding = Platform.OS === 'web' ? 67 : insets.top;
   const bottomPadding = Platform.OS === 'web' ? 34 : insets.bottom;
   const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const { logout } = useAuth();
 
   const {
     profile,
@@ -64,9 +66,9 @@ export default function ProfileScreen() {
     return 4;
   }, [daysOnApp]);
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     setShowSignOutModal(false);
-    router.replace('/onboarding');
+    await logout();
   };
 
   return (
@@ -192,10 +194,10 @@ export default function ProfileScreen() {
             />
             <View style={styles.menuDivider} />
             <MenuRow
-              icon="bookmark"
+              icon="book-open"
               iconColor={Colors.warning}
-              label="Saved Exercises"
-              onPress={() => router.push('/saved-exercises' as any)}
+              label="Learn"
+              onPress={() => router.push('/articles' as any)}
             />
             <View style={styles.menuDivider} />
             <MenuRow
@@ -279,7 +281,7 @@ export default function ProfileScreen() {
             <View style={styles.bottomSheetHandle} />
             <Text style={styles.bottomSheetTitle}>Sign Out?</Text>
             <Text style={styles.bottomSheetBody}>
-              Your data is saved to this device. Signing out will reset the app to the welcome screen. You will need to go through onboarding again.
+              Your data is safely stored in the cloud. You can sign back in at any time and everything will be right where you left it.
             </Text>
             <TouchableOpacity
               style={styles.signOutConfirmButton}
