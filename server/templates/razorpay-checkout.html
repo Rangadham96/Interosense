@@ -65,15 +65,17 @@
 
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
+    var isNativeWebView = !!(window.ReactNativeWebView);
+
     function params() {
       var p = new URLSearchParams(window.location.search);
       return {
-        key:    p.get('key')     || '',
-        planId: p.get('plan_id') || '',
-        userId: p.get('user_id') || '',
-        name:   p.get('name')   || '',
-        email:  p.get('email')  || '',
-        plan:   p.get('plan')   || 'monthly',
+        key:            p.get('key')             || '',
+        subscriptionId: p.get('subscription_id') || '',
+        userId:         p.get('user_id')         || '',
+        name:           p.get('name')            || '',
+        email:          p.get('email')           || '',
+        plan:           p.get('plan')            || 'monthly',
       };
     }
 
@@ -89,23 +91,28 @@
       }
     }
 
+    function postToNative(type, payload) {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: type, payload: payload }));
+      }
+    }
+
     function openCheckout() {
       var p = params();
-      if (!p.key || !p.planId) {
+      if (!p.key || !p.subscriptionId) {
         setStatus('Invalid checkout link. Please return to the app and try again.', true);
         return;
       }
 
       document.getElementById('retry-btn').style.display = 'none';
       document.getElementById('spinner').style.display = 'block';
-      setStatus('Opening payment…', false);
+      setStatus('Opening payment\u2026', false);
 
-      var planLabel = p.plan === 'annual' ? 'Annual Plan — \u20b94,999/yr' : 'Monthly Plan — \u20b9799/mo';
+      var planLabel = p.plan === 'annual' ? 'Annual Plan \u2014 \u20b94,999/yr' : 'Monthly Plan \u2014 \u20b9799/mo';
 
       var options = {
         key: p.key,
-        subscription_id: undefined,
-        plan_id: p.planId,
+        subscription_id: p.subscriptionId,
         name: 'Interosense',
         description: planLabel,
         image: window.location.origin + '/app/assets/images/logo.png',
@@ -114,41 +121,57 @@
         notes: { userId: p.userId, plan: p.plan },
         modal: {
           ondismiss: function() {
-            setStatus('Payment cancelled. You can try again.', true);
+            if (isNativeWebView) {
+              postToNative('DISMISSED', {});
+            } else {
+              setStatus('Payment cancelled. You can try again.', true);
+            }
           }
         },
         handler: function(response) {
           document.getElementById('desc').textContent = 'Payment successful!';
           setStatus('Verifying your subscription\u2026', false);
 
-          fetch('/api/razorpay/verify-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              razorpay_payment_id:    response.razorpay_payment_id,
+          if (isNativeWebView) {
+            postToNative('SUCCESS', {
+              razorpay_payment_id:      response.razorpay_payment_id,
               razorpay_subscription_id: response.razorpay_subscription_id,
-              razorpay_signature:     response.razorpay_signature,
-            }),
-          })
-          .then(function(r) { return r.json(); })
-          .then(function() {
-            setStatus('All done! Returning to app\u2026', false);
-            var deepLink = 'interosense://subscription-success?payment_id=' + response.razorpay_payment_id;
-            var webUrl   = window.location.origin + '/app/subscription-success';
-            window.location.href = deepLink;
-            setTimeout(function() { window.location.href = webUrl; }, 800);
-          })
-          .catch(function() {
-            setStatus('Payment received but verification pending. Please restart the app.', true);
-          });
+              razorpay_signature:       response.razorpay_signature,
+            });
+          } else {
+            fetch('/api/razorpay/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                razorpay_payment_id:      response.razorpay_payment_id,
+                razorpay_subscription_id: response.razorpay_subscription_id,
+                razorpay_signature:       response.razorpay_signature,
+              }),
+            })
+            .then(function(r) { return r.json(); })
+            .then(function() {
+              setStatus('All done! Returning to app\u2026', false);
+              var deepLink = 'interosense://subscription-success?payment_id=' + response.razorpay_payment_id;
+              var webUrl   = window.location.origin + '/app/subscription-success';
+              window.location.href = deepLink;
+              setTimeout(function() { window.location.href = webUrl; }, 800);
+            })
+            .catch(function() {
+              setStatus('Payment received but verification pending. Please restart the app.', true);
+            });
+          }
         },
       };
 
       var rzp = new window.Razorpay(options);
       rzp.on('payment.failed', function(response) {
-        var desc = response.error && response.error.description || 'Unknown error';
-        setStatus('Payment failed: ' + desc, true);
+        var desc = (response.error && response.error.description) || 'Unknown error';
+        if (isNativeWebView) {
+          postToNative('FAILED', { description: desc });
+        } else {
+          setStatus('Payment failed: ' + desc, true);
+        }
       });
       rzp.open();
       setStatus('Complete payment in the checkout window', false);

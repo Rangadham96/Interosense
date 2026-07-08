@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getRazorpayKeyId, verifyPaymentSignature, isRazorpayConfigured } from './razorpayClient';
+import { getRazorpayKeyId, getRazorpayClient, verifyPaymentSignature, isRazorpayConfigured } from './razorpayClient';
 import { storage } from './storage';
 
 const router = Router();
@@ -32,6 +32,22 @@ router.post('/api/razorpay/create-subscription', async (req: Request, res: Respo
 
   try {
     const user = await storage.getUser(sessionUser.id);
+    const client = getRazorpayClient();
+
+    const totalCount = planKey === 'annual' ? 10 : 120;
+    const sub: any = await (client.subscriptions as any).create({
+      plan_id: planIdEnv,
+      total_count: totalCount,
+      quantity: 1,
+      customer_notify: 1,
+      notes: {
+        userId: String(sessionUser.id),
+        plan: planKey,
+      },
+    });
+
+    const subscriptionId: string = sub.id;
+
     const forwardedProto = req.header('x-forwarded-proto') || req.protocol || 'https';
     const forwardedHost = req.header('x-forwarded-host') || req.get('host') || '';
     const baseUrl = `${forwardedProto}://${forwardedHost}`;
@@ -40,14 +56,24 @@ router.post('/api/razorpay/create-subscription', async (req: Request, res: Respo
       `${baseUrl}/razorpay-checkout?` +
       new URLSearchParams({
         key: getRazorpayKeyId(),
-        plan_id: planIdEnv,
+        subscription_id: subscriptionId,
         user_id: String(sessionUser.id),
         name: user?.name || '',
         email: user?.email || '',
         plan: planKey,
       }).toString();
 
-    return res.json({ url: checkoutUrl });
+    return res.json({
+      subscription_id: subscriptionId,
+      key: getRazorpayKeyId(),
+      prefill: {
+        name: user?.name || '',
+        email: user?.email || '',
+        contact: '',
+      },
+      plan: planKey,
+      url: checkoutUrl,
+    });
   } catch (err: any) {
     console.error('Razorpay create-subscription error:', err);
     return res.status(500).json({ error: err.message || 'Failed to start checkout' });

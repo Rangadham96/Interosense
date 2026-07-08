@@ -16,7 +16,7 @@ import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiPostJson } from '@/lib/api';
-import * as WebBrowser from 'expo-web-browser';
+import RazorpayCheckoutModal from '@/components/RazorpayCheckoutModal';
 
 export { FREE_LIMITS } from '@/constants/free-limits';
 
@@ -82,6 +82,31 @@ const PREMIUM_FEATURES = [
   },
 ];
 
+interface CheckoutParams {
+  subscription_id: string;
+  key: string;
+  prefill: { name: string; email: string; contact: string };
+  plan: string;
+  url: string;
+}
+
+async function openNativeRazorpay(
+  params: CheckoutParams,
+  planLabel: string
+): Promise<{ razorpay_payment_id: string; razorpay_subscription_id: string; razorpay_signature: string }> {
+  const RazorpayCheckout = require('react-native-razorpay').default;
+  return RazorpayCheckout.open({
+    key: params.key,
+    subscription_id: params.subscription_id,
+    name: 'Interosense',
+    description: planLabel,
+    currency: 'INR',
+    prefill: params.prefill,
+    theme: { color: '#6B5B95' },
+    notes: { plan: params.plan },
+  });
+}
+
 export default function PremiumScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -90,6 +115,8 @@ export default function PremiumScreen() {
 
   const [selectedPlan, setSelectedPlan] = useState('annual');
   const [loading, setLoading] = useState(false);
+  const [checkoutParams, setCheckoutParams] = useState<CheckoutParams | null>(null);
+  const [checkoutVisible, setCheckoutVisible] = useState(false);
 
   if (user?.isPremium) {
     return (
@@ -132,22 +159,74 @@ export default function PremiumScreen() {
     );
   }
 
+  const verifyAndActivate = async (paymentData: {
+    razorpay_payment_id: string;
+    razorpay_subscription_id: string;
+    razorpay_signature: string;
+  }) => {
+    await apiPostJson('/api/razorpay/verify-payment', {
+      razorpay_payment_id: paymentData.razorpay_payment_id,
+      razorpay_subscription_id: paymentData.razorpay_subscription_id,
+      razorpay_signature: paymentData.razorpay_signature,
+    });
+    await refreshUser();
+    router.replace('/subscription-success' as any);
+  };
+
   const handleSubscribe = async () => {
     setLoading(true);
     try {
-      const data = await apiPostJson<{ url: string }>('/api/razorpay/create-subscription', { planId: selectedPlan });
+      const data = await apiPostJson<CheckoutParams>('/api/razorpay/create-subscription', {
+        planId: selectedPlan,
+      });
 
-      if (!data.url) {
-        throw new Error('No checkout URL received');
+      if (!data.subscription_id || !data.key) {
+        throw new Error('Invalid checkout response from server');
       }
 
       if (Platform.OS === 'web') {
         window.location.href = data.url;
-      } else {
-        const result = await WebBrowser.openAuthSessionAsync(data.url, 'interosense://subscription-success');
-        if (result.type === 'success') {
-          await refreshUser();
-          router.replace('/subscription-success' as any);
+        return;
+      }
+
+      const planLabel =
+        selectedPlan === 'annual'
+          ? 'Annual Plan — ₹4,999/yr'
+          : 'Monthly Plan — ₹799/mo';
+
+      try {
+        const result = await openNativeRazorpay(data, planLabel);
+        setLoading(true);
+        try {
+          await verifyAndActivate(result);
+        } catch (verifyErr: any) {
+          Alert.alert(
+            'Verification Failed',
+            'Payment was received but we could not verify it. Please contact support or try again.',
+            [{ text: 'OK' }]
+          );
+        }
+      } catch (nativeErr: any) {
+        const code: string = nativeErr?.code || '';
+        if (
+          code === 'PAYMENT_CANCELLED' ||
+          nativeErr?.description === 'Cancelled by user'
+        ) {
+          // user cancelled — no action needed
+        } else if (
+          code === 'MODULE_NOT_FOUND' ||
+          nativeErr?.message?.includes('NativeModule') ||
+          nativeErr?.message?.includes('null is not an object')
+        ) {
+          // Native SDK not available (Expo Go) — fall back to in-app WebView
+          setCheckoutParams(data);
+          setCheckoutVisible(true);
+        } else {
+          Alert.alert(
+            'Payment Failed',
+            nativeErr?.description || nativeErr?.message || 'Payment could not be completed. Please try again.',
+            [{ text: 'OK' }]
+          );
         }
       }
     } catch (error: any) {
@@ -159,6 +238,39 @@ export default function PremiumScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleWebViewSuccess = async (paymentData: {
+    razorpay_payment_id: string;
+    razorpay_subscription_id: string;
+    razorpay_signature: string;
+  }) => {
+    setCheckoutVisible(false);
+    setLoading(true);
+    try {
+      await verifyAndActivate(paymentData);
+    } catch (err: any) {
+      Alert.alert(
+        'Verification Failed',
+        'Payment was received but we could not verify it. Please contact support.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWebViewDismiss = () => {
+    setCheckoutVisible(false);
+  };
+
+  const handleWebViewError = (description: string) => {
+    setCheckoutVisible(false);
+    Alert.alert(
+      'Payment Failed',
+      description || 'Payment could not be completed. Please try again.',
+      [{ text: 'OK' }]
+    );
   };
 
   return (
@@ -259,6 +371,7 @@ export default function PremiumScreen() {
           style={[styles.subscribeButton, loading && styles.subscribeButtonDisabled]}
           onPress={handleSubscribe}
           disabled={loading}
+          testID="subscribe-button"
         >
           <LinearGradient
             colors={['#F0C05A', '#E8A830']}
@@ -280,6 +393,16 @@ export default function PremiumScreen() {
           Secure payment via Razorpay · Cancel anytime · INR billing
         </Text>
       </View>
+
+      {checkoutParams && Platform.OS !== 'web' ? (
+        <RazorpayCheckoutModal
+          visible={checkoutVisible}
+          checkoutUrl={checkoutParams.url}
+          onSuccess={handleWebViewSuccess}
+          onDismiss={handleWebViewDismiss}
+          onError={handleWebViewError}
+        />
+      ) : null}
     </View>
   );
 }
