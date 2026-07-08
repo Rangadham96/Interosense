@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,47 +11,21 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import Svg, { Path, Circle, Line, Text as SvgText, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Colors from '@/constants/colors';
 import { WearableDataPoint } from '@/lib/storage';
-
-const DEVICES = [
-  { id: 'apple', name: 'Apple Health', icon: 'smartphone' as const },
-  { id: 'google', name: 'Google Fit', icon: 'activity' as const },
-  { id: 'fitbit', name: 'Fitbit', icon: 'watch' as const },
-];
-
-function generateId() {
-  return Date.now().toString() + Math.random().toString(36).substr(2, 9);
-}
-
-function generateSimulatedData(): WearableDataPoint[] {
-  const data: WearableDataPoint[] = [];
-  const now = new Date();
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    date.setHours(8, 0, 0, 0);
-    const baseHR = 68 + Math.random() * 12;
-    const hrvTrend = 35 + (6 - i) * 3 + Math.random() * 10;
-    const steps = Math.floor(4000 + Math.random() * 7000);
-    const sleep = 5.5 + Math.random() * 3;
-    const restingHR = 60 + Math.random() * 10;
-    data.push({
-      id: generateId(),
-      timestamp: date.toISOString(),
-      heartRate: Math.round(baseHR),
-      hrv: Math.round(hrvTrend),
-      steps,
-      sleepHours: Math.round(sleep * 10) / 10,
-      restingHeartRate: Math.round(restingHR),
-      source: 'simulated',
-    });
-  }
-  return data;
-}
+import {
+  getHealthConnection,
+  saveHealthConnection,
+  clearHealthConnection,
+  requestHealthPermissions,
+  fetchHealthData,
+  HealthPlatform,
+} from '@/lib/health';
+import { Storage } from '@/lib/storage';
 
 function MiniChart({
   data,
@@ -182,32 +156,134 @@ const headerShadow = Platform.select({
   },
 });
 
+type ConnectionStatus = 'idle' | 'requesting' | 'fetching' | 'connected' | 'error';
+
+const ERROR_MESSAGES: Record<string, string> = {
+  'native-module-required': 'Apple Health requires the native app. Scan the QR code in Expo Go or download from the App Store.',
+  'health-connect-not-installed': 'Health Connect is not installed. Install it from the Play Store to sync your health data.',
+  'web': 'Health data is available on the iOS and Android apps.',
+  'unsupported-platform': 'Health data is not supported on this platform.',
+  'permission-denied': 'Permission was denied. Please enable health access in your device settings.',
+  'fetch-failed': 'Could not load health data. Please try again.',
+  'default': 'Could not connect. Please try again.',
+};
+
+function getErrorMessage(error?: string) {
+  if (!error) return ERROR_MESSAGES['default'];
+  return ERROR_MESSAGES[error] || ERROR_MESSAGES['default'];
+}
+
 export default function WearableScreen() {
   const insets = useSafeAreaInsets();
-  const { wearableData, addWearableData } = useApp();
-  const [connecting, setConnecting] = useState(false);
-  const [connectedDevice, setConnectedDevice] = useState<string | null>(
-    wearableData.length > 0 ? 'Apple Health' : null
-  );
+  const { wearableData, refresh } = useApp();
+  const { user } = useAuth();
+  const isPremium = user?.isPremium;
 
   const topPadding = Platform.OS === 'web' ? 67 : insets.top;
   const bottomPadding = Platform.OS === 'web' ? 34 : insets.bottom;
 
-  const handleConnect = async (deviceName: string) => {
-    setConnecting(true);
-    const simData = generateSimulatedData();
-    for (const dp of simData) {
-      await addWearableData(dp);
+  const [status, setStatus] = useState<ConnectionStatus>('idle');
+  const [connectedPlatform, setConnectedPlatform] = useState<HealthPlatform>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [healthData, setHealthData] = useState<WearableDataPoint[]>([]);
+
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
+
+  useEffect(() => {
+    getHealthConnection().then((conn) => {
+      if (!isMounted.current) return;
+      if (conn.connected && conn.platform) {
+        setConnectedPlatform(conn.platform);
+        setStatus('connected');
+      }
+    });
+    const realData = wearableData.filter((d) => d.source === 'healthkit' || d.source === 'health-connect');
+    if (realData.length > 0) {
+      setHealthData(realData);
     }
-    setConnectedDevice(deviceName);
-    setConnecting(false);
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      getHealthConnection().then(async (conn) => {
+        if (!isMounted.current || !conn.connected || !conn.platform) return;
+        const fetchResult = await fetchHealthData(conn.platform);
+        if (!isMounted.current) return;
+        if (fetchResult.data.length > 0) {
+          await Storage.setWearableData(fetchResult.data);
+          setHealthData(fetchResult.data);
+          setConnectedPlatform(conn.platform);
+          setStatus('connected');
+          await refresh();
+        }
+      });
+    }, [refresh])
+  );
+
+  const handleConnect = useCallback(async (platform: 'apple' | 'google') => {
+    setStatus('requesting');
+    setErrorMessage(null);
+
+    const permResult = await requestHealthPermissions(platform);
+    if (!permResult.granted) {
+      setStatus('error');
+      setErrorMessage(getErrorMessage(permResult.error));
+      return;
+    }
+
+    setStatus('fetching');
+    const fetchResult = await fetchHealthData(platform);
+
+    if (fetchResult.error && fetchResult.data.length === 0) {
+      setStatus('error');
+      setErrorMessage(getErrorMessage(fetchResult.error));
+      return;
+    }
+
+    await Storage.setWearableData(fetchResult.data);
+    await saveHealthConnection({ connected: true, platform, connectedAt: new Date().toISOString() });
+    setHealthData(fetchResult.data);
+    setConnectedPlatform(platform);
+    setStatus('connected');
+    await refresh();
+  }, [refresh]);
+
+  const handleRefresh = useCallback(async () => {
+    if (!connectedPlatform) return;
+    setStatus('fetching');
+    setErrorMessage(null);
+
+    const fetchResult = await fetchHealthData(connectedPlatform);
+    if (fetchResult.error && fetchResult.data.length === 0) {
+      setStatus('error');
+      setErrorMessage(getErrorMessage(fetchResult.error));
+      return;
+    }
+    await Storage.setWearableData(fetchResult.data);
+    setHealthData(fetchResult.data);
+    setStatus('connected');
+    await refresh();
+  }, [connectedPlatform, refresh]);
+
+  const handleDisconnect = useCallback(async () => {
+    await clearHealthConnection();
+    await Storage.setWearableData([]);
+    setConnectedPlatform(null);
+    setHealthData([]);
+    setStatus('idle');
+    setErrorMessage(null);
+    await refresh();
+  }, [refresh]);
 
   const sortedData = useMemo(() => {
-    return [...wearableData].sort(
+    return [...healthData].sort(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
-  }, [wearableData]);
+  }, [healthData]);
 
   const last7 = useMemo(() => sortedData.slice(-7), [sortedData]);
   const todayData = last7.length > 0 ? last7[last7.length - 1] : null;
@@ -246,7 +322,7 @@ export default function WearableScreen() {
         result.push({
           icon: 'moon',
           color: Colors.secondary,
-          text: 'Sleep consistency has improved - great for emotional regulation',
+          text: 'Sleep consistency has improved — great for emotional regulation',
         });
       }
     }
@@ -268,6 +344,71 @@ export default function WearableScreen() {
     ? heartRates[heartRates.length - 1] - heartRates[heartRates.length - 2]
     : 0;
 
+  const connectedDeviceName = connectedPlatform === 'apple' ? 'Apple Health' : connectedPlatform === 'google' ? 'Health Connect' : null;
+
+  const renderHeader = () => (
+    <LinearGradient
+      colors={[Colors.primary, Colors.primaryDark]}
+      style={[styles.headerGradient, headerShadow, { paddingTop: topPadding + 16 }]}
+    >
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Feather name="arrow-left" size={20} color="#FFFFFF" />
+          <Text style={styles.backBtnTextWhite}>Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Health Data</Text>
+        <Feather name="heart" size={22} color="#FFFFFF" />
+      </View>
+    </LinearGradient>
+  );
+
+  if (!isPremium) {
+    return (
+      <View style={styles.container}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding + 40 }]} showsVerticalScrollIndicator={false}>
+          {renderHeader()}
+          <View style={[styles.premiumGate, cardShadow]}>
+            <LinearGradient colors={[Colors.primary, Colors.primaryDark]} style={styles.premiumGateGradient}>
+              <Feather name="lock" size={32} color="#FFFFFF" />
+              <Text style={styles.premiumGateTitle}>Premium Feature</Text>
+              <Text style={styles.premiumGateDesc}>
+                Connect Apple Health or Google Fit to sync your heart rate, HRV, sleep, and activity data with your Interosense practice.
+              </Text>
+              <TouchableOpacity
+                style={styles.premiumGateBtn}
+                activeOpacity={0.85}
+                onPress={() => router.push('/premium' as any)}
+              >
+                <Text style={styles.premiumGateBtnText}>Unlock with Premium</Text>
+              </TouchableOpacity>
+            </LinearGradient>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  if (Platform.OS === 'web') {
+    return (
+      <View style={styles.container}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding + 40 }]} showsVerticalScrollIndicator={false}>
+          {renderHeader()}
+          <View style={[styles.connectionCard, cardShadow]}>
+            <View style={styles.webMessageRow}>
+              <View style={[styles.webIconCircle, { backgroundColor: `${Colors.primary}15` }]}>
+                <Feather name="smartphone" size={28} color={Colors.primary} />
+              </View>
+              <Text style={styles.webMessageTitle}>Available on Mobile</Text>
+              <Text style={styles.webMessageBody}>
+                Health data integration with Apple Health and Google Fit is available on the iOS and Android apps. Open Interosense on your phone to connect your health data.
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -275,57 +416,83 @@ export default function WearableScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPadding + 40 }]}
         showsVerticalScrollIndicator={false}
       >
-        <LinearGradient
-          colors={[Colors.primary, Colors.primaryDark]}
-          style={[styles.headerGradient, headerShadow, { paddingTop: topPadding + 16 }]}
-        >
-          <View style={styles.headerRow}>
-            <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Feather name="arrow-left" size={20} color="#FFFFFF" />
-              <Text style={styles.backBtnTextWhite}>Back</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Health Data</Text>
-            <Feather name="heart" size={22} color="#FFFFFF" />
-          </View>
-        </LinearGradient>
+        {renderHeader()}
 
-        {connectedDevice ? (
+        {status === 'connected' && connectedDeviceName ? (
           <View style={[styles.connectionCard, cardShadow]}>
             <View style={styles.connectedRow}>
               <View style={styles.connectedDot} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.connectedLabel}>Connected</Text>
-                <Text style={styles.connectedDevice}>{connectedDevice}</Text>
+                <Text style={styles.connectedDevice}>{connectedDeviceName}</Text>
               </View>
-              <Feather name="check-circle" size={22} color={Colors.success} />
+              <TouchableOpacity onPress={handleRefresh} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ marginRight: 12 }}>
+                <Feather name="refresh-cw" size={18} color={Colors.textSecondary} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleDisconnect} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Feather name="x-circle" size={20} color={Colors.textTertiary} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : status === 'requesting' || status === 'fetching' ? (
+          <View style={[styles.connectionCard, cardShadow]}>
+            <View style={styles.loadingRow}>
+              <ActivityIndicator size="small" color={Colors.primary} />
+              <Text style={styles.loadingText}>
+                {status === 'requesting' ? 'Requesting permission...' : 'Syncing health data...'}
+              </Text>
             </View>
           </View>
         ) : (
           <View style={[styles.connectionCard, cardShadow]}>
-            <Text style={styles.connectTitle}>Connect Your Device</Text>
+            <Text style={styles.connectTitle}>Connect Your Health App</Text>
             <Text style={styles.connectSubtitle}>
-              Sync your wearable to track heart rate, HRV, sleep, and activity data
+              Sync your heart rate, HRV, sleep, and step data from your phone or wearable
             </Text>
-            {connecting ? (
-              <ActivityIndicator size="small" color={Colors.primary} style={{ marginTop: 16 }} />
-            ) : (
-              <View style={styles.deviceList}>
-                {DEVICES.map((device) => (
-                  <TouchableOpacity
-                    key={device.id}
-                    style={styles.deviceButton}
-                    onPress={() => handleConnect(device.name)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.deviceIconCircle}>
-                      <Feather name={device.icon} size={18} color={Colors.primary} />
-                    </View>
-                    <Text style={styles.deviceName}>{device.name}</Text>
-                    <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
-                  </TouchableOpacity>
-                ))}
+            {status === 'error' && errorMessage ? (
+              <View style={styles.errorBox}>
+                <Feather name="alert-circle" size={16} color={Colors.error} style={{ marginRight: 8, flexShrink: 0 }} />
+                <Text style={styles.errorText}>{errorMessage}</Text>
               </View>
-            )}
+            ) : null}
+            <View style={styles.deviceList}>
+              {Platform.OS === 'ios' && (
+                <TouchableOpacity
+                  style={styles.deviceButton}
+                  onPress={() => handleConnect('apple')}
+                  activeOpacity={0.7}
+                  testID="connect-apple-health"
+                >
+                  <View style={styles.deviceIconCircle}>
+                    <Feather name="smartphone" size={18} color={Colors.primary} />
+                  </View>
+                  <Text style={styles.deviceName}>Apple Health</Text>
+                  <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
+                </TouchableOpacity>
+              )}
+              {Platform.OS === 'android' && (
+                <TouchableOpacity
+                  style={styles.deviceButton}
+                  onPress={() => handleConnect('google')}
+                  activeOpacity={0.7}
+                  testID="connect-google-fit"
+                >
+                  <View style={styles.deviceIconCircle}>
+                    <Feather name="activity" size={18} color={Colors.primary} />
+                  </View>
+                  <Text style={styles.deviceName}>Health Connect</Text>
+                  <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
+
+        {status === 'connected' && last7.length === 0 && (
+          <View style={[styles.emptyState, cardShadow]}>
+            <Feather name="watch" size={32} color={Colors.textTertiary} />
+            <Text style={styles.emptyStateTitle}>No data yet</Text>
+            <Text style={styles.emptyStateBody}>Wear your device today and your data will appear here.</Text>
           </View>
         )}
 
@@ -552,6 +719,112 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.text,
     marginTop: 2,
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 15,
+    color: Colors.textSecondary,
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: `${Colors.error}10`,
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 14,
+  },
+  errorText: {
+    flex: 1,
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: Colors.error,
+    lineHeight: 18,
+  },
+  emptyState: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    gap: 10,
+  },
+  emptyStateTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 17,
+    color: Colors.text,
+    marginTop: 4,
+  },
+  emptyStateBody: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  premiumGate: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  premiumGateGradient: {
+    padding: 28,
+    alignItems: 'center',
+    gap: 12,
+  },
+  premiumGateTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 20,
+    color: '#FFFFFF',
+  },
+  premiumGateDesc: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.85)',
+    textAlign: 'center',
+    lineHeight: 21,
+  },
+  premiumGateBtn: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  premiumGateBtnText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 15,
+    color: Colors.primary,
+  },
+  webMessageRow: {
+    alignItems: 'center',
+    gap: 14,
+    paddingVertical: 8,
+  },
+  webIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  webMessageTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 18,
+    color: Colors.text,
+  },
+  webMessageBody: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 21,
   },
   sectionTitle: {
     fontFamily: 'Nunito_700Bold',

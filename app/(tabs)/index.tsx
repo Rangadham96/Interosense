@@ -21,6 +21,7 @@ import { format, parseISO, differenceInDays } from 'date-fns';
 import Svg from 'react-native-svg';
 import type { Recommendation, InsightCard } from '@/lib/personalization-engine';
 import { apiRequest } from '@/lib/query-client';
+import { getWearableContext } from '@/lib/health';
 
 const DAILY_SCIENCE_INSIGHTS = [
   { label: 'THE INSULA', text: 'Regular interoceptive practice measurably thickens the insular cortex — the region that translates body signals into conscious awareness.' },
@@ -109,7 +110,10 @@ export default function HomeScreen() {
     todayCheckedIn,
     assessments,
     totalSessions,
+    wearableData,
   } = useApp();
+
+  const wearableContext = useMemo(() => getWearableContext(wearableData), [wearableData]);
 
   useEffect(() => {
     if (!isLoading && !onboardingComplete) {
@@ -140,10 +144,10 @@ export default function HomeScreen() {
   }, []);
 
   const { data: aiInsightData, isLoading: aiInsightLoading } = useQuery<{ insight: string } | null>({
-    queryKey: ['/api/advisor/insight'],
+    queryKey: ['/api/advisor/insight', wearableContext?.avgHrv, wearableContext?.lastSleepHours],
     queryFn: async () => {
       try {
-        const res = await apiRequest('POST', '/api/advisor/insight');
+        const res = await apiRequest('POST', '/api/advisor/insight', { wearableContext });
         return await res.json();
       } catch {
         return null;

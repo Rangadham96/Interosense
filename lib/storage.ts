@@ -102,7 +102,7 @@ export interface WearableDataPoint {
   steps?: number;
   sleepHours?: number;
   restingHeartRate?: number;
-  source: 'manual' | 'healthkit' | 'simulated';
+  source: 'manual' | 'healthkit' | 'health-connect' | 'simulated';
 }
 
 async function getJSON<T>(key: string, defaultValue: T): Promise<T> {

@@ -231,6 +231,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      const wearableContext = req.body?.wearableContext ?? null;
+
       const insightText = await generateInsight({
         name: user?.name || "there",
         conditions: (user?.conditions as string[]) || [],
@@ -249,6 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalMinutes,
         timeOfDay,
         isNewUser: sessions.length === 0 && checkins.length === 0,
+        wearableContext,
       });
 
       await saveInsight(req.session.userId, insightText, today);

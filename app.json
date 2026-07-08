@@ -15,10 +15,25 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.interosense"
+      "bundleIdentifier": "com.interosense",
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "Interosense uses your heart rate, HRV, sleep, and step data to personalise your interoception practice and provide more relevant insights.",
+        "NSHealthUpdateUsageDescription": "Interosense does not write to Apple Health."
+      },
+      "entitlements": {
+        "com.apple.developer.healthkit": true,
+        "com.apple.developer.healthkit.background-delivery": false
+      }
     },
     "android": {
       "package": "com.interosense",
+      "permissions": [
+        "android.permission.health.READ_HEART_RATE",
+        "android.permission.health.READ_HEART_RATE_VARIABILITY",
+        "android.permission.health.READ_SLEEP",
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_RESTING_HEART_RATE"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#6B5B95",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -37,7 +52,13 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "react-native-health",
+        {
+          "isClinicalDataEnabled": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

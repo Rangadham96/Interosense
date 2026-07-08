@@ -14,6 +14,12 @@ interface UserContext {
   totalMinutes: number;
   timeOfDay: string;
   isNewUser: boolean;
+  wearableContext?: {
+    avgHrv?: number;
+    lastSleepHours?: number;
+    avgSleep7d?: number;
+    avgHrv7d?: number;
+  } | null;
 }
 
 const SYSTEM_PROMPT = `You are a knowledgeable, compassionate interoception coach embedded in a wellness app called Interosense. Your role is to provide a single daily insight that feels genuinely personal.
@@ -26,6 +32,7 @@ Guidelines:
 - If the user is new, welcome them and connect their specific conditions to interoceptive science.
 - If they checked in today, reference their specific scores and mood.
 - If they have a streak, acknowledge it meaningfully — tie it to neuroplasticity.
+- If real HRV or sleep data is available, reference it specifically (e.g. "Your HRV yesterday was 42ms — your nervous system appears well-regulated today"). HRV above 40ms is generally a sign of good vagal tone; below 20ms may indicate stress or poor recovery. Sleep under 6 hours increases interoceptive reactivity.
 - Match tone to time of day (energizing in morning, reflective in evening, calming at night).
 - Do not use bullet points or lists. Write in flowing, natural prose.
 - Do not start with greetings like "Good morning" — the app already shows a greeting.
@@ -105,6 +112,26 @@ function buildUserMessage(context: UserContext): string {
     parts.push(`Recent exercises: ${exerciseList}`);
   } else {
     parts.push("No exercises completed yet.");
+  }
+
+  if (context.wearableContext) {
+    const w = context.wearableContext;
+    const wearableParts: string[] = [];
+    if (w.avgHrv !== undefined) {
+      wearableParts.push(`most recent HRV: ${w.avgHrv}ms`);
+    }
+    if (w.avgHrv7d !== undefined && w.avgHrv !== undefined && w.avgHrv7d !== w.avgHrv) {
+      wearableParts.push(`7-day HRV average: ${w.avgHrv7d}ms`);
+    }
+    if (w.lastSleepHours !== undefined) {
+      wearableParts.push(`last night's sleep: ${w.lastSleepHours}hrs`);
+    }
+    if (w.avgSleep7d !== undefined) {
+      wearableParts.push(`7-day sleep average: ${w.avgSleep7d}hrs`);
+    }
+    if (wearableParts.length > 0) {
+      parts.push(`Real biometric data from their wearable — use these numbers in your insight: ${wearableParts.join(", ")}`);
+    }
   }
 
   parts.push("Generate a single personalized daily insight for this user.");
