@@ -13,8 +13,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { ARTICLES, ARTICLE_CATEGORIES, ArticleCategory } from '@/constants/articles';
 import Colors from '@/constants/colors';
+import { FREE_LIMITS } from '@/constants/free-limits';
 
 const CATEGORY_KEYS: ArticleCategory[] = ['getting-started', 'science', 'conditions', 'techniques', 'wellness'];
 const FEATURED_ARTICLE_ID = 'what-is-interoception';
@@ -22,7 +24,9 @@ const FEATURED_ARTICLE_ID = 'what-is-interoception';
 export default function ArticlesScreen() {
   const insets = useSafeAreaInsets();
   const { bookmarks, toggleBookmark, articlesRead } = useApp();
+  const { user } = useAuth();
   const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const isPremium = user?.isPremium ?? false;
 
   const [selectedCategory, setSelectedCategory] = useState<ArticleCategory | 'all'>('all');
   const [search, setSearch] = useState('');
@@ -32,7 +36,7 @@ export default function ArticlesScreen() {
     [articlesRead.length]
   );
 
-  const filteredArticles = useMemo(() => {
+  const allFilteredArticles = useMemo(() => {
     let result = ARTICLES.filter(a => a.id !== FEATURED_ARTICLE_ID || articlesRead.length >= 3);
     if (selectedCategory !== 'all') {
       result = result.filter(a => a.category === selectedCategory);
@@ -45,6 +49,10 @@ export default function ArticlesScreen() {
     }
     return result;
   }, [selectedCategory, search, articlesRead.length]);
+
+  const freeArticleIds = useMemo(() => {
+    return ARTICLES.slice(0, FREE_LIMITS.articles).map(a => a.id);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -62,6 +70,16 @@ export default function ArticlesScreen() {
         </View>
         <Text style={styles.headerSub}>Deepen your interoceptive knowledge</Text>
       </LinearGradient>
+
+      {!isPremium && (
+        <TouchableOpacity style={styles.premiumBanner} activeOpacity={0.8} onPress={() => router.push('/premium' as any)}>
+          <Feather name="star" size={14} color={Colors.warning} />
+          <Text style={styles.premiumBannerText}>
+            {FREE_LIMITS.articles} free articles — unlock all 15 with Premium
+          </Text>
+          <Feather name="chevron-right" size={14} color={Colors.warning} />
+        </TouchableOpacity>
+      )}
 
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
@@ -149,16 +167,41 @@ export default function ArticlesScreen() {
           </>
         )}
 
-        {filteredArticles.length === 0 ? (
+        {allFilteredArticles.length === 0 ? (
           <View style={styles.emptyState}>
             <Feather name="search" size={36} color={Colors.textTertiary} />
             <Text style={styles.emptyText}>No articles found</Text>
           </View>
         ) : (
-          filteredArticles.map((article) => {
+          allFilteredArticles.map((article, idx) => {
             const catMeta = ARTICLE_CATEGORIES[article.category];
             const isBookmarked = bookmarks.includes(article.id);
             const isRead = articlesRead.includes(article.id);
+            const isLocked = !isPremium && !freeArticleIds.includes(article.id);
+
+            if (isLocked) {
+              return (
+                <TouchableOpacity
+                  key={article.id}
+                  style={[styles.card, styles.cardLocked]}
+                  activeOpacity={0.7}
+                  onPress={() => router.push('/premium' as any)}
+                >
+                  <View style={[styles.cardIconCircle, { backgroundColor: Colors.backgroundSecondary }]}>
+                    <Feather name="lock" size={20} color={Colors.textTertiary} />
+                  </View>
+                  <View style={styles.cardContent}>
+                    <Text style={[styles.cardTitle, { color: Colors.textTertiary }]} numberOfLines={1}>{article.title}</Text>
+                    <Text style={[styles.cardSubtitle, { color: Colors.textTertiary }]} numberOfLines={1}>{article.subtitle}</Text>
+                  </View>
+                  <View style={styles.premiumBadge}>
+                    <Feather name="star" size={12} color={Colors.warning} />
+                    <Text style={styles.premiumBadgeText}>Premium</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            }
+
             return (
               <TouchableOpacity
                 key={article.id}
@@ -241,6 +284,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'rgba(255,255,255,0.75)',
     marginTop: 6,
+  },
+  premiumBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginTop: 12,
+    backgroundColor: Colors.warning + '12',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: Colors.warning + '30',
+  },
+  premiumBannerText: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 13,
+    color: Colors.warning,
+    flex: 1,
   },
   searchContainer: {
     paddingHorizontal: 20,
@@ -413,6 +475,9 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  cardLocked: {
+    opacity: 0.7,
+  },
   cardIconCircle: {
     width: 44,
     height: 44,
@@ -474,5 +539,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_600SemiBold',
     fontSize: 11,
     color: Colors.success,
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.warning + '18',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  premiumBadgeText: {
+    fontSize: 11,
+    fontFamily: 'Nunito_600SemiBold',
+    color: Colors.warning,
   },
 });

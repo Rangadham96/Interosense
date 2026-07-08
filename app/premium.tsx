@@ -15,12 +15,16 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
+import { apiPostJson } from '@/lib/api';
+import * as WebBrowser from 'expo-web-browser';
+
+export { FREE_LIMITS } from '@/constants/free-limits';
 
 const PLANS = [
   {
     id: 'monthly',
     name: 'Monthly',
-    price: '$9.99',
+    price: '₹799',
     period: '/month',
     savings: '',
     popular: false,
@@ -28,9 +32,9 @@ const PLANS = [
   {
     id: 'annual',
     name: 'Annual',
-    price: '$59.99',
+    price: '₹4,999',
     period: '/year',
-    savings: 'Save 50%',
+    savings: 'Save 48%',
     popular: true,
   },
 ];
@@ -78,34 +82,83 @@ const PREMIUM_FEATURES = [
   },
 ];
 
-const FREE_LIMITS = {
-  exercises: 5,
-  articles: 3,
-  assessments: false,
-  analytics: 'basic',
-  export: false,
-  wearable: false,
-};
-
 export default function PremiumScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const topPadding = Platform.OS === 'web' ? 67 : insets.top;
 
   const [selectedPlan, setSelectedPlan] = useState('annual');
   const [loading, setLoading] = useState(false);
 
+  if (user?.isPremium) {
+    return (
+      <View style={[styles.container, { paddingTop: topPadding }]}>
+        <LinearGradient
+          colors={['#6B5B95', '#524578', '#3D3260']}
+          style={styles.headerGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <Pressable style={styles.closeBtn} onPress={() => router.back()}>
+            <Feather name="x" size={24} color="rgba(255,255,255,0.8)" />
+          </Pressable>
+          <View style={styles.crownContainer}>
+            <LinearGradient colors={['#F0C05A', '#E8A830']} style={styles.crownCircle}>
+              <Feather name="star" size={32} color="#fff" />
+            </LinearGradient>
+          </View>
+          <Text style={styles.headerTitle}>You're Premium</Text>
+          <Text style={styles.headerSubtitle}>Thank you for supporting Interosense</Text>
+        </LinearGradient>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <Feather name="check-circle" size={64} color={Colors.success} />
+          <Text style={[styles.headerTitle, { color: Colors.text, marginTop: 20, marginBottom: 10 }]}>
+            Active Subscription
+          </Text>
+          <Text style={{ fontFamily: 'Nunito_400Regular', fontSize: 15, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22 }}>
+            You have full access to all Premium features. Manage your subscription from your profile.
+          </Text>
+          <Pressable
+            style={[styles.subscribeButton, { marginTop: 32, borderRadius: 16, overflow: 'hidden' }]}
+            onPress={() => router.back()}
+          >
+            <LinearGradient colors={['#6B5B95', '#524578']} style={styles.subscribeGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+              <Text style={styles.subscribeText}>Back to App</Text>
+            </LinearGradient>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
   const handleSubscribe = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const data = await apiPostJson<{ url: string }>('/api/razorpay/create-subscription', { planId: selectedPlan });
+
+      if (!data.url) {
+        throw new Error('No checkout URL received');
+      }
+
+      if (Platform.OS === 'web') {
+        window.location.href = data.url;
+      } else {
+        const result = await WebBrowser.openAuthSessionAsync(data.url, 'interosense://subscription-success');
+        if (result.type === 'success') {
+          await refreshUser();
+          router.replace('/subscription-success' as any);
+        }
+      }
+    } catch (error: any) {
       Alert.alert(
-        'Coming Soon',
-        'Payment processing will be available soon. You can continue using the app with all features unlocked during the preview period.',
-        [{ text: 'OK', onPress: () => router.back() }]
+        'Checkout Unavailable',
+        error.message || 'Unable to start checkout. Please try again.',
+        [{ text: 'OK' }]
       );
-    }, 1500);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -191,9 +244,9 @@ export default function PremiumScreen() {
         <View style={styles.guaranteeCard}>
           <Feather name="shield" size={20} color={Colors.success} />
           <View style={styles.guaranteeText}>
-            <Text style={styles.guaranteeTitle}>7-Day Free Trial</Text>
+            <Text style={styles.guaranteeTitle}>Secure Payments via Razorpay</Text>
             <Text style={styles.guaranteeDesc}>
-              Try Premium free for 7 days. Cancel anytime, no questions asked.
+              UPI, cards, net banking. Cancel anytime, no questions asked.
             </Text>
           </View>
         </View>
@@ -217,14 +270,14 @@ export default function PremiumScreen() {
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <>
-                <Text style={styles.subscribeText}>Start Free Trial</Text>
+                <Text style={styles.subscribeText}>Subscribe Now</Text>
                 <Feather name="arrow-right" size={20} color="#fff" />
               </>
             )}
           </LinearGradient>
         </Pressable>
         <Text style={styles.termsText}>
-          Cancel anytime. Terms & privacy policy apply.
+          Secure payment via Razorpay · Cancel anytime · INR billing
         </Text>
       </View>
     </View>

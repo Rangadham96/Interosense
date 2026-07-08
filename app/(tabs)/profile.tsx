@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Platform,
   Modal,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -18,6 +19,7 @@ import Colors from '@/constants/colors';
 import { CONDITIONS } from '@/constants/conditions';
 import { format, differenceInCalendarDays } from 'date-fns';
 import GetHelpLink from '@/components/GetHelpLink';
+import { apiPostJson } from '@/lib/api';
 
 const FOUR_WEEK_PROGRAMME = [
   { week: 1, title: 'Foundation', description: 'Begin with heartbeat detection and diaphragmatic breathing to build your interoceptive baseline.' },
@@ -31,7 +33,7 @@ export default function ProfileScreen() {
   const topPadding = Platform.OS === 'web' ? 67 : insets.top;
   const bottomPadding = Platform.OS === 'web' ? 34 : insets.bottom;
   const [showSignOutModal, setShowSignOutModal] = useState(false);
-  const { logout } = useAuth();
+  const [portalLoading, setPortalLoading] = useState(false);
 
   const {
     profile,
@@ -42,6 +44,9 @@ export default function ProfileScreen() {
     averageAwareness,
     checkins,
   } = useApp();
+
+  const { user, logout } = useAuth();
+  const isPremium = user?.isPremium ?? false;
 
   const firstName = profile?.name ? profile.name.split(' ')[0] : 'there';
   const conditions = profile?.conditions || [];
@@ -69,6 +74,31 @@ export default function ProfileScreen() {
   const handleSignOut = async () => {
     setShowSignOutModal(false);
     await logout();
+  };
+
+  const handleManageSubscription = () => {
+    Alert.alert(
+      'Manage Subscription',
+      'Your subscription is active. Would you like to cancel it?',
+      [
+        { text: 'Keep Subscription', style: 'cancel' },
+        {
+          text: 'Cancel Subscription',
+          style: 'destructive',
+          onPress: async () => {
+            setPortalLoading(true);
+            try {
+              await apiPostJson('/api/razorpay/cancel', {});
+              Alert.alert('Cancelled', 'Your subscription has been cancelled. You will retain access until the current period ends.');
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Could not cancel subscription. Please try again.');
+            } finally {
+              setPortalLoading(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -112,8 +142,36 @@ export default function ProfileScreen() {
               <Feather name="eye" size={13} color="rgba(255,255,255,0.9)" />
               <Text style={styles.heroPillText}>{averageAwareness.toFixed(1)} aware</Text>
             </View>
+            {isPremium && (
+              <View style={[styles.heroPill, { backgroundColor: 'rgba(240,192,90,0.3)' }]}>
+                <Feather name="star" size={13} color="#F0C05A" />
+                <Text style={[styles.heroPillText, { color: '#F0C05A' }]}>Premium</Text>
+              </View>
+            )}
           </View>
         </LinearGradient>
+
+        {!isPremium && (
+          <TouchableOpacity
+            style={styles.premiumUpsell}
+            activeOpacity={0.85}
+            onPress={() => router.push('/premium' as any)}
+          >
+            <LinearGradient
+              colors={['#F0C05A', '#E8A830']}
+              style={styles.premiumUpsellGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Feather name="star" size={18} color="#fff" />
+              <View style={styles.premiumUpsellText}>
+                <Text style={styles.premiumUpsellTitle}>Try Premium Free</Text>
+                <Text style={styles.premiumUpsellSub}>7-day trial · All exercises, assessments & more</Text>
+              </View>
+              <Feather name="arrow-right" size={18} color="#fff" />
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
 
         {conditionDetails.length > 0 && (
           <View style={styles.section}>
@@ -179,13 +237,35 @@ export default function ProfileScreen() {
             <ProfileInfoRow label="Name" value={profile?.name || '—'} />
             <ProfileInfoRow label="Experience" value={profile?.experienceLevel ? profile.experienceLevel.charAt(0).toUpperCase() + profile.experienceLevel.slice(1) : '—'} />
             <ProfileInfoRow label="Member Since" value={sessions.length > 0 ? format(new Date(sessions.reduce((earliest, s) => s.completedAt < earliest ? s.completedAt : earliest, sessions[0].completedAt)), 'MMMM yyyy') : 'Today'} />
-            <ProfileInfoRow label="Total Practice Time" value={`${totalMinutes} min`} last />
+            <ProfileInfoRow label="Total Practice Time" value={`${totalMinutes} min`} />
+            <ProfileInfoRow label="Subscription" value={isPremium ? 'Premium' : 'Free'} last />
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>App</Text>
           <View style={styles.card}>
+            {isPremium ? (
+              <>
+                <MenuRow
+                  icon="star"
+                  iconColor={Colors.warning}
+                  label={portalLoading ? 'Opening portal...' : 'Manage Subscription'}
+                  onPress={handleManageSubscription}
+                />
+                <View style={styles.menuDivider} />
+              </>
+            ) : (
+              <>
+                <MenuRow
+                  icon="star"
+                  iconColor={Colors.warning}
+                  label="Upgrade to Premium"
+                  onPress={() => router.push('/premium' as any)}
+                />
+                <View style={styles.menuDivider} />
+              </>
+            )}
             <MenuRow
               icon="sliders"
               iconColor={Colors.primary}
@@ -339,7 +419,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   scrollContent: { paddingHorizontal: 20 },
 
-  heroCard: { borderRadius: 24, padding: 24, marginBottom: 24, marginTop: 8 },
+  heroCard: { borderRadius: 24, padding: 24, marginBottom: 16, marginTop: 8 },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
   heroTopRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatarCircle: {
@@ -353,12 +433,18 @@ const styles = StyleSheet.create({
   },
   heroName: { fontFamily: 'Nunito_800ExtraBold', fontSize: 24, color: '#FFFFFF', marginBottom: 4 },
   heroDays: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: 'rgba(255,255,255,0.8)', marginBottom: 18 },
-  heroPills: { flexDirection: 'row', gap: 8 },
+  heroPills: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   heroPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16,
   },
   heroPillText: { fontFamily: 'Nunito_600SemiBold', fontSize: 12, color: '#FFFFFF' },
+
+  premiumUpsell: { borderRadius: 16, overflow: 'hidden', marginBottom: 20 },
+  premiumUpsellGradient: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
+  premiumUpsellText: { flex: 1 },
+  premiumUpsellTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: '#fff' },
+  premiumUpsellSub: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
 
   section: { marginBottom: 24 },
   sectionTitle: { fontFamily: 'Nunito_700Bold', fontSize: 17, color: Colors.text, marginBottom: 12 },

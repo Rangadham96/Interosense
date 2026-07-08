@@ -7,6 +7,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import Colors from '@/constants/colors';
 import { getScaleById, interpretScore } from '@/constants/clinical-scales';
 import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Svg, { Circle } from 'react-native-svg';
 import { apiPost } from '@/lib/api';
 
@@ -18,10 +19,13 @@ export default function AssessmentScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { addAssessment, assessments } = useApp();
+  const { user } = useAuth();
   const scale = getScaleById(id || '');
 
   const topInset = Platform.OS === 'web' ? 67 : insets.top;
   const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
+
+  const isPremium = user?.isPremium ?? false;
 
   const [phase, setPhase] = useState<Phase>('intro');
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -34,6 +38,10 @@ export default function AssessmentScreen() {
     .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
 
   const handleStart = () => {
+    if (!isPremium) {
+      router.push('/premium' as any);
+      return;
+    }
     setAnswers(new Array(scale?.totalQuestions || 0).fill(-1));
     setCurrentQuestion(0);
     setPhase('questions');
@@ -129,6 +137,26 @@ export default function AssessmentScreen() {
             </View>
           </View>
 
+          {!isPremium && (
+            <View style={styles.premiumGate}>
+              <View style={styles.premiumGateIconRow}>
+                <Feather name="lock" size={22} color="rgba(255,255,255,0.9)" />
+                <Text style={styles.premiumGateTitle}>Premium Feature</Text>
+              </View>
+              <Text style={styles.premiumGateDesc}>
+                Clinical assessments are available on Interosense Premium. Start your 7-day free trial to access GAD-7, PHQ-9, PCL-5, and MAIA-2.
+              </Text>
+              <TouchableOpacity
+                style={styles.premiumGateBtn}
+                onPress={() => router.push('/premium' as any)}
+                activeOpacity={0.85}
+              >
+                <Feather name="star" size={16} color={Colors.primary} />
+                <Text style={styles.premiumGateBtnText}>Unlock with Premium</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           <View style={styles.introCard}>
             <Text style={styles.introCardTitle}>How it works</Text>
             <Text style={styles.introCardText}>
@@ -156,10 +184,12 @@ export default function AssessmentScreen() {
             <Text style={styles.disclaimerText}>{scale.disclaimer}</Text>
           </View>
 
-          <TouchableOpacity style={styles.startBtn} onPress={handleStart} activeOpacity={0.85}>
-            <Feather name="play" size={20} color={Colors.primary} />
-            <Text style={styles.startBtnText}>Begin Assessment</Text>
-          </TouchableOpacity>
+          {isPremium && (
+            <TouchableOpacity style={styles.startBtn} onPress={handleStart} activeOpacity={0.85}>
+              <Feather name="play" size={20} color={Colors.primary} />
+              <Text style={styles.startBtnText}>Begin Assessment</Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </LinearGradient>
     );
@@ -336,6 +366,26 @@ const styles = StyleSheet.create({
   prevSeverity: { fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
   disclaimerBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 24 },
   disclaimerText: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: 'rgba(255,255,255,0.5)', flex: 1, lineHeight: 16 },
+
+  premiumGate: {
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 18,
+    padding: 22,
+    marginBottom: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  premiumGateIconRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+  premiumGateTitle: { fontFamily: 'Nunito_700Bold', fontSize: 17, color: '#FFF' },
+  premiumGateDesc: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: 'rgba(255,255,255,0.8)', textAlign: 'center', lineHeight: 21, marginBottom: 18 },
+  premiumGateBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#FFF', paddingVertical: 14, paddingHorizontal: 32, borderRadius: 50,
+  },
+  premiumGateBtnText: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: Colors.primary },
+
   startBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
     backgroundColor: '#FFF', paddingVertical: 16, paddingHorizontal: 48, borderRadius: 30, width: '100%', maxWidth: 300,

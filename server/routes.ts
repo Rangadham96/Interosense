@@ -7,6 +7,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { pool } from "./db";
 import authRouter from "./auth";
+import razorpayRouter from "./razorpayRoutes";
 import {
   createSession,
   getUserSessions,
@@ -43,6 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   app.use(authRouter);
+  app.use(razorpayRouter);
 
   app.get("/pitch", (req: Request, res: Response) => {
     const templatePath = path.resolve(

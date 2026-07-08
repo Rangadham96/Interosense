@@ -29,7 +29,6 @@ function setupCors(app: express.Application) {
 
     const origin = req.header("origin");
 
-    // Allow localhost origins for Expo web development (any port)
     const isLocalhost =
       origin?.startsWith("http://localhost:") ||
       origin?.startsWith("http://127.0.0.1:");
@@ -49,6 +48,19 @@ function setupCors(app: express.Application) {
     }
 
     next();
+  });
+}
+
+function setupRazorpayCheckoutPage(app: express.Application) {
+  app.get('/razorpay-checkout', (_req: Request, res: Response) => {
+    const checkoutPath = path.resolve(process.cwd(), 'server', 'templates', 'razorpay-checkout.html');
+    if (fs.existsSync(checkoutPath)) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-store');
+      res.sendFile(checkoutPath);
+    } else {
+      res.status(404).send('Checkout page not found');
+    }
   });
 }
 
@@ -237,8 +249,12 @@ function setupErrorHandler(app: express.Application) {
   });
 }
 
+
 (async () => {
   setupCors(app);
+
+  setupRazorpayCheckoutPage(app);
+
   setupBodyParsing(app);
   setupRequestLogging(app);
 

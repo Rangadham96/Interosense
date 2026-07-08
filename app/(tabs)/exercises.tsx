@@ -16,7 +16,9 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
 import GetHelpLink from '@/components/GetHelpLink';
+import { FREE_LIMITS } from '@/constants/free-limits';
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string }> = {
   beginner: { bg: '#E8F5E1', text: '#4A8C3F' },
@@ -50,6 +52,9 @@ export default function ExercisesScreen() {
   const [selectedCategory, setSelectedCategory] = useState<ExerciseCategory | 'all'>('all');
   const [tooltipExercise, setTooltipExercise] = useState<Exercise | null>(null);
   const { todayCheckedIn } = useApp();
+  const { user } = useAuth();
+
+  const isPremium = user?.isPremium ?? false;
 
   const filteredExercises = useMemo(() => {
     let results = EXERCISES;
@@ -67,12 +72,46 @@ export default function ExercisesScreen() {
     return results;
   }, [selectedCategory, searchText]);
 
-  const renderExerciseCard = ({ item }: { item: Exercise }) => {
+  const renderExerciseCard = ({ item, index }: { item: Exercise; index: number }) => {
     const catColor = Colors.category[item.category];
     const diffStyle = DIFFICULTY_COLORS[item.difficulty];
     const catInfo = CATEGORY_INFO[item.category];
     const evidence = EVIDENCE_LABELS[item.methodology] || { label: 'Emerging Science', color: '#B8860B' };
     const hasContraindications = item.contraindications && item.contraindications.length > 0;
+
+    const globalIndex = EXERCISES.indexOf(item);
+    const isLocked = !isPremium && globalIndex >= FREE_LIMITS.exercises;
+
+    if (isLocked) {
+      return (
+        <TouchableOpacity
+          style={[styles.card, styles.cardLocked]}
+          activeOpacity={0.7}
+          onPress={() => router.push('/premium' as any)}
+        >
+          <View style={[styles.accentBar, { backgroundColor: catColor + '60' }]} />
+          <View style={styles.cardContent}>
+            <View style={styles.cardTop}>
+              <View style={[styles.iconCircle, { backgroundColor: catColor + '0D' }]}>
+                <Feather name="lock" size={20} color={Colors.textTertiary} />
+              </View>
+              <View style={styles.cardTextWrap}>
+                <Text style={[styles.cardTitle, { color: Colors.textTertiary }]} numberOfLines={1}>
+                  {item.title}
+                </Text>
+                <Text style={[styles.cardSubtitle, { color: Colors.textTertiary }]} numberOfLines={1}>
+                  {item.subtitle}
+                </Text>
+              </View>
+              <View style={styles.premiumBadge}>
+                <Feather name="star" size={12} color={Colors.warning} />
+                <Text style={styles.premiumBadgeText}>Premium</Text>
+              </View>
+            </View>
+          </View>
+        </TouchableOpacity>
+      );
+    }
 
     return (
       <TouchableOpacity
@@ -158,6 +197,16 @@ export default function ExercisesScreen() {
         </View>
       )}
 
+      {!isPremium && (
+        <TouchableOpacity style={styles.premiumBanner} activeOpacity={0.8} onPress={() => router.push('/premium' as any)}>
+          <Feather name="star" size={15} color={Colors.warning} />
+          <Text style={styles.premiumBannerText}>
+            {FREE_LIMITS.exercises} free exercises — unlock all 25+ with Premium
+          </Text>
+          <Feather name="chevron-right" size={15} color={Colors.warning} />
+        </TouchableOpacity>
+      )}
+
       <View style={styles.filterSection}>
         <ScrollView
           horizontal
@@ -229,10 +278,10 @@ export default function ExercisesScreen() {
         <FlatList
           data={filteredExercises}
           keyExtractor={(item) => item.id}
-          renderItem={renderExerciseCard}
+          renderItem={({ item, index }) => renderExerciseCard({ item, index })}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          scrollEnabled={filteredExercises.length > 0}
+          scrollEnabled={!!filteredExercises.length}
         />
       ) : (
         <View style={styles.emptyState}>
@@ -337,6 +386,27 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 18,
   },
+  premiumBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginTop: 4,
+    marginBottom: 4,
+    backgroundColor: Colors.warning + '12',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: Colors.warning + '30',
+  },
+  premiumBannerText: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 13,
+    color: Colors.warning,
+    flex: 1,
+    lineHeight: 18,
+  },
   filterSection: {
     paddingTop: 12,
     paddingBottom: 4,
@@ -390,6 +460,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 12,
     elevation: 3,
+  },
+  cardLocked: {
+    opacity: 0.75,
   },
   accentBar: {
     width: 4,
@@ -466,6 +539,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Nunito_400Regular',
     color: Colors.textTertiary,
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.warning + '18',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  premiumBadgeText: {
+    fontSize: 11,
+    fontFamily: 'Nunito_600SemiBold',
+    color: Colors.warning,
   },
   emptyState: {
     flex: 1,

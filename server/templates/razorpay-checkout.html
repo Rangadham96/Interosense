@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interosense Premium</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #6B5B95 0%, #524578 50%, #3D3260 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+    .card {
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 24px;
+      padding: 48px 36px;
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+    }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    p  { font-size: 15px; opacity: 0.85; line-height: 1.5; margin-bottom: 28px; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status { font-size: 14px; opacity: 0.7; margin-bottom: 24px; min-height: 20px; }
+    .btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-size: 15px;
+      cursor: pointer;
+      display: none;
+      margin: 0 auto;
+    }
+    .btn:hover { background: rgba(255,255,255,0.3); }
+    .error-text { color: #ffb3b3; }
+    .logo-img { width: 64px; height: 64px; border-radius: 16px; object-fit: cover; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img class="logo-img" src="/app/assets/images/logo.png" alt="Interosense" onerror="this.style.display='none'" />
+    <h1>Interosense Premium</h1>
+    <p id="desc">Opening secure checkout&hellip;</p>
+    <div class="spinner" id="spinner"></div>
+    <p class="status" id="status">Please wait</p>
+    <button class="btn" id="retry-btn" onclick="openCheckout()">Try Again</button>
+  </div>
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    function params() {
+      var p = new URLSearchParams(window.location.search);
+      return {
+        key:    p.get('key')     || '',
+        planId: p.get('plan_id') || '',
+        userId: p.get('user_id') || '',
+        name:   p.get('name')   || '',
+        email:  p.get('email')  || '',
+        plan:   p.get('plan')   || 'monthly',
+      };
+    }
+
+    function setStatus(msg, isError) {
+      var el = document.getElementById('status');
+      el.textContent = msg;
+      if (isError) {
+        el.classList.add('error-text');
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('retry-btn').style.display = 'inline-block';
+      } else {
+        el.classList.remove('error-text');
+      }
+    }
+
+    function openCheckout() {
+      var p = params();
+      if (!p.key || !p.planId) {
+        setStatus('Invalid checkout link. Please return to the app and try again.', true);
+        return;
+      }
+
+      document.getElementById('retry-btn').style.display = 'none';
+      document.getElementById('spinner').style.display = 'block';
+      setStatus('Opening payment…', false);
+
+      var planLabel = p.plan === 'annual' ? 'Annual Plan — \u20b94,999/yr' : 'Monthly Plan — \u20b9799/mo';
+
+      var options = {
+        key: p.key,
+        subscription_id: undefined,
+        plan_id: p.planId,
+        name: 'Interosense',
+        description: planLabel,
+        image: window.location.origin + '/app/assets/images/logo.png',
+        prefill: { name: p.name, email: p.email },
+        theme: { color: '#6B5B95' },
+        notes: { userId: p.userId, plan: p.plan },
+        modal: {
+          ondismiss: function() {
+            setStatus('Payment cancelled. You can try again.', true);
+          }
+        },
+        handler: function(response) {
+          document.getElementById('desc').textContent = 'Payment successful!';
+          setStatus('Verifying your subscription\u2026', false);
+
+          fetch('/api/razorpay/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              razorpay_payment_id:    response.razorpay_payment_id,
+              razorpay_subscription_id: response.razorpay_subscription_id,
+              razorpay_signature:     response.razorpay_signature,
+            }),
+          })
+          .then(function(r) { return r.json(); })
+          .then(function() {
+            setStatus('All done! Returning to app\u2026', false);
+            var deepLink = 'interosense://subscription-success?payment_id=' + response.razorpay_payment_id;
+            var webUrl   = window.location.origin + '/app/subscription-success';
+            window.location.href = deepLink;
+            setTimeout(function() { window.location.href = webUrl; }, 800);
+          })
+          .catch(function() {
+            setStatus('Payment received but verification pending. Please restart the app.', true);
+          });
+        },
+      };
+
+      var rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function(response) {
+        var desc = response.error && response.error.description || 'Unknown error';
+        setStatus('Payment failed: ' + desc, true);
+      });
+      rzp.open();
+      setStatus('Complete payment in the checkout window', false);
+    }
+
+    window.addEventListener('load', openCheckout);
+  </script>
+</body>
+</html>
