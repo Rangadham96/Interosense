@@ -328,3 +328,82 @@ export function getMaia2OverallAverage(subscaleScores: Record<string, number>): 
   if (values.length === 0) return 0;
   return Math.round(values.reduce((s, v) => s + v, 0) / values.length * 100) / 100;
 }
+
+export interface Maia2ClinicalFlag {
+  key: string;
+  type: 'professional' | 'distress' | 'encouragement';
+  title: string;
+  message: string;
+}
+
+export function getMaia2ClinicalFlags(subscaleScores: Record<string, number>): Maia2ClinicalFlag[] {
+  const flags: Maia2ClinicalFlag[] = [];
+  const trusting = subscaleScores['trusting'] ?? 0;
+  const noticing = subscaleScores['noticing'] ?? 0;
+  const notWorrying = subscaleScores['notWorrying'] ?? 0;
+  const avg = getMaia2OverallAverage(subscaleScores);
+
+  if (trusting < 2.0) {
+    flags.push({
+      key: 'low-trusting',
+      type: 'professional',
+      title: 'Consider speaking with a professional',
+      message: 'Your Trusting score suggests you may find it difficult to feel safe or at home in your body. This is common after trauma, chronic illness, or prolonged stress. A therapist familiar with somatic approaches may offer meaningful support alongside your practice.',
+    });
+  }
+
+  if (noticing >= 3.5 && notWorrying < 2.0) {
+    flags.push({
+      key: 'high-noticing-low-notworrying',
+      type: 'distress',
+      title: 'Body awareness with worry — a pattern worth noting',
+      message: 'You are highly attuned to body signals (Noticing) but find them distressing (Not-Worrying). Heightened awareness paired with anxiety about sensations is a recognised pattern. Regulation exercises — particularly breathing and grounding — can help shift this balance over time.',
+    });
+  }
+
+  if (avg < 2.0 && flags.length === 0) {
+    flags.push({
+      key: 'low-overall',
+      type: 'encouragement',
+      title: 'You are at the start of your journey',
+      message: 'Your scores reflect where you are right now, not where you are headed. Interoceptive awareness is a trainable skill — consistent practice with breathing, body scanning, and movement exercises has been shown to improve all 8 dimensions over time.',
+    });
+  }
+
+  return flags;
+}
+
+export function generateClinicianReport(
+  subscaleScores: Record<string, number>,
+  assessmentDate: string,
+  userName?: string,
+): string {
+  const lines: string[] = [];
+  lines.push('MAIA-2 — Multidimensional Assessment of Interoceptive Awareness');
+  lines.push(`Assessment date: ${assessmentDate}`);
+  if (userName) lines.push(`Client: ${userName}`);
+  lines.push('');
+  lines.push('SUBSCALE SCORES (0–5 scale)');
+  lines.push('─────────────────────────────────────────');
+
+  for (const subscale of MAIA2_SCALE.subscales) {
+    const score = subscaleScores[subscale.key] ?? 0;
+    const bar = '█'.repeat(Math.round(score)) + '░'.repeat(5 - Math.round(score));
+    lines.push(`${subscale.name.padEnd(22)} ${bar}  ${score.toFixed(1)}/5`);
+    lines.push(`  ${subscale.description}`);
+    lines.push('');
+  }
+
+  lines.push('─────────────────────────────────────────');
+  lines.push('CLINICAL NOTE');
+  lines.push('The MAIA-2 (Mehling et al., 2018, PLOS ONE) is a validated 37-item');
+  lines.push('instrument. Authors explicitly caution against computing a composite');
+  lines.push('score — the 8-subscale profile is the clinically meaningful unit.');
+  lines.push('');
+  lines.push('Citation: Mehling WE et al. (2018). The Multidimensional Assessment of');
+  lines.push('Interoceptive Awareness, Version 2 (MAIA-2). PLOS ONE 13(12): e0208034.');
+  lines.push('');
+  lines.push('Generated via Interosense — interosense.app');
+
+  return lines.join('\n');
+}

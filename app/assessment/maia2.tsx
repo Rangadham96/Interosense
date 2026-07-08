@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import {
-  StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform,
+  StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform, Share, Alert,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +11,8 @@ import {
   MAIA2_SCALE,
   calculateMaia2Subscales,
   getMaia2OverallAverage,
+  getMaia2ClinicalFlags,
+  generateClinicianReport,
 } from '@/constants/clinical-scales';
 import { useApp } from '@/contexts/AppContext';
 import { apiPost } from '@/lib/api';
@@ -75,6 +77,21 @@ export default function Maia2Screen() {
       setCurrentQuestion(prev => prev - 1);
     }
   };
+
+  const clinicalFlags = useMemo(() => {
+    if (Object.keys(subscaleScores).length === 0) return [];
+    return getMaia2ClinicalFlags(subscaleScores);
+  }, [subscaleScores]);
+
+  const handleShareWithClinician = useCallback(async () => {
+    const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    const report = generateClinicianReport(subscaleScores, date);
+    try {
+      await Share.share({ message: report, title: 'MAIA-2 Body Awareness Profile' });
+    } catch {
+      Alert.alert('Unable to share', 'Please try again.');
+    }
+  }, [subscaleScores]);
 
   const handleSave = useCallback(async () => {
     if (isSaving) return;
@@ -302,10 +319,17 @@ export default function Maia2Screen() {
       >
         <Text style={styles.resultsTitle}>Your Body Awareness Profile</Text>
 
-        <View style={styles.scoreCircle}>
-          <Text style={styles.scoreNumber}>{Math.round(overallAverage * 20)}</Text>
-          <Text style={styles.scoreMax}>/100</Text>
-          <Text style={styles.scoreLabel}>Awareness Score</Text>
+        <View style={styles.aggregateRow}>
+          <View style={styles.scoreCircle}>
+            <Text style={styles.scoreNumber}>{Math.round(overallAverage * 20)}</Text>
+            <Text style={styles.scoreMax}>/100</Text>
+          </View>
+          <View style={styles.aggregateNote}>
+            <Text style={styles.aggregateNoteLabel}>Aggregate indicator only</Text>
+            <Text style={styles.aggregateNoteText}>
+              MAIA-2 authors advise against a single composite score — the pattern across all 8 subscales is the clinically meaningful result.
+            </Text>
+          </View>
         </View>
 
         <View style={styles.radarContainer}>
@@ -392,10 +416,39 @@ export default function Maia2Screen() {
           })}
         </View>
 
+        {clinicalFlags.length > 0 && (
+          <View style={styles.clinicalFlagsCard}>
+            <Text style={styles.clinicalFlagsTitle}>Clinical Interpretation</Text>
+            {clinicalFlags.map(flag => (
+              <View key={flag.key} style={[styles.clinicalFlagItem, {
+                borderLeftColor: flag.type === 'professional' ? '#88D5E0' : flag.type === 'distress' ? '#E8A48B' : '#7FB069',
+              }]}>
+                <View style={styles.clinicalFlagHeader}>
+                  <Feather
+                    name={flag.type === 'professional' ? 'user' : flag.type === 'distress' ? 'alert-circle' : 'trending-up'}
+                    size={14}
+                    color={flag.type === 'professional' ? '#88D5E0' : flag.type === 'distress' ? '#E8A48B' : '#7FB069'}
+                  />
+                  <Text style={styles.clinicalFlagTitle}>{flag.title}</Text>
+                </View>
+                <Text style={styles.clinicalFlagMessage}>{flag.message}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         <View style={styles.citationBox}>
           <Feather name="book-open" size={14} color="rgba(255,255,255,0.5)" />
           <Text style={styles.citationText}>{MAIA2_SCALE.citation}</Text>
         </View>
+
+        <TouchableOpacity style={styles.shareBtn} onPress={handleShareWithClinician} activeOpacity={0.8}>
+          <Feather name="share-2" size={18} color="#4A6FA5" />
+          <Text style={styles.shareBtnText}>Share with Clinician</Text>
+        </TouchableOpacity>
+        <Text style={styles.shareBtnNote}>
+          Sends a formatted subscale report your therapist can read without knowing the MAIA-2 instrument.
+        </Text>
 
         <TouchableOpacity
           style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]}
@@ -502,15 +555,25 @@ const styles = StyleSheet.create({
 
   resultsContent: { paddingHorizontal: 24, alignItems: 'center' },
   resultsTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 22, color: '#FFF', marginBottom: 20, textAlign: 'center' },
+  aggregateRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 16, width: '100%', marginBottom: 24,
+  },
   scoreCircle: {
-    width: 120, height: 120, borderRadius: 60,
+    width: 90, height: 90, borderRadius: 45,
     backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 24,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
     borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)',
   },
-  scoreNumber: { fontFamily: 'Nunito_800ExtraBold', fontSize: 36, color: '#FFF' },
-  scoreMax: { fontFamily: 'Nunito_400Regular', fontSize: 13, color: 'rgba(255,255,255,0.6)' },
-  scoreLabel: { fontFamily: 'Nunito_500Medium', fontSize: 10, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
+  aggregateNote: { flex: 1 },
+  aggregateNoteLabel: {
+    fontFamily: 'Nunito_700Bold', fontSize: 12, color: 'rgba(255,255,255,0.6)',
+    marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5,
+  },
+  aggregateNoteText: {
+    fontFamily: 'Nunito_400Regular', fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 17,
+  },
+  scoreNumber: { fontFamily: 'Nunito_800ExtraBold', fontSize: 28, color: '#FFF' },
+  scoreMax: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: 'rgba(255,255,255,0.6)' },
   radarContainer: { alignItems: 'center', marginBottom: 24 },
   comparisonCard: {
     backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 14, padding: 16, width: '100%', marginBottom: 16,
@@ -548,13 +611,35 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_400Regular', fontSize: 10, color: 'rgba(255,255,255,0.4)',
     flex: 1, lineHeight: 15,
   },
+  clinicalFlagsCard: {
+    backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 14, padding: 16, width: '100%', marginBottom: 16,
+  },
+  clinicalFlagsTitle: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: '#FFF', marginBottom: 12 },
+  clinicalFlagItem: {
+    borderLeftWidth: 3, paddingLeft: 12, marginBottom: 14,
+  },
+  clinicalFlagHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 5 },
+  clinicalFlagTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: '#FFF', flex: 1 },
+  clinicalFlagMessage: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: 'rgba(255,255,255,0.8)', lineHeight: 18 },
+
+  shareBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    backgroundColor: '#FFF', paddingVertical: 14, paddingHorizontal: 48,
+    borderRadius: 30, width: '100%', maxWidth: 300, marginBottom: 8,
+  },
+  shareBtnText: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: '#4A6FA5' },
+  shareBtnNote: {
+    fontFamily: 'Nunito_400Regular', fontSize: 11, color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center', marginBottom: 20, lineHeight: 16,
+  },
   saveBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    backgroundColor: '#FFF', paddingVertical: 16, paddingHorizontal: 48,
+    backgroundColor: 'rgba(255,255,255,0.2)', paddingVertical: 14, paddingHorizontal: 48,
     borderRadius: 30, width: '100%', maxWidth: 300, marginBottom: 14,
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.4)',
   },
   saveBtnDisabled: { opacity: 0.6 },
-  saveBtnText: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: '#4A6FA5' },
+  saveBtnText: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: '#FFF' },
   closeResult: { paddingVertical: 10 },
   closeResultText: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: 'rgba(255,255,255,0.6)' },
 });

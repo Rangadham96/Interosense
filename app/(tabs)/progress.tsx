@@ -1,15 +1,16 @@
-import { StyleSheet, Text, View, ScrollView, Platform, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Platform, TouchableOpacity, Share, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import GetHelpLink from '@/components/GetHelpLink';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { format, parseISO, startOfWeek, addDays, isSameDay, differenceInDays } from 'date-fns';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { ACHIEVEMENTS, TIER_COLORS } from '@/constants/achievements';
-import { CLINICAL_SCALES, MAIA2_SCALE, getMaia2OverallAverage } from '@/constants/clinical-scales';
+import { CLINICAL_SCALES, MAIA2_SCALE, getMaia2OverallAverage, getMaia2ClinicalFlags, generateClinicianReport } from '@/constants/clinical-scales';
 import RadarChart from '@/components/RadarChart';
+import Svg, { Circle } from 'react-native-svg';
 
 const CATEGORY_LABELS: Record<string, string> = {
   heartbeat: 'Heartbeat',
@@ -113,12 +114,21 @@ export default function ProgressScreen() {
     return getMaia2OverallAverage(latestMaia2.subscaleScores);
   }, [latestMaia2]);
 
-  const awarenessDisplayScore = useMemo(() => {
-    if (maia2OverallScore !== null) {
-      return Math.round(maia2OverallScore * 20);
+  const maia2ClinicalFlags = useMemo(() => {
+    if (!latestMaia2?.subscaleScores) return [];
+    return getMaia2ClinicalFlags(latestMaia2.subscaleScores);
+  }, [latestMaia2]);
+
+  const handleShareWithClinician = useCallback(async () => {
+    if (!latestMaia2?.subscaleScores) return;
+    const date = format(parseISO(latestMaia2.completedAt), 'MMMM d, yyyy');
+    const report = generateClinicianReport(latestMaia2.subscaleScores, date);
+    try {
+      await Share.share({ message: report, title: 'MAIA-2 Body Awareness Profile' });
+    } catch {
+      Alert.alert('Unable to share', 'Please try again.');
     }
-    return averageAwareness;
-  }, [maia2OverallScore, averageAwareness]);
+  }, [latestMaia2]);
 
   const showMaia2Prompt = useMemo(() => {
     if (maia2Assessments.length === 0 && totalSessions >= 10) return true;
@@ -285,48 +295,31 @@ export default function ProgressScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Interoceptive Awareness Score</Text>
-          <View style={styles.card}>
-            <View style={[styles.avgRow, { marginBottom: 6 }]}>
-              <Text style={styles.avgLabel}>{maia2OverallScore !== null ? 'MAIA-2' : 'Average'}</Text>
-              <Text style={styles.avgValue}>{maia2OverallScore !== null ? awarenessDisplayScore : averageAwareness}</Text>
-              <Text style={styles.avgOutOf}>{maia2OverallScore !== null ? '/100' : '/10'}</Text>
-            </View>
-            {maia2OverallScore !== null ? (
-              <Text style={styles.awarenessSubtitle}>
-                Scientifically validated score from MAIA-2. Based on {maia2Assessments.length} assessment{maia2Assessments.length !== 1 ? 's' : ''}.
+        {checkins.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Check-in Awareness Trend</Text>
+            <View style={styles.card}>
+              <Text style={styles.chartContextLabel}>
+                Your self-reported awareness from recent check-ins.
+                {maia2Assessments.length === 0 && ' Take the MAIA-2 for a clinically validated subscale profile.'}
               </Text>
-            ) : checkins.length > 0 ? (
-              <>
-                <Text style={styles.awarenessSubtitle}>Daily check-in average. Take the MAIA-2 for a validated score.</Text>
-                <View style={{ height: 14 }} />
-                <View style={styles.barChart}>
-                  {last7Checkins.map((c, i) => {
-                    const ratio = c.awarenessScore / 10;
-                    const barColor = interpolateColor(Colors.secondary, Colors.primary, ratio);
-                    return (
-                      <View key={c.id || i} style={styles.barColumn}>
-                        <View style={styles.barTrack}>
-                          <View style={[styles.bar, { height: `${Math.max(ratio * 100, 5)}%` as any, backgroundColor: barColor }]} />
-                        </View>
-                        <Text style={styles.barLabel}>{format(parseISO(c.date), 'dd')}</Text>
+              <View style={styles.barChart}>
+                {last7Checkins.map((c, i) => {
+                  const ratio = c.awarenessScore / 10;
+                  const barColor = interpolateColor(Colors.secondary, Colors.primary, ratio);
+                  return (
+                    <View key={c.id || i} style={styles.barColumn}>
+                      <View style={styles.barTrack}>
+                        <View style={[styles.bar, { height: `${Math.max(ratio * 100, 5)}%` as any, backgroundColor: barColor }]} />
                       </View>
-                    );
-                  })}
-                </View>
-              </>
-            ) : (
-              <View style={styles.emptyState}>
-                <Feather name="bar-chart-2" size={32} color={Colors.primary} />
-                <Text style={styles.emptyText}>Complete check-ins or take the MAIA-2 assessment</Text>
-                <TouchableOpacity style={styles.emptyActionBtn} onPress={() => router.push('/(tabs)/checkin')}>
-                  <Text style={styles.emptyActionText}>Start a Check-In</Text>
-                </TouchableOpacity>
+                      <Text style={styles.barLabel}>{format(parseISO(c.date), 'dd')}</Text>
+                    </View>
+                  );
+                })}
               </View>
-            )}
+            </View>
           </View>
-        </View>
+        )}
 
         {showMaia2Prompt && (
           <TouchableOpacity
@@ -384,6 +377,52 @@ export default function ProgressScreen() {
                   </View>
                 </View>
               )}
+
+              <View style={styles.subscaleProfileSection}>
+                <Text style={styles.subscaleProfileTitle}>8-Dimension Subscale Profile</Text>
+                <Text style={styles.subscaleProfileNote}>
+                  MAIA-2 authors advise against a single composite score. The pattern across all 8 subscales is the clinically meaningful result.
+                </Text>
+                {MAIA2_SCALE.subscales.map(s => {
+                  const score = latestMaia2.subscaleScores?.[s.key] ?? 0;
+                  const pct = (score / 5) * 100;
+                  const barColor = score >= 3.5 ? Colors.success : score >= 2 ? Colors.primary : Colors.warning;
+                  return (
+                    <View key={s.key} style={styles.subscaleProfileRow}>
+                      <View style={styles.subscaleProfileHeader}>
+                        <Text style={styles.subscaleProfileName}>{s.name}</Text>
+                        <Text style={[styles.subscaleProfileScore, { color: barColor }]}>{score.toFixed(1)}/5</Text>
+                      </View>
+                      <View style={styles.subscaleProfileTrack}>
+                        <View style={[styles.subscaleProfileFill, { width: `${pct}%` as any, backgroundColor: barColor }]} />
+                      </View>
+                      <Text style={styles.subscaleProfileDesc}>{getSubscaleOneLiner(s.key, score)}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+
+              {maia2ClinicalFlags.length > 0 && (
+                <View style={styles.clinicalFlagsSection}>
+                  <Text style={styles.clinicalFlagsTitle}>Clinical Interpretation</Text>
+                  {maia2ClinicalFlags.map(flag => (
+                    <View key={flag.key} style={[styles.clinicalFlagCard, styles[`flagType_${flag.type}` as keyof typeof styles] as any]}>
+                      <View style={styles.clinicalFlagHeader}>
+                        <Feather
+                          name={flag.type === 'professional' ? 'user' : flag.type === 'distress' ? 'alert-circle' : 'trending-up'}
+                          size={15}
+                          color={flag.type === 'professional' ? '#4A6FA5' : flag.type === 'distress' ? '#E07A5F' : Colors.success}
+                        />
+                        <Text style={[styles.clinicalFlagTitle, {
+                          color: flag.type === 'professional' ? '#2D4A7A' : flag.type === 'distress' ? '#7A3020' : '#1A5C30',
+                        }]}>{flag.title}</Text>
+                      </View>
+                      <Text style={styles.clinicalFlagMessage}>{flag.message}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
               {previousMaia2?.subscaleScores && (
                 <View style={styles.maia2Comparisons}>
                   <Text style={styles.maia2ComparisonTitle}>Month-over-Month</Text>
@@ -403,6 +442,14 @@ export default function ProgressScreen() {
                   })}
                 </View>
               )}
+
+              <TouchableOpacity style={styles.shareClinicianBtn} onPress={handleShareWithClinician} activeOpacity={0.8}>
+                <Feather name="share-2" size={16} color={Colors.primary} />
+                <Text style={styles.shareClinicianText}>Share with Clinician</Text>
+              </TouchableOpacity>
+              <Text style={styles.shareClinicianNote}>
+                Generates a formatted report of your 8 subscale scores you can send by email, messages, or print.
+              </Text>
             </View>
           </View>
         )}
@@ -663,6 +710,53 @@ export default function ProgressScreen() {
   );
 }
 
+function getSubscaleOneLiner(key: string, score: number): string {
+  const level = score >= 3.5 ? 'high' : score >= 2 ? 'moderate' : 'developing';
+  const map: Record<string, Record<string, string>> = {
+    noticing: {
+      high: `${score.toFixed(1)} — You naturally pick up on what your body is communicating.`,
+      moderate: `${score.toFixed(1)} — You notice body signals some of the time.`,
+      developing: `${score.toFixed(1)} — Developing sensitivity to body signals.`,
+    },
+    notDistracting: {
+      high: `${score.toFixed(1)} — You tend to stay present with uncomfortable sensations.`,
+      moderate: `${score.toFixed(1)} — You sometimes push away discomfort rather than staying with it.`,
+      developing: `${score.toFixed(1)} — Tendency to distract from physical discomfort.`,
+    },
+    notWorrying: {
+      high: `${score.toFixed(1)} — You can notice discomfort without catastrophising.`,
+      moderate: `${score.toFixed(1)} — Sensations sometimes trigger worry.`,
+      developing: `${score.toFixed(1)} — Body sensations tend to feel distressing.`,
+    },
+    attentionRegulation: {
+      high: `${score.toFixed(1)} — You can deliberately focus and redirect attention in the body.`,
+      moderate: `${score.toFixed(1)} — Moderate ability to sustain body-focused attention.`,
+      developing: `${score.toFixed(1)} — Sustaining body awareness is an area of growth.`,
+    },
+    emotionalAwareness: {
+      high: `${score.toFixed(1)} — You recognise how emotions live in your body.`,
+      moderate: `${score.toFixed(1)} — Some awareness of the mind-body connection.`,
+      developing: `${score.toFixed(1)} — The mind-body bridge is developing.`,
+    },
+    selfRegulation: {
+      high: `${score.toFixed(1)} — You can use body awareness to calm distress.`,
+      moderate: `${score.toFixed(1)} — Sometimes able to regulate through body awareness.`,
+      developing: `${score.toFixed(1)} — Using body awareness for regulation is emerging.`,
+    },
+    bodyListening: {
+      high: `${score.toFixed(1)} — You consult your body as a source of wisdom.`,
+      moderate: `${score.toFixed(1)} — Occasionally listen to your body for guidance.`,
+      developing: `${score.toFixed(1)} — Body listening is an area to explore.`,
+    },
+    trusting: {
+      high: `${score.toFixed(1)} — You experience your body as safe and trustworthy.`,
+      moderate: `${score.toFixed(1)} — Some sense of body as safe, with room to deepen.`,
+      developing: `${score.toFixed(1)} — Feeling safe in your body is a growing edge.`,
+    },
+  };
+  return map[key]?.[level] ?? `${score.toFixed(1)}/5`;
+}
+
 function StatCard({ icon, iconColor, value, label }: { icon: string; iconColor: string; value: number; label: string }) {
   return (
     <View style={styles.statCard}>
@@ -811,10 +905,51 @@ const styles = StyleSheet.create({
   maia2LegendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   maia2LegendDot: { width: 10, height: 10, borderRadius: 5 },
   maia2LegendText: { fontFamily: 'Nunito_500Medium', fontSize: 12, color: Colors.textSecondary },
-  maia2Comparisons: { width: '100%', borderTopWidth: 1, borderTopColor: Colors.borderLight, paddingTop: 14 },
+  maia2Comparisons: { width: '100%', borderTopWidth: 1, borderTopColor: Colors.borderLight, paddingTop: 14, marginTop: 4 },
   maia2ComparisonTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: Colors.text, marginBottom: 8 },
   maia2CompRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 3, gap: 6 },
   maia2CompLabel: { fontFamily: 'Nunito_500Medium', fontSize: 12, color: Colors.textSecondary, flex: 1 },
   maia2CompArrow: { fontFamily: 'Nunito_700Bold', fontSize: 14, width: 16, textAlign: 'center' },
   maia2CompValues: { fontFamily: 'Nunito_600SemiBold', fontSize: 12, color: Colors.textTertiary, width: 80, textAlign: 'right' },
+
+  subscaleProfileSection: {
+    width: '100%', borderTopWidth: 1, borderTopColor: Colors.borderLight, paddingTop: 16, marginTop: 4,
+  },
+  subscaleProfileTitle: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: Colors.text, marginBottom: 6 },
+  subscaleProfileNote: {
+    fontFamily: 'Nunito_400Regular', fontSize: 11, color: Colors.textTertiary, lineHeight: 16, marginBottom: 14,
+    backgroundColor: Colors.backgroundSecondary, borderRadius: 8, padding: 10,
+  },
+  subscaleProfileRow: { marginBottom: 14 },
+  subscaleProfileHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
+  subscaleProfileName: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: Colors.text },
+  subscaleProfileScore: { fontFamily: 'Nunito_700Bold', fontSize: 13 },
+  subscaleProfileTrack: {
+    height: 6, backgroundColor: Colors.backgroundSecondary, borderRadius: 3, overflow: 'hidden' as const, marginBottom: 5,
+  },
+  subscaleProfileFill: { height: '100%', borderRadius: 3 },
+  subscaleProfileDesc: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: Colors.textSecondary, lineHeight: 16 },
+
+  clinicalFlagsSection: {
+    width: '100%', borderTopWidth: 1, borderTopColor: Colors.borderLight, paddingTop: 16, marginTop: 4,
+  },
+  clinicalFlagsTitle: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: Colors.text, marginBottom: 10 },
+  clinicalFlagCard: { borderRadius: 12, padding: 14, marginBottom: 10, borderLeftWidth: 3 },
+  flagType_professional: { backgroundColor: '#EDF2FB', borderLeftColor: '#4A6FA5' },
+  flagType_distress: { backgroundColor: '#FDF1EE', borderLeftColor: '#E07A5F' },
+  flagType_encouragement: { backgroundColor: '#EFF7F0', borderLeftColor: Colors.success },
+  clinicalFlagHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  clinicalFlagTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, flex: 1 },
+  clinicalFlagMessage: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.textSecondary, lineHeight: 18 },
+
+  shareClinicianBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderWidth: 1.5, borderColor: Colors.primary, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 20,
+    width: '100%', marginTop: 16,
+  },
+  shareClinicianText: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: Colors.primary },
+  shareClinicianNote: {
+    fontFamily: 'Nunito_400Regular', fontSize: 11, color: Colors.textTertiary,
+    textAlign: 'center', marginTop: 8, lineHeight: 16,
+  },
 });
