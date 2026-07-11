@@ -354,7 +354,7 @@ export default function SettingsScreen() {
             <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
           </TouchableOpacity>
           <View style={styles.divider} />
-          <TouchableOpacity style={styles.row} activeOpacity={0.6}>
+          <TouchableOpacity style={styles.row} activeOpacity={0.6} onPress={() => router.push('/privacy-policy' as any)}>
             <View style={styles.rowLeft}>
               <View style={[styles.iconContainer, { backgroundColor: `${Colors.primary}15` }]}>
                 <Feather name="shield" size={18} color={Colors.primary} />
@@ -366,7 +366,7 @@ export default function SettingsScreen() {
             <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
           </TouchableOpacity>
           <View style={styles.divider} />
-          <TouchableOpacity style={styles.row} activeOpacity={0.6}>
+          <TouchableOpacity style={styles.row} activeOpacity={0.6} onPress={() => router.push('/terms' as any)}>
             <View style={styles.rowLeft}>
               <View style={[styles.iconContainer, { backgroundColor: `${Colors.accent}25` }]}>
                 <Feather name="file-text" size={18} color={Colors.accent} />

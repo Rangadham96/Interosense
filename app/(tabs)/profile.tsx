@@ -326,7 +326,7 @@ export default function ProfileScreen() {
               icon="shield"
               iconColor={Colors.textSecondary}
               label="Privacy Policy"
-              onPress={() => {}}
+              onPress={() => router.push('/privacy-policy' as any)}
             />
             <View style={styles.menuDivider} />
             <TouchableOpacity
