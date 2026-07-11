@@ -214,7 +214,7 @@ export const MAIA2_SCALE: Maia2Scale = {
       key: 'noticing',
       name: 'Noticing',
       description: 'Awareness of uncomfortable, comfortable, and neutral body sensations',
-      clinicalContext: 'Noticing reflects your baseline sensitivity to bodily signals. Higher scores mean you naturally pick up on what your body is communicating — a foundation for all other dimensions.',
+      clinicalContext: 'Noticing reflects your baseline sensitivity to bodily signals. Higher scores mean you naturally pick up on what your body is communicating, a foundation for all other dimensions.',
       questionIds: [1, 2, 3, 4],
     },
     {
@@ -228,7 +228,7 @@ export const MAIA2_SCALE: Maia2Scale = {
       key: 'notWorrying',
       name: 'Not-Worrying',
       description: 'Tendency not to worry or experience emotional distress with sensations of pain or discomfort',
-      clinicalContext: 'Not-Worrying reflects emotional equanimity toward body sensations. Higher scores suggest you can notice discomfort without catastrophising — a key skill in pain management and anxiety.',
+      clinicalContext: 'Not-Worrying reflects emotional equanimity toward body sensations. Higher scores suggest you can notice discomfort without catastrophising, a key skill in pain management and anxiety.',
       questionIds: [11, 12, 13, 14, 15],
     },
     {
@@ -242,7 +242,7 @@ export const MAIA2_SCALE: Maia2Scale = {
       key: 'emotionalAwareness',
       name: 'Emotional Awareness',
       description: 'Awareness of the connection between body sensations and emotional states',
-      clinicalContext: 'Emotional Awareness captures the mind-body bridge — recognising that emotions live in the body. Strengthening this dimension improves emotional regulation and self-understanding.',
+      clinicalContext: 'Emotional Awareness captures the mind-body bridge, recognising that emotions live in the body. Strengthening this dimension improves emotional regulation and self-understanding.',
       questionIds: [23, 24, 25, 26, 27],
     },
     {
@@ -356,8 +356,8 @@ export function getMaia2ClinicalFlags(subscaleScores: Record<string, number>): M
     flags.push({
       key: 'high-noticing-low-notworrying',
       type: 'distress',
-      title: 'Body awareness with worry — a pattern worth noting',
-      message: 'You are highly attuned to body signals (Noticing) but find them distressing (Not-Worrying). Heightened awareness paired with anxiety about sensations is a recognised pattern. Regulation exercises — particularly breathing and grounding — can help shift this balance over time.',
+      title: 'Body awareness with worry, a pattern worth noting',
+      message: 'You are highly attuned to body signals (Noticing) but find them distressing (Not-Worrying). Heightened awareness paired with anxiety about sensations is a recognised pattern. Regulation exercises, particularly breathing and grounding, can help shift this balance over time.',
     });
   }
 
@@ -366,7 +366,7 @@ export function getMaia2ClinicalFlags(subscaleScores: Record<string, number>): M
       key: 'low-overall',
       type: 'encouragement',
       title: 'You are at the start of your journey',
-      message: 'Your scores reflect where you are right now, not where you are headed. Interoceptive awareness is a trainable skill — consistent practice with breathing, body scanning, and movement exercises has been shown to improve all 8 dimensions over time.',
+      message: 'Your scores reflect where you are right now, not where you are headed. Interoceptive awareness is a trainable skill, consistent practice with breathing, body scanning, and movement exercises has been shown to improve all 8 dimensions over time.',
     });
   }
 
@@ -379,7 +379,7 @@ export function generateClinicianReport(
   userName?: string,
 ): string {
   const lines: string[] = [];
-  lines.push('MAIA-2 — Multidimensional Assessment of Interoceptive Awareness');
+  lines.push('MAIA-2, Multidimensional Assessment of Interoceptive Awareness');
   lines.push(`Assessment date: ${assessmentDate}`);
   if (userName) lines.push(`Client: ${userName}`);
   lines.push('');
@@ -398,12 +398,12 @@ export function generateClinicianReport(
   lines.push('CLINICAL NOTE');
   lines.push('The MAIA-2 (Mehling et al., 2018, PLOS ONE) is a validated 37-item');
   lines.push('instrument. Authors explicitly caution against computing a composite');
-  lines.push('score — the 8-subscale profile is the clinically meaningful unit.');
+  lines.push('score, the 8-subscale profile is the clinically meaningful unit.');
   lines.push('');
   lines.push('Citation: Mehling WE et al. (2018). The Multidimensional Assessment of');
   lines.push('Interoceptive Awareness, Version 2 (MAIA-2). PLOS ONE 13(12): e0208034.');
   lines.push('');
-  lines.push('Generated via Interosense — interosense.app');
+  lines.push('Generated via Interosense, interosense.app');
 
   return lines.join('\n');
 }

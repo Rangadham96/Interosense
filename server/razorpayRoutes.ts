@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getRazorpayKeyId, getRazorpayClient, verifyPaymentSignature, isRazorpayConfigured } from './razorpayClient';
+import { getRazorpayKeyId, getRazorpayClient, verifyPaymentSignature, isRazorpayConfigured, PLANS } from './razorpayClient';
 import { storage } from './storage';
 
 const router = Router();
@@ -11,27 +11,27 @@ router.post('/api/razorpay/create-subscription', async (req: Request, res: Respo
     });
   }
 
-  const sessionUser = (req.session as any)?.user;
-  if (!sessionUser?.id) {
+  const userId = (req.session as any)?.userId;
+  if (!userId) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
 
   const planKey = req.body.planId === 'annual' ? 'annual' : 'monthly';
-  const planIdEnv =
-    planKey === 'annual'
-      ? process.env.RAZORPAY_ANNUAL_PLAN_ID
-      : process.env.RAZORPAY_MONTHLY_PLAN_ID;
+  const currency = 'INR';
+
+  const planIdEnv = planKey === 'annual'
+    ? process.env.RAZORPAY_ANNUAL_PLAN_ID
+    : process.env.RAZORPAY_MONTHLY_PLAN_ID;
 
   if (!planIdEnv) {
     return res.status(503).json({
-      error:
-        'Subscription plans not configured. Set RAZORPAY_MONTHLY_PLAN_ID and RAZORPAY_ANNUAL_PLAN_ID in Secrets.',
+      error: 'Subscription plans not configured. Run POST /api/razorpay/setup-plans to create them.',
       setup_required: true,
     });
   }
 
   try {
-    const user = await storage.getUser(sessionUser.id);
+    const user = await storage.getUser(userId);
     const client = getRazorpayClient();
 
     const totalCount = planKey === 'annual' ? 10 : 120;
@@ -41,8 +41,9 @@ router.post('/api/razorpay/create-subscription', async (req: Request, res: Respo
       quantity: 1,
       customer_notify: 1,
       notes: {
-        userId: String(sessionUser.id),
+        userId: String(userId),
         plan: planKey,
+        currency,
       },
     });
 
@@ -57,10 +58,11 @@ router.post('/api/razorpay/create-subscription', async (req: Request, res: Respo
       new URLSearchParams({
         key: getRazorpayKeyId(),
         subscription_id: subscriptionId,
-        user_id: String(sessionUser.id),
+        user_id: String(userId),
         name: user?.name || '',
         email: user?.email || '',
         plan: planKey,
+        currency,
       }).toString();
 
     return res.json({
@@ -72,6 +74,7 @@ router.post('/api/razorpay/create-subscription', async (req: Request, res: Respo
         contact: '',
       },
       plan: planKey,
+      currency,
       url: checkoutUrl,
     });
   } catch (err: any) {
@@ -81,8 +84,8 @@ router.post('/api/razorpay/create-subscription', async (req: Request, res: Respo
 });
 
 router.post('/api/razorpay/verify-payment', async (req: Request, res: Response) => {
-  const sessionUser = (req.session as any)?.user;
-  if (!sessionUser?.id) {
+  const verifyUserId = (req.session as any)?.userId;
+  if (!verifyUserId) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
 
@@ -103,7 +106,7 @@ router.post('/api/razorpay/verify-payment', async (req: Request, res: Response) 
   }
 
   try {
-    await storage.updateUser(String(sessionUser.id), {
+    await storage.updateUser(String(verifyUserId), {
       isPremium: true,
       stripeCustomerId: razorpay_subscription_id,
       stripeSubscriptionId: razorpay_subscription_id,
@@ -154,11 +157,11 @@ router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
 });
 
 router.post('/api/razorpay/cancel', async (req: Request, res: Response) => {
-  const sessionUser = (req.session as any)?.user;
-  if (!sessionUser?.id) return res.status(401).json({ error: 'Not authenticated' });
+  const cancelUserId = (req.session as any)?.userId;
+  if (!cancelUserId) return res.status(401).json({ error: 'Not authenticated' });
 
   try {
-    await storage.updateUser(String(sessionUser.id), {
+    await storage.updateUser(String(cancelUserId), {
       isPremium: false,
       stripeSubscriptionId: null,
     });
@@ -166,6 +169,89 @@ router.post('/api/razorpay/cancel', async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error('Razorpay cancel error:', err);
     return res.status(500).json({ error: err.message || 'Failed to cancel subscription' });
+  }
+});
+
+router.post('/api/razorpay/setup-plans', async (req: Request, res: Response) => {
+  const adminSecret = process.env.ADMIN_SECRET;
+  const providedSecret = req.headers['x-admin-secret'] || req.body?.adminSecret;
+  if (!adminSecret || providedSecret !== adminSecret) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  if (!isRazorpayConfigured()) {
+    return res.status(503).json({
+      error: 'RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET must be set before creating plans.',
+    });
+  }
+
+  const existing = {
+    monthly_inr: process.env.RAZORPAY_MONTHLY_PLAN_ID,
+    annual_inr: process.env.RAZORPAY_ANNUAL_PLAN_ID,
+  };
+
+  if (existing.monthly_inr && existing.annual_inr) {
+    return res.json({
+      message: 'All plans already configured',
+      plans: existing,
+    });
+  }
+
+  try {
+    const client = getRazorpayClient();
+    const results: Record<string, string> = {};
+    const instructions: string[] = [];
+
+    if (!existing.monthly_inr) {
+      const plan: any = await (client.plans as any).create({
+        period: PLANS.inr.monthly.period,
+        interval: PLANS.inr.monthly.interval,
+        item: {
+          name: PLANS.inr.monthly.name,
+          amount: PLANS.inr.monthly.amount,
+          currency: 'INR',
+          description: 'Interosense Premium, monthly subscription',
+        },
+        notes: { plan_type: 'monthly_inr' },
+      });
+      results.monthly_inr = plan.id;
+      instructions.push(`Set RAZORPAY_MONTHLY_PLAN_ID = ${plan.id}`);
+    } else {
+      results.monthly_inr = existing.monthly_inr;
+    }
+
+    if (!existing.annual_inr) {
+      const plan: any = await (client.plans as any).create({
+        period: PLANS.inr.annual.period,
+        interval: PLANS.inr.annual.interval,
+        item: {
+          name: PLANS.inr.annual.name,
+          amount: PLANS.inr.annual.amount,
+          currency: 'INR',
+          description: 'Interosense Premium, annual subscription',
+        },
+        notes: { plan_type: 'annual_inr' },
+      });
+      results.annual_inr = plan.id;
+      instructions.push(`Set RAZORPAY_ANNUAL_PLAN_ID = ${plan.id}`);
+    } else {
+      results.annual_inr = existing.annual_inr;
+    }
+
+    console.log('Razorpay plans created:');
+    instructions.forEach(i => console.log(' ', i));
+
+    return res.json({
+      message: instructions.length
+        ? 'Plans created. Copy the IDs below into Replit Secrets.'
+        : 'All plans were already configured.',
+      plans: results,
+      instructions,
+    });
+  } catch (err: any) {
+    const detail = err?.error?.description || err?.message || JSON.stringify(err);
+    console.error('Razorpay setup-plans error:', detail);
+    return res.status(500).json({ error: detail });
   }
 });
 

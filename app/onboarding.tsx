@@ -210,21 +210,21 @@ function getAhaMoment(conditions: string[], baseline: InteroceptiveAnswer | null
   if (isPtsd) {
     return {
       whatWeNoticed: baseline === 'clear'
-        ? "Your nervous system is highly attuned — you detected signals most people miss."
+        ? "Your nervous system is highly attuned, you detected signals most people miss."
         : "Your body has learned to protect itself by dimming internal signals. That is a survival adaptation.",
-      whatYourBodyDoes: "Trauma rewires the brain's threat detector (amygdala) to stay on high alert, while the prefrontal cortex — your rational mind — goes quieter. Your body holds the story of what happened.",
-      whatWellTrain: "Trauma-sensitive interoceptive exercises will gently rebuild your sense of body safety — starting with neutral areas like hands and feet, never pushing past your window of tolerance.",
-      citation: "van der Kolk, B. (2014). The Body Keeps the Score. — Porges, S. (2011). The Polyvagal Theory.",
+      whatYourBodyDoes: "Trauma rewires the brain's threat detector (amygdala) to stay on high alert, while the prefrontal cortex, your rational mind, goes quieter. Your body holds the story of what happened.",
+      whatWellTrain: "Trauma-sensitive interoceptive exercises will gently rebuild your sense of body safety, starting with neutral areas like hands and feet, never pushing past your window of tolerance.",
+      citation: "van der Kolk, B. (2014). The Body Keeps the Score., Porges, S. (2011). The Polyvagal Theory.",
     };
   }
 
   if (isPanic) {
     return {
       whatWeNoticed: baseline === 'clear'
-        ? "You can feel your heartbeat clearly — a strength we will use to retrain your threat response."
+        ? "You can feel your heartbeat clearly, a strength we will use to retrain your threat response."
         : "Panic often makes the body feel unreadable. Safe exposure changes that.",
-      whatYourBodyDoes: "During a panic attack, your amygdala fires a false alarm. The body sensations of panic (racing heart, breathlessness) are physically identical to vigorous exercise — but catastrophically misread as danger.",
-      whatWellTrain: "Interoceptive exposure: deliberately inducing mild versions of panic sensations in a safe context teaches your brain that these sensations are uncomfortable — not dangerous. This reduces panic attacks by up to 80%.",
+      whatYourBodyDoes: "During a panic attack, your amygdala fires a false alarm. The body sensations of panic (racing heart, breathlessness) are physically identical to vigorous exercise, but catastrophically misread as danger.",
+      whatWellTrain: "Interoceptive exposure: deliberately inducing mild versions of panic sensations in a safe context teaches your brain that these sensations are uncomfortable, not dangerous. This reduces panic attacks by up to 80%.",
       citation: "Craske et al. (2008). Interoceptive exposure vs. breathing retraining within CBT for panic disorder. BJCP, 47(1).",
     };
   }
@@ -233,7 +233,7 @@ function getAhaMoment(conditions: string[], baseline: InteroceptiveAnswer | null
     return {
       whatWeNoticed: baseline === 'none'
         ? "Anxiety can suppress body awareness even when the nervous system is highly activated."
-        : "You have interoceptive sensitivity — you notice signals. We will build accuracy so signals are interpreted correctly.",
+        : "You have interoceptive sensitivity, you notice signals. We will build accuracy so signals are interpreted correctly.",
       whatYourBodyDoes: "Anxiety overactivates the insula (your internal body-sensor), making it interpret normal sensations as threats. A racing heart gets labeled 'danger' instead of 'I just climbed stairs.'",
       whatWellTrain: "Training interoceptive accuracy closes the gap between sensing and interpreting body signals. Research shows 30–40% anxiety reduction with 8 weeks of practice.",
       citation: "Garfinkel et al. (2015). Knowing your own heart. Biological Psychology, 104, 65–74.",
@@ -245,7 +245,7 @@ function getAhaMoment(conditions: string[], baseline: InteroceptiveAnswer | null
       whatWeNoticed: baseline === 'clear'
         ? "You have more body access than you might think. We will build the translation layer."
         : "Difficulty detecting body signals is the signature of alexithymia. This is precisely what we train.",
-      whatYourBodyDoes: "Your anterior insula receives body signals, but the translation step — from raw sensation to emotional meaning — is impaired. It is like having a radio but a broken decoder.",
+      whatYourBodyDoes: "Your anterior insula receives body signals, but the translation step, from raw sensation to emotional meaning, is impaired. It is like having a radio but a broken decoder.",
       whatWellTrain: "Kelly Mahler's 3-step framework: Notice (detect the sensation) → Describe (name it precisely) → Connect (link it to an emotion). Repeated practice rewires the insula-prefrontal pathway.",
       citation: "Price & Hooven (2018). Interoceptive awareness skills for emotion regulation. Frontiers in Psychology, 9, 798.",
     };
@@ -254,9 +254,9 @@ function getAhaMoment(conditions: string[], baseline: InteroceptiveAnswer | null
   if (isDepression) {
     return {
       whatWeNoticed: baseline === 'faint' || baseline === 'none'
-        ? "Depression blunts interoception — your body signals have been turned down. We will turn them back up."
+        ? "Depression blunts interoception, your body signals have been turned down. We will turn them back up."
         : "Your body awareness is stronger than depression typically allows. That is a real asset.",
-      whatYourBodyDoes: "Depression reduces insula activation, creating interoceptive blunting — the body feels muted or distant. Critically, 95% of serotonin is produced in the gut. Your enteric nervous system is a mood pathway.",
+      whatYourBodyDoes: "Depression reduces insula activation, creating interoceptive blunting, the body feels muted or distant. Critically, 95% of serotonin is produced in the gut. Your enteric nervous system is a mood pathway.",
       whatWellTrain: "Gentle body-based practices restore the interoceptive signal. Even 2-minute practices measurably increase insula activation and create a bottom-up path to emotional re-engagement.",
       citation: "Paulus & Stein (2010). Interoception in anxiety and depression. Brain Structure and Function, 214(5–6).",
     };
@@ -264,12 +264,12 @@ function getAhaMoment(conditions: string[], baseline: InteroceptiveAnswer | null
 
   return {
     whatWeNoticed: baseline === 'clear'
-      ? "Strong interoceptive access — you are already operating above average on body awareness."
+      ? "Strong interoceptive access, you are already operating above average on body awareness."
       : baseline === 'faint'
-      ? "Faint awareness is a great starting point — interoception improves rapidly with targeted practice."
+      ? "Faint awareness is a great starting point, interoception improves rapidly with targeted practice."
       : "Low baseline awareness is common and very trainable. The insula is neuroplastic throughout life.",
-    whatYourBodyDoes: "Your insular cortex constantly receives signals from every organ and tissue. Most of this traffic never reaches consciousness — interoception is the skill of tuning in to this stream.",
-    whatWellTrain: "Evidence-based exercises using MABT methodology will systematically expand your interoceptive vocabulary — training you to notice, describe, and interpret your body's signals with increasing precision.",
+    whatYourBodyDoes: "Your insular cortex constantly receives signals from every organ and tissue. Most of this traffic never reaches consciousness, interoception is the skill of tuning in to this stream.",
+    whatWellTrain: "Evidence-based exercises using MABT methodology will systematically expand your interoceptive vocabulary, training you to notice, describe, and interpret your body's signals with increasing precision.",
     citation: "Price, C. J. & Hooven, C. (2018). MABT. Frontiers in Psychology, 9, 798.",
   };
 }
@@ -482,7 +482,7 @@ export default function OnboardingScreen() {
             </View>
             <Text style={styles.step1Title}>Welcome to{'\n'}Interosense</Text>
             <Text style={styles.step1Subtitle}>
-              Science-backed body awareness training — personalized to your nervous system.
+              Science-backed body awareness training, personalized to your nervous system.
             </Text>
 
             <View style={styles.trustLines}>
@@ -630,7 +630,7 @@ export default function OnboardingScreen() {
               <Animated.View entering={FadeIn.duration(400)} style={styles.distressNote}>
                 <Feather name="heart" size={16} color={Colors.primary} style={{ marginTop: 2 }} />
                 <Text style={styles.distressNoteText}>
-                  It takes courage to check in. Immediate support resources are waiting for you — you don't have to face this alone.
+                  It takes courage to check in. Immediate support resources are waiting for you, you don't have to face this alone.
                 </Text>
               </Animated.View>
             )}
@@ -667,7 +667,7 @@ export default function OnboardingScreen() {
           <Animated.View entering={FadeIn.duration(300)}>
             <Text style={styles.setupTitle}>What brings you here?</Text>
             <Text style={styles.setupSubtitle}>
-              Select any that apply — this determines which exercises and science we show you. Interoception research is condition-specific.
+              Select any that apply, this determines which exercises and science we show you. Interoception research is condition-specific.
             </Text>
 
             <View style={styles.conditionsList}>
@@ -816,8 +816,8 @@ export default function OnboardingScreen() {
             <Text style={styles.setupTitle}>Body awareness baseline</Text>
             <Text style={styles.setupSubtitle}>
               {bodyAwarenessVersion === 'A'
-                ? 'Ground yourself first. Notice 3 things you can feel physically right now — your feet on the floor, air on your skin, your weight in the seat.'
-                : 'We are measuring your interoceptive starting point. This is research data — there is no right or wrong answer.'}
+                ? 'Ground yourself first. Notice 3 things you can feel physically right now, your feet on the floor, air on your skin, your weight in the seat.'
+                : 'We are measuring your interoceptive starting point. This is research data, there is no right or wrong answer.'}
             </Text>
 
             <View style={styles.pulseArea}>

@@ -21,22 +21,8 @@ import RazorpayCheckoutModal from '@/components/RazorpayCheckoutModal';
 export { FREE_LIMITS } from '@/constants/free-limits';
 
 const PLANS = [
-  {
-    id: 'monthly',
-    name: 'Monthly',
-    price: '₹799',
-    period: '/month',
-    savings: '',
-    popular: false,
-  },
-  {
-    id: 'annual',
-    name: 'Annual',
-    price: '₹4,999',
-    period: '/year',
-    savings: 'Save 48%',
-    popular: true,
-  },
+  { id: 'monthly', name: 'Monthly', price: '₹399', period: '/month', savings: '', popular: false },
+  { id: 'annual',  name: 'Annual',  price: '₹3,990', period: '/year', savings: '2 months free', popular: true },
 ];
 
 const PREMIUM_FEATURES = [
@@ -189,10 +175,7 @@ export default function PremiumScreen() {
         return;
       }
 
-      const planLabel =
-        selectedPlan === 'annual'
-          ? 'Annual Plan — ₹4,999/yr'
-          : 'Monthly Plan — ₹799/mo';
+      const planLabel = selectedPlan === 'annual' ? 'Annual Plan | ₹3,990/yr' : 'Monthly Plan | ₹399/mo';
 
       try {
         const result = await openNativeRazorpay(data, planLabel);
@@ -212,13 +195,13 @@ export default function PremiumScreen() {
           code === 'PAYMENT_CANCELLED' ||
           nativeErr?.description === 'Cancelled by user'
         ) {
-          // user cancelled — no action needed
+          // user cancelled, no action needed
         } else if (
           code === 'MODULE_NOT_FOUND' ||
           nativeErr?.message?.includes('NativeModule') ||
           nativeErr?.message?.includes('null is not an object')
         ) {
-          // Native SDK not available (Expo Go) — fall back to in-app WebView
+          // Native SDK not available (Expo Go), fall back to in-app WebView
           setCheckoutParams(data);
           setCheckoutVisible(true);
         } else {

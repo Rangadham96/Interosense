@@ -20,7 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const TRUST_ITEMS = [
   'Your data is encrypted and never sold',
-  'Free forever — no credit card required',
+  'Free forever, no credit card required',
   'Built with clinical research, not trends',
   'Cancel or delete your account any time',
 ];
@@ -34,14 +34,9 @@ export default function RegisterScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const passwordsMatch = password === confirmPassword;
-  const showMatchIndicator = confirmPassword.length >= 4;
 
   const handleRegister = async () => {
     setError('');
@@ -51,10 +46,6 @@ export default function RegisterScreen() {
     }
     if (password.length < 6) {
       setError('Your password needs to be at least 6 characters.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Your passwords don't match — please check and try again.");
       return;
     }
 
@@ -167,36 +158,6 @@ export default function RegisterScreen() {
               </View>
             </View>
 
-            <View style={styles.inputGroup}>
-              <View style={styles.inputWrapper}>
-                <Feather name="lock" size={18} color={Colors.textTertiary} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Confirm your password"
-                  placeholderTextColor={Colors.textTertiary}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry={!showConfirmPassword}
-                  testID="register-confirm"
-                />
-                <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeBtn} testID="register-confirm-eye-toggle">
-                  <Feather name={showConfirmPassword ? 'eye-off' : 'eye'} size={18} color={Colors.textTertiary} />
-                </Pressable>
-              </View>
-              {showMatchIndicator && (
-                <View style={styles.matchRow}>
-                  <Feather
-                    name={passwordsMatch ? 'check-circle' : 'x-circle'}
-                    size={14}
-                    color={passwordsMatch ? '#2E7D32' : '#C62828'}
-                  />
-                  <Text style={[styles.matchText, { color: passwordsMatch ? '#2E7D32' : '#C62828' }]}>
-                    {passwordsMatch ? 'Passwords match' : "Passwords don't match"}
-                  </Text>
-                </View>
-              )}
-            </View>
-
             <Pressable
               style={[styles.registerButton, loading && styles.registerButtonDisabled]}
               onPress={handleRegister}
@@ -209,7 +170,7 @@ export default function RegisterScreen() {
                   <Text style={styles.registerButtonText}>Just a moment...</Text>
                 </>
               ) : (
-                <Text style={styles.registerButtonText}>Create My Account →</Text>
+                <Text style={styles.registerButtonText}>Create My Account</Text>
               )}
             </Pressable>
           </View>
@@ -274,8 +235,6 @@ const styles = StyleSheet.create({
     fontSize: 15, fontFamily: 'Nunito_500Medium', color: Colors.text,
   },
   eyeBtn: { padding: 14 },
-  matchRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, paddingLeft: 4 },
-  matchText: { fontSize: 12, fontFamily: 'Nunito_600SemiBold' },
   registerButton: {
     backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 16,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8,

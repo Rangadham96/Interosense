@@ -68,14 +68,14 @@ export default function SubscriptionSuccessScreen() {
 
           <Text style={styles.title}>Welcome to Premium!</Text>
           <Text style={styles.subtitle}>
-            Your subscription is now active. You have full access to all Premium features — explore everything Interosense has to offer.
+            Your subscription is now active. You have full access to all Premium features, explore everything Interosense has to offer.
           </Text>
 
           <View style={styles.featuresList}>
             {[
               'All 25+ guided exercises unlocked',
               'Clinical assessments (GAD-7, PHQ-9, PCL-5)',
-              'Full article library — 15 articles',
+              'Full article library, 15 articles',
               'AI-powered daily insights',
               'Advanced progress analytics',
             ].map((feature) => (

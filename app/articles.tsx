@@ -75,7 +75,7 @@ export default function ArticlesScreen() {
         <TouchableOpacity style={styles.premiumBanner} activeOpacity={0.8} onPress={() => router.push('/premium' as any)}>
           <Feather name="star" size={14} color={Colors.warning} />
           <Text style={styles.premiumBannerText}>
-            {FREE_LIMITS.articles} free articles — unlock all 15 with Premium
+            {FREE_LIMITS.articles} free articles. Unlock all 15 with Premium.
           </Text>
           <Feather name="chevron-right" size={14} color={Colors.warning} />
         </TouchableOpacity>

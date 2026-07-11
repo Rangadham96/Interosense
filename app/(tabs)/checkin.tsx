@@ -33,7 +33,7 @@ function getTimeOfDay(): TimeOfDay {
 const TIME_HINTS: Record<TimeOfDay, Record<number, string>> = {
   morning: {
     0: 'Take a moment to notice how your body feels waking into this day.',
-    1: 'Notice any morning heaviness or lightness — your body is speaking.',
+    1: 'Notice any morning heaviness or lightness. Your body is speaking.',
     2: 'How did rest land in your body last night?',
     3: 'Notice any anticipatory tension your body is already holding.',
   },
@@ -47,7 +47,7 @@ const TIME_HINTS: Record<TimeOfDay, Record<number, string>> = {
     0: 'Wind down and tune in. What has your body absorbed today?',
     1: 'How much energy does your body have left at the end of this day?',
     2: 'How is your body recovering from last night?',
-    3: 'What stress has built through the day — and where does it live in you?',
+    3: 'What stress has built through the day. Where does it live in you?',
   },
   night: {
     0: 'Check in with your body as you prepare for rest.',
@@ -461,7 +461,7 @@ export default function CheckinScreen() {
         {step === 1 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepQuestion}>{STEP_QUESTIONS[1]}</Text>
-            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][1] || 'Notice how energy manifests physically — heaviness in limbs, mental alertness, desire to move or rest.'}</Text>
+            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][1] || 'Notice how energy manifests physically: heaviness in limbs, mental alertness, desire to move or rest.'}</Text>
             <ScaleSelector value={energy} onChange={setEnergy} leftLabel="Depleted" rightLabel="Energised" color={Colors.secondary} />
           </Animated.View>
         )}

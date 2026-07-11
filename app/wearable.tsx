@@ -322,7 +322,7 @@ export default function WearableScreen() {
         result.push({
           icon: 'moon',
           color: Colors.secondary,
-          text: 'Sleep consistency has improved — great for emotional regulation',
+          text: 'Sleep consistency has improved, great for emotional regulation',
         });
       }
     }

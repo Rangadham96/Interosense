@@ -628,7 +628,7 @@ export default function ProgressScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>This Week</Text>
           <View style={styles.card}>
-            <Text style={styles.chartContextLabel}>Consistency over intensity — every session matters</Text>
+            <Text style={styles.chartContextLabel}>Consistency over intensity. Every session matters.</Text>
             <View style={styles.heatmapRow}>
               {weeklyActivity.map((day, i) => {
                 const baseSize = 36;
@@ -714,44 +714,44 @@ function getSubscaleOneLiner(key: string, score: number): string {
   const level = score >= 3.5 ? 'high' : score >= 2 ? 'moderate' : 'developing';
   const map: Record<string, Record<string, string>> = {
     noticing: {
-      high: `${score.toFixed(1)} — You naturally pick up on what your body is communicating.`,
-      moderate: `${score.toFixed(1)} — You notice body signals some of the time.`,
-      developing: `${score.toFixed(1)} — Developing sensitivity to body signals.`,
+      high: `${score.toFixed(1)}: You naturally pick up on what your body is communicating.`,
+      moderate: `${score.toFixed(1)}: You notice body signals some of the time.`,
+      developing: `${score.toFixed(1)}: Developing sensitivity to body signals.`,
     },
     notDistracting: {
-      high: `${score.toFixed(1)} — You tend to stay present with uncomfortable sensations.`,
-      moderate: `${score.toFixed(1)} — You sometimes push away discomfort rather than staying with it.`,
-      developing: `${score.toFixed(1)} — Tendency to distract from physical discomfort.`,
+      high: `${score.toFixed(1)}: You tend to stay present with uncomfortable sensations.`,
+      moderate: `${score.toFixed(1)}: You sometimes push away discomfort rather than staying with it.`,
+      developing: `${score.toFixed(1)}: Tendency to distract from physical discomfort.`,
     },
     notWorrying: {
-      high: `${score.toFixed(1)} — You can notice discomfort without catastrophising.`,
-      moderate: `${score.toFixed(1)} — Sensations sometimes trigger worry.`,
-      developing: `${score.toFixed(1)} — Body sensations tend to feel distressing.`,
+      high: `${score.toFixed(1)}: You can notice discomfort without catastrophising.`,
+      moderate: `${score.toFixed(1)}: Sensations sometimes trigger worry.`,
+      developing: `${score.toFixed(1)}: Body sensations tend to feel distressing.`,
     },
     attentionRegulation: {
-      high: `${score.toFixed(1)} — You can deliberately focus and redirect attention in the body.`,
-      moderate: `${score.toFixed(1)} — Moderate ability to sustain body-focused attention.`,
-      developing: `${score.toFixed(1)} — Sustaining body awareness is an area of growth.`,
+      high: `${score.toFixed(1)}: You can deliberately focus and redirect attention in the body.`,
+      moderate: `${score.toFixed(1)}: Moderate ability to sustain body-focused attention.`,
+      developing: `${score.toFixed(1)}: Sustaining body awareness is an area of growth.`,
     },
     emotionalAwareness: {
-      high: `${score.toFixed(1)} — You recognise how emotions live in your body.`,
-      moderate: `${score.toFixed(1)} — Some awareness of the mind-body connection.`,
-      developing: `${score.toFixed(1)} — The mind-body bridge is developing.`,
+      high: `${score.toFixed(1)}: You recognise how emotions live in your body.`,
+      moderate: `${score.toFixed(1)}: Some awareness of the mind-body connection.`,
+      developing: `${score.toFixed(1)}: The mind-body bridge is developing.`,
     },
     selfRegulation: {
-      high: `${score.toFixed(1)} — You can use body awareness to calm distress.`,
-      moderate: `${score.toFixed(1)} — Sometimes able to regulate through body awareness.`,
-      developing: `${score.toFixed(1)} — Using body awareness for regulation is emerging.`,
+      high: `${score.toFixed(1)}: You can use body awareness to calm distress.`,
+      moderate: `${score.toFixed(1)}: Sometimes able to regulate through body awareness.`,
+      developing: `${score.toFixed(1)}: Using body awareness for regulation is emerging.`,
     },
     bodyListening: {
-      high: `${score.toFixed(1)} — You consult your body as a source of wisdom.`,
-      moderate: `${score.toFixed(1)} — Occasionally listen to your body for guidance.`,
-      developing: `${score.toFixed(1)} — Body listening is an area to explore.`,
+      high: `${score.toFixed(1)}: You consult your body as a source of wisdom.`,
+      moderate: `${score.toFixed(1)}: Occasionally listen to your body for guidance.`,
+      developing: `${score.toFixed(1)}: Body listening is an area to explore.`,
     },
     trusting: {
-      high: `${score.toFixed(1)} — You experience your body as safe and trustworthy.`,
-      moderate: `${score.toFixed(1)} — Some sense of body as safe, with room to deepen.`,
-      developing: `${score.toFixed(1)} — Feeling safe in your body is a growing edge.`,
+      high: `${score.toFixed(1)}: You experience your body as safe and trustworthy.`,
+      moderate: `${score.toFixed(1)}: Some sense of body as safe, with room to deepen.`,
+      developing: `${score.toFixed(1)}: Feeling safe in your body is a growing edge.`,
     },
   };
   return map[key]?.[level] ?? `${score.toFixed(1)}/5`;

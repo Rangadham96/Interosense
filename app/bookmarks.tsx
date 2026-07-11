@@ -40,7 +40,7 @@ export default function BookmarksScreen() {
           </View>
           <Text style={styles.emptyTitle}>Your saved reading, all in one place</Text>
           <Text style={styles.emptySubtitle}>
-            Save articles and exercises you want to return to — tap the bookmark icon on any article
+            Save articles and exercises you want to return to, tap the bookmark icon on any article
           </Text>
           <TouchableOpacity style={styles.emptyActionButton} onPress={() => router.push('/articles' as any)}>
             <Feather name="book-open" size={16} color={Colors.textInverse} />

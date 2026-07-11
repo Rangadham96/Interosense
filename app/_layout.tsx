@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator, Text } from "react-native";
 import Colors from "@/constants/colors";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   useFonts,
   Nunito_400Regular,
@@ -28,6 +29,15 @@ function AuthGate() {
   const segments = useSegments();
   const router = useRouter();
   const prevAuthRef = useRef<boolean | null>(null);
+  const [welcomeChecked, setWelcomeChecked] = useState(false);
+  const [hasSeenWelcome, setHasSeenWelcome] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem('hasSeenWelcome').then(val => {
+      setHasSeenWelcome(!!val);
+      setWelcomeChecked(true);
+    });
+  }, []);
 
   useEffect(() => {
     if (isLoading) return;
@@ -54,16 +64,21 @@ function AuthGate() {
   }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || !welcomeChecked) return;
 
     const inAuthGroup = segments[0] === 'auth';
+    const inWelcome = segments[0] === 'welcome';
 
-    if (!isAuthenticated && !inAuthGroup) {
-      router.replace('/auth/login');
-    } else if (isAuthenticated && inAuthGroup) {
+    if (!isAuthenticated && !inAuthGroup && !inWelcome) {
+      if (!hasSeenWelcome) {
+        router.replace('/welcome');
+      } else {
+        router.replace('/auth/login');
+      }
+    } else if (isAuthenticated && (inAuthGroup || inWelcome)) {
       router.replace('/');
     }
-  }, [isAuthenticated, isLoading, segments]);
+  }, [isAuthenticated, isLoading, segments, welcomeChecked, hasSeenWelcome]);
 
   if (isLoading) {
     return (
@@ -76,6 +91,7 @@ function AuthGate() {
 
   return (
     <Stack screenOptions={{ headerBackTitle: "Back", gestureEnabled: true, gestureDirection: 'horizontal' }}>
+      <Stack.Screen name="welcome" options={{ headerShown: false, animation: 'fade' }} />
       <Stack.Screen name="auth/login" options={{ headerShown: false, animation: 'fade' }} />
       <Stack.Screen name="auth/register" options={{ headerShown: false, animation: 'fade' }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

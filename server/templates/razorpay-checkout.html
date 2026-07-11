@@ -76,6 +76,7 @@
         name:           p.get('name')            || '',
         email:          p.get('email')           || '',
         plan:           p.get('plan')            || 'monthly',
+        currency:       p.get('currency')        || 'INR',
       };
     }
 
@@ -108,7 +109,10 @@
       document.getElementById('spinner').style.display = 'block';
       setStatus('Opening payment\u2026', false);
 
-      var planLabel = p.plan === 'annual' ? 'Annual Plan \u2014 \u20b94,999/yr' : 'Monthly Plan \u2014 \u20b9799/mo';
+      var isUsd = (p.currency === 'USD');
+      var planLabel = isUsd
+        ? (p.plan === 'annual' ? 'Annual Plan | $79.90/yr' : 'Monthly Plan | $7.99/mo')
+        : (p.plan === 'annual' ? 'Annual Plan | \u20b93,990/yr' : 'Monthly Plan | \u20b9399/mo');
 
       var options = {
         key: p.key,

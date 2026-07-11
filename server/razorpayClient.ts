@@ -46,6 +46,36 @@ export function isRazorpayConfigured(): boolean {
 }
 
 export const PLANS = {
-  monthly: { amount: 79900, period: 'monthly', name: 'Interosense Premium Monthly', interval: 1 as const },
-  annual:  { amount: 499900, period: 'yearly',  name: 'Interosense Premium Annual',  interval: 1 as const },
+  inr: {
+    monthly: {
+      amount: 39900,
+      currency: 'INR',
+      period: 'monthly' as const,
+      interval: 1 as const,
+      name: 'Interosense Premium Monthly',
+    },
+    annual: {
+      amount: 399000,
+      currency: 'INR',
+      period: 'yearly' as const,
+      interval: 1 as const,
+      name: 'Interosense Premium Annual',
+    },
+  },
+  usd: {
+    monthly: {
+      amount: 799,
+      currency: 'USD',
+      period: 'monthly' as const,
+      interval: 1 as const,
+      name: 'Interosense Premium Monthly',
+    },
+    annual: {
+      amount: 7990,
+      currency: 'USD',
+      period: 'yearly' as const,
+      interval: 1 as const,
+      name: 'Interosense Premium Annual',
+    },
+  },
 };

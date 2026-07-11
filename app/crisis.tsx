@@ -462,7 +462,7 @@ export default function CrisisScreen() {
 
             <Pressable style={styles.crisisTextBtn} onPress={handleCrisisText}>
               <Feather name="message-square" size={18} color="#D32F2F" />
-              <Text style={styles.crisisTextBtnText}>Crisis Text Line — Text HOME to 741741</Text>
+              <Text style={styles.crisisTextBtnText}>Crisis Text Line, Text HOME to 741741</Text>
             </Pressable>
           </View>
         </Animated.View>

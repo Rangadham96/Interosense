@@ -27,15 +27,15 @@ const SYSTEM_PROMPT = `You are a knowledgeable, compassionate interoception coac
 Guidelines:
 - Respond warmly but stay grounded in clinical reality. Reference real neuroscience when relevant (insular cortex, vagus nerve, HRV, gut-brain axis).
 - Never be alarmist. Never use generic phrases like "Great job!" or "Keep it up!"
-- Always be specific to what the user has shared — their conditions, recent check-in data, exercise patterns, and current state.
+- Always be specific to what the user has shared, their conditions, recent check-in data, exercise patterns, and current state.
 - Maximum 120 words. Write in second person ("you").
 - If the user is new, welcome them and connect their specific conditions to interoceptive science.
 - If they checked in today, reference their specific scores and mood.
-- If they have a streak, acknowledge it meaningfully — tie it to neuroplasticity.
-- If real HRV or sleep data is available, reference it specifically (e.g. "Your HRV yesterday was 42ms — your nervous system appears well-regulated today"). HRV above 40ms is generally a sign of good vagal tone; below 20ms may indicate stress or poor recovery. Sleep under 6 hours increases interoceptive reactivity.
+- If they have a streak, acknowledge it meaningfully, tie it to neuroplasticity.
+- If real HRV or sleep data is available, reference it specifically (e.g. "Your HRV yesterday was 42ms, your nervous system appears well-regulated today"). HRV above 40ms is generally a sign of good vagal tone; below 20ms may indicate stress or poor recovery. Sleep under 6 hours increases interoceptive reactivity.
 - Match tone to time of day (energizing in morning, reflective in evening, calming at night).
 - Do not use bullet points or lists. Write in flowing, natural prose.
-- Do not start with greetings like "Good morning" — the app already shows a greeting.
+- Do not start with greetings like "Good morning", the app already shows a greeting.
 - Do not mention that you are an AI.`;
 
 export async function generateInsight(context: UserContext): Promise<string> {
@@ -103,7 +103,7 @@ function buildUserMessage(context: UserContext): string {
     const c = context.todayCheckin;
     parts.push(`Today's check-in: awareness ${c.awarenessScore}/10, energy ${c.energyLevel}/10, sleep quality ${c.sleepQuality}/10, stress ${c.stressLevel}/10, mood: ${c.mood || "not specified"}`);
   } else {
-    parts.push("No check-in today — base the insight on their historical patterns and conditions.");
+    parts.push("No check-in today, base the insight on their historical patterns and conditions.");
   }
 
   if (context.recentExerciseHistory.length > 0) {
@@ -130,7 +130,7 @@ function buildUserMessage(context: UserContext): string {
       wearableParts.push(`7-day sleep average: ${w.avgSleep7d}hrs`);
     }
     if (wearableParts.length > 0) {
-      parts.push(`Real biometric data from their wearable — use these numbers in your insight: ${wearableParts.join(", ")}`);
+      parts.push(`Real biometric data from their wearable, use these numbers in your insight: ${wearableParts.join(", ")}`);
     }
   }
 

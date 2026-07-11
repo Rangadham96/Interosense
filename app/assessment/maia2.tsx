@@ -147,7 +147,7 @@ export default function Maia2Screen() {
           <Text style={styles.introTitle}>MAIA-2</Text>
           <Text style={styles.introFullName}>Multidimensional Assessment of Interoceptive Awareness</Text>
           <Text style={styles.introDesc}>
-            The only scientifically validated measure of body awareness. 37 questions across 8 dimensions reveal exactly where your interoceptive awareness is strongest — and where it's growing.
+            The only scientifically validated measure of body awareness. 37 questions across 8 dimensions reveal exactly where your interoceptive awareness is strongest, and where it is growing.
           </Text>
 
           <View style={styles.introMetaRow}>
@@ -183,7 +183,7 @@ export default function Maia2Screen() {
           <View style={styles.introCard}>
             <Text style={styles.introCardTitle}>How to respond</Text>
             <Text style={styles.introCardText}>
-              Rate each statement from 0 (Never) to 5 (Always) based on how often it applies to you. There are no right or wrong answers — this measures your current experience.
+              Rate each statement from 0 (Never) to 5 (Always) based on how often it applies to you. There are no right or wrong answers. This measures your current experience.
             </Text>
           </View>
 
@@ -327,7 +327,7 @@ export default function Maia2Screen() {
           <View style={styles.aggregateNote}>
             <Text style={styles.aggregateNoteLabel}>Aggregate indicator only</Text>
             <Text style={styles.aggregateNoteText}>
-              MAIA-2 authors advise against a single composite score — the pattern across all 8 subscales is the clinically meaningful result.
+              MAIA-2 authors advise against a single composite score, the pattern across all 8 subscales is the clinically meaningful result.
             </Text>
           </View>
         </View>

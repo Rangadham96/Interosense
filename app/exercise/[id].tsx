@@ -50,7 +50,7 @@ const CATEGORY_SCIENCE_REFLECTIONS: Record<string, string> = {
   tension: 'By noticing and releasing tension, you have engaged your proprioceptive and interoceptive systems together. This integration is what makes somatic practices so powerful for stress.',
   temperature: 'Thermal interoception engages your trigeminal nerve and insular cortex simultaneously. Developing this sensitivity improves all forms of body awareness.',
   exposure: 'Controlled exposure to uncomfortable sensations builds distress tolerance. Your amygdala has learned, just slightly, that these signals are safe to feel.',
-  gut: 'The enteric nervous system you just connected with contains 500 million neurons. You have strengthened the gut-brain axis — a direct pathway to mood regulation.',
+  gut: 'The enteric nervous system you just connected with contains 500 million neurons. You have strengthened the gut-brain axis, a direct pathway to mood regulation.',
   movement: 'Mindful movement engages proprioceptive receptors throughout your body, feeding rich sensory information to your cerebellum and insula simultaneously.',
 };
 
@@ -309,7 +309,7 @@ export default function ExerciseSessionScreen() {
             <View style={styles.contraindicationCard}>
               <View style={styles.contraindicationHeader}>
                 <Feather name="alert-triangle" size={16} color="#B8860B" />
-                <Text style={styles.contraindicationTitle}>Before you begin — please read</Text>
+                <Text style={styles.contraindicationTitle}>Before you begin: please read</Text>
               </View>
               {exercise.contraindications.map((c, i) => (
                 <View key={i} style={styles.benefitRow}>
@@ -404,7 +404,7 @@ export default function ExerciseSessionScreen() {
             <View style={styles.scienceReflectionCard}>
               <View style={styles.scienceReflectionHeader}>
                 <Feather name="book-open" size={14} color={Colors.secondaryLight} />
-                <Text style={styles.scienceReflectionLabel}>{(catInfo?.label || exercise.category).toUpperCase()} — WHAT JUST HAPPENED</Text>
+                <Text style={styles.scienceReflectionLabel}>{(catInfo?.label || exercise.category).toUpperCase()} | WHAT JUST HAPPENED</Text>
               </View>
               <Text style={styles.scienceReflectionText}>{categoryReflection}</Text>
             </View>

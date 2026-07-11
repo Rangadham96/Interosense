@@ -25,13 +25,13 @@ import { apiRequest } from '@/lib/query-client';
 import { getWearableContext } from '@/lib/health';
 
 const DAILY_SCIENCE_INSIGHTS = [
-  { label: 'THE INSULA', text: 'Regular interoceptive practice measurably thickens the insular cortex — the region that translates body signals into conscious awareness.' },
+  { label: 'THE INSULA', text: 'Regular interoceptive practice measurably thickens the insular cortex, the region that translates body signals into conscious awareness.' },
   { label: 'VAGUS NERVE', text: 'Your vagus nerve carries 80% of signals from gut to brain. Just 5 minutes of slow breathing activates your rest-and-digest system.' },
   { label: 'HRV & RESILIENCE', text: 'Heart rate variability (HRV) is your body\'s resilience score. Box breathing can raise it by 10–15% in a single session.' },
   { label: 'NEUROPLASTICITY', text: 'Each moment of mindful body attention reshapes neural pathways. Two weeks of daily practice produces measurable changes.' },
   { label: 'GUT-BRAIN AXIS', text: 'Your gut produces 95% of your body\'s serotonin. Gut awareness exercises directly support mood through the enteric nervous system.' },
   { label: 'INTEROCEPTION', text: 'People with greater interoceptive accuracy tend to experience emotions more intensely and make more intuitive decisions (Critchley, 2004).' },
-  { label: 'BREATH & EMOTION', text: 'Your breathing pattern directly reflects your emotional state — and changing your breath can change your feelings within 90 seconds.' },
+  { label: 'BREATH & EMOTION', text: 'Your breathing pattern directly reflects your emotional state. Changing your breath can change your feelings within 90 seconds.' },
 ];
 
 function getTimeOfDayGreeting(name: string): { greeting: string; subtext: string } {
@@ -39,24 +39,24 @@ function getTimeOfDayGreeting(name: string): { greeting: string; subtext: string
   if (hour >= 5 && hour < 12) {
     return {
       greeting: `Good morning, ${name}`,
-      subtext: `${name} — how is your body this morning?`,
+      subtext: `${name}, how is your body this morning?`,
     };
   }
   if (hour >= 12 && hour < 17) {
     return {
       greeting: `Good afternoon, ${name}`,
-      subtext: `${name} — how are you feeling right now?`,
+      subtext: `${name}, how are you feeling right now?`,
     };
   }
   if (hour >= 17 && hour < 21) {
     return {
       greeting: `Good evening, ${name}`,
-      subtext: `${name} — how has your body carried you today?`,
+      subtext: `${name}, how has your body carried you today?`,
     };
   }
   return {
     greeting: `Good night, ${name}`,
-    subtext: `${name} — how is your body winding down?`,
+    subtext: `${name}, how is your body winding down?`,
   };
 }
 
@@ -212,15 +212,15 @@ export default function HomeScreen() {
         return diff <= 30;
       });
       if (recentSessions.length > 0) {
-        return `You have ${recentSessions.length} session${recentSessions.length !== 1 ? 's' : ''} this month — every practice counts`;
+        return `You have ${recentSessions.length} session${recentSessions.length !== 1 ? 's' : ''} this month. Every practice counts.`;
       }
       return 'Your journey begins with a single breath';
     }
-    if (currentStreak === 1) return '1 day of practice — a powerful beginning';
-    if (currentStreak < 7) return `${currentStreak} days of consistent awareness — keep going`;
-    if (currentStreak < 14) return `${currentStreak} days — your neural pathways are strengthening`;
-    if (currentStreak < 30) return `${currentStreak} days — remarkable dedication to yourself`;
-    return `${currentStreak} days — you are genuinely rewiring your brain`;
+    if (currentStreak === 1) return '1 day of practice. A powerful beginning.';
+    if (currentStreak < 7) return `${currentStreak} days of consistent awareness. Keep going.`;
+    if (currentStreak < 14) return `${currentStreak} days. Your neural pathways are strengthening.`;
+    if (currentStreak < 30) return `${currentStreak} days. Remarkable dedication to yourself.`;
+    return `${currentStreak} days. You are genuinely rewiring your brain.`;
   }, [currentStreak, sessions]);
 
   const nextExercise = advisorState.nextExercise;
@@ -487,7 +487,7 @@ export default function HomeScreen() {
             <View style={styles.maia2BannerContent}>
               <Text style={styles.maia2BannerTitle}>Measure Your Body Awareness</Text>
               <Text style={styles.maia2BannerSubtitle}>
-                Take the MAIA-2 — the validated 8-dimension body awareness assessment
+                Take the MAIA-2: the validated 8-dimension body awareness assessment
               </Text>
             </View>
             <Feather name="chevron-right" size={16} color="#4A6FA5" />

@@ -203,7 +203,7 @@ export default function ExercisesScreen() {
         <TouchableOpacity style={styles.premiumBanner} activeOpacity={0.8} onPress={() => router.push('/premium' as any)}>
           <Feather name="star" size={15} color={Colors.warning} />
           <Text style={styles.premiumBannerText}>
-            {FREE_LIMITS.exercises} free exercises — unlock all 37+ with Premium
+            {FREE_LIMITS.exercises} free exercises. Unlock all 37+ with Premium.
           </Text>
           <Feather name="chevron-right" size={15} color={Colors.warning} />
         </TouchableOpacity>
@@ -314,7 +314,7 @@ export default function ExercisesScreen() {
           <View style={styles.tooltipCard}>
             <View style={styles.tooltipHeader}>
               <Feather name="alert-triangle" size={18} color="#B8860B" />
-              <Text style={styles.tooltipTitle}>Before you begin — please read</Text>
+              <Text style={styles.tooltipTitle}>Before you begin: please read</Text>
             </View>
             <Text style={styles.tooltipExerciseName}>{tooltipExercise?.title}</Text>
             {tooltipExercise?.contraindications.map((c, i) => (
