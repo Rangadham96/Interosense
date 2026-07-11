@@ -72,6 +72,7 @@ export const assessments = pgTable("assessments", {
   totalScore: integer("total_score").notNull().default(0),
   severity: text("severity").notNull().default(""),
   answers: jsonb("answers").$type<number[]>().notNull().default([]),
+  subscaleScores: jsonb("subscale_scores").$type<Record<string, number>>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

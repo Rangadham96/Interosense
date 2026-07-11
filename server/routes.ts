@@ -149,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Not authenticated" });
     }
     try {
-      const { id, scaleId, scaleName, completedAt, totalScore, severity, answers } = req.body;
+      const { id, scaleId, scaleName, completedAt, totalScore, severity, answers, subscaleScores } = req.body;
       const assessment = await createAssessment({
         id,
         userId: req.session.userId,
@@ -158,7 +158,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completedAt,
         totalScore: totalScore ?? 0,
         severity: severity ?? "",
-        answers: answers ?? [],
+        answers: Array.isArray(answers) ? answers : [],
+        subscaleScores: subscaleScores ?? null,
       });
       return res.status(201).json({ assessment });
     } catch (error) {

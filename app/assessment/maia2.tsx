@@ -118,12 +118,7 @@ export default function Maia2Screen() {
       return;
     }
     try {
-      await apiPost('/api/assessments', {
-        ...assessmentData,
-        scale: 'maia2',
-        score: score100,
-        answers: subscaleScores,
-      });
+      await apiPost('/api/assessments', assessmentData);
     } catch (e) {
       console.error('Failed to sync MAIA-2 to server:', e);
     }

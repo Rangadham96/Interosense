@@ -12,6 +12,7 @@ import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator, Text } from "react-native";
 import Colors from "@/constants/colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { calculateMaia2Subscales } from "@/constants/clinical-scales";
 import {
   useFonts,
   Nunito_400Regular,
@@ -49,10 +50,21 @@ function AuthGate() {
     if (isNowAuthenticated && wasAuthenticated !== true) {
       fetchServerData().then(data => {
         if (data) {
+          const assessments = data.assessments.map((a: any) => {
+            if (
+              a.scaleId === 'maia2' &&
+              !a.subscaleScores &&
+              Array.isArray(a.answers) &&
+              a.answers.length === 37
+            ) {
+              return { ...a, subscaleScores: calculateMaia2Subscales(a.answers) };
+            }
+            return a;
+          });
           hydrateFromServer({
             sessions: data.sessions,
             checkins: data.checkins,
-            assessments: data.assessments,
+            assessments,
           });
         }
       });
