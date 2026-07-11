@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getRazorpayKeyId, getRazorpayClient, verifyPaymentSignature, verifyWebhookSignature, isRazorpayConfigured, PLANS } from './razorpayClient';
 import { storage } from './storage';
+import { notifySubscriptionHalted } from './notifications';
 
 const router = Router();
 
@@ -153,7 +154,6 @@ router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
     } else if (
       event.event === 'subscription.cancelled' ||
       event.event === 'subscription.expired' ||
-      event.event === 'subscription.halted' ||
       event.event === 'subscription.completed'
     ) {
       if (userId) {
@@ -161,6 +161,19 @@ router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
           isPremium: false,
           stripeSubscriptionId: null,
         });
+      }
+    } else if (event.event === 'subscription.halted') {
+      if (userId) {
+        await storage.updateUser(String(userId), {
+          isPremium: false,
+          stripeSubscriptionId: null,
+        });
+        const user = await storage.getUser(String(userId));
+        if (user) {
+          notifySubscriptionHalted(user, subscriptionId).catch(err =>
+            console.error('notifySubscriptionHalted failed:', err)
+          );
+        }
       }
     }
 
