@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import {
-  StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform, Share, Alert,
+  StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform, Share, Alert, ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { MAIA2_SCALE, getMaia2OverallAverage, generateClinicianReport, PastMaia2Assessment } from '@/constants/clinical-scales';
 import RadarChart from '@/components/RadarChart';
+import { exportMaia2Pdf } from '@/lib/maia2-pdf';
 
 const SUBSCALE_SHORT: Record<string, string> = {
   noticing: 'Not',
@@ -30,6 +31,7 @@ export default function Maia2HistoryScreen() {
   const bottomPadding = Platform.OS === 'web' ? 34 : insets.bottom;
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const maia2Assessments = useMemo(() => {
     return assessments
@@ -60,6 +62,33 @@ export default function Maia2HistoryScreen() {
       await Share.share({ message: report, title: 'MAIA-2 Longitudinal Report' });
     } catch {
       Alert.alert('Unable to share', 'Please try again.');
+    }
+  }, [maia2Assessments, profile]);
+
+  const handleExportPdf = useCallback(async () => {
+    if (maia2Assessments.length === 0) return;
+    const latest = maia2Assessments[0];
+    if (!latest.subscaleScores) return;
+
+    const latestDate = format(parseISO(latest.completedAt), 'MMMM d, yyyy');
+    const pastAssessments: PastMaia2Assessment[] = maia2Assessments
+      .slice(1, 4)
+      .filter(a => !!a.subscaleScores)
+      .map(a => ({
+        date: format(parseISO(a.completedAt), 'MMMM d, yyyy'),
+        subscaleScores: a.subscaleScores!,
+      }));
+
+    setPdfLoading(true);
+    try {
+      await exportMaia2Pdf({
+        subscaleScores: latest.subscaleScores,
+        assessmentDate: latestDate,
+        userName: profile?.name,
+        pastAssessments: pastAssessments.length > 0 ? pastAssessments : undefined,
+      });
+    } finally {
+      setPdfLoading(false);
     }
   }, [maia2Assessments, profile]);
 
@@ -115,9 +144,17 @@ export default function Maia2HistoryScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>MAIA-2 History</Text>
         {maia2Assessments.length > 0 && (
-          <TouchableOpacity onPress={handleShareMulti} style={styles.shareBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Feather name="share-2" size={20} color={Colors.primary} />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity onPress={handleShareMulti} style={styles.shareBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Feather name="share-2" size={19} color={Colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleExportPdf} style={styles.shareBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} disabled={pdfLoading}>
+              {pdfLoading
+                ? <ActivityIndicator size="small" color={Colors.primary} />
+                : <Feather name="download" size={19} color={Colors.primary} />
+              }
+            </TouchableOpacity>
+          </View>
         )}
       </View>
 
@@ -173,14 +210,27 @@ export default function Maia2HistoryScreen() {
           <View style={styles.shareCard}>
             <Feather name="file-text" size={18} color={Colors.primary} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.shareCardTitle}>Share longitudinal report</Text>
+              <Text style={styles.shareCardTitle}>Longitudinal report</Text>
               <Text style={styles.shareCardSub}>
                 Includes your current profile plus up to 3 prior assessments for your clinician.
               </Text>
             </View>
-            <TouchableOpacity onPress={handleShareMulti} style={styles.shareCardBtn} activeOpacity={0.8}>
-              <Text style={styles.shareCardBtnText}>Share</Text>
-            </TouchableOpacity>
+            <View style={styles.shareCardActions}>
+              <TouchableOpacity onPress={handleShareMulti} style={[styles.shareCardBtn, styles.shareCardBtnOutline]} activeOpacity={0.8}>
+                <Feather name="share-2" size={13} color={Colors.primary} />
+                <Text style={[styles.shareCardBtnText, { color: Colors.primary }]}>Text</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleExportPdf} style={styles.shareCardBtn} activeOpacity={0.8} disabled={pdfLoading}>
+                {pdfLoading ? (
+                  <ActivityIndicator size="small" color={Colors.textInverse} />
+                ) : (
+                  <>
+                    <Feather name="download" size={13} color={Colors.textInverse} />
+                    <Text style={styles.shareCardBtnText}>PDF</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -322,7 +372,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingBottom: 12, paddingTop: 8,
   },
   backBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  shareBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  shareBtn: { width: 36, height: 38, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontFamily: 'Nunito_700Bold', color: Colors.text },
   scroll: { paddingHorizontal: 16 },
   countLabel: {
@@ -363,8 +414,14 @@ const styles = StyleSheet.create({
   },
   shareCardTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: Colors.text, marginBottom: 2 },
   shareCardSub: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: Colors.textSecondary, lineHeight: 16 },
+  shareCardActions: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   shareCardBtn: {
-    backgroundColor: Colors.primary, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8,
+    backgroundColor: Colors.primary, borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 5, minWidth: 60, justifyContent: 'center',
+  },
+  shareCardBtnOutline: {
+    backgroundColor: 'transparent', borderWidth: 1.5, borderColor: Colors.primary,
   },
   shareCardBtnText: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: Colors.textInverse },
 
