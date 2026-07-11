@@ -23,6 +23,9 @@ import {
   clearHealthConnection,
   requestHealthPermissions,
   fetchHealthData,
+  getLastSyncedAt,
+  saveLastSyncedAt,
+  clearLastSyncedAt,
   HealthPlatform,
 } from '@/lib/health';
 import { Storage } from '@/lib/storage';
@@ -186,6 +189,9 @@ export default function WearableScreen() {
   const [connectedPlatform, setConnectedPlatform] = useState<HealthPlatform>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [healthData, setHealthData] = useState<WearableDataPoint[]>([]);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+
+  const SYNC_THROTTLE_MS = 30 * 60 * 1000;
 
   const isMounted = useRef(true);
   useEffect(() => {
@@ -201,6 +207,10 @@ export default function WearableScreen() {
         setStatus('connected');
       }
     });
+    getLastSyncedAt().then((ts) => {
+      if (!isMounted.current) return;
+      setLastSyncedAt(ts);
+    });
     const realData = wearableData.filter((d) => d.source === 'healthkit' || d.source === 'health-connect');
     if (realData.length > 0) {
       setHealthData(realData);
@@ -211,13 +221,29 @@ export default function WearableScreen() {
     useCallback(() => {
       getHealthConnection().then(async (conn) => {
         if (!isMounted.current || !conn.connected || !conn.platform) return;
+
+        const storedSync = await getLastSyncedAt();
+        const lastSyncMs = storedSync ? new Date(storedSync).getTime() : 0;
+        const staleEnough = Date.now() - lastSyncMs >= SYNC_THROTTLE_MS;
+        if (!staleEnough) return;
+
         const fetchResult = await fetchHealthData(conn.platform);
         if (!isMounted.current) return;
+
+        if (fetchResult.error && fetchResult.data.length === 0) {
+          setErrorMessage(getErrorMessage(fetchResult.error));
+          return;
+        }
+
         if (fetchResult.data.length > 0) {
           await Storage.setWearableData(fetchResult.data);
           setHealthData(fetchResult.data);
           setConnectedPlatform(conn.platform);
           setStatus('connected');
+          const now = new Date().toISOString();
+          await saveLastSyncedAt(now);
+          setLastSyncedAt(now);
+          setErrorMessage(null);
           await refresh();
         }
       });
@@ -244,11 +270,14 @@ export default function WearableScreen() {
       return;
     }
 
+    const now = new Date().toISOString();
     await Storage.setWearableData(fetchResult.data);
-    await saveHealthConnection({ connected: true, platform, connectedAt: new Date().toISOString() });
+    await saveHealthConnection({ connected: true, platform, connectedAt: now });
+    await saveLastSyncedAt(now);
     setHealthData(fetchResult.data);
     setConnectedPlatform(platform);
     setStatus('connected');
+    setLastSyncedAt(now);
     await refresh();
   }, [refresh]);
 
@@ -259,23 +288,29 @@ export default function WearableScreen() {
 
     const fetchResult = await fetchHealthData(connectedPlatform);
     if (fetchResult.error && fetchResult.data.length === 0) {
-      setStatus('error');
+      setStatus('connected');
       setErrorMessage(getErrorMessage(fetchResult.error));
       return;
     }
+    const now = new Date().toISOString();
     await Storage.setWearableData(fetchResult.data);
+    await saveLastSyncedAt(now);
     setHealthData(fetchResult.data);
     setStatus('connected');
+    setLastSyncedAt(now);
+    setErrorMessage(null);
     await refresh();
   }, [connectedPlatform, refresh]);
 
   const handleDisconnect = useCallback(async () => {
     await clearHealthConnection();
+    await clearLastSyncedAt();
     await Storage.setWearableData([]);
     setConnectedPlatform(null);
     setHealthData([]);
     setStatus('idle');
     setErrorMessage(null);
+    setLastSyncedAt(null);
     await refresh();
   }, [refresh]);
 
@@ -345,6 +380,18 @@ export default function WearableScreen() {
     : 0;
 
   const connectedDeviceName = connectedPlatform === 'apple' ? 'Apple Health' : connectedPlatform === 'google' ? 'Health Connect' : null;
+
+  const lastSyncedLabel = useMemo(() => {
+    if (!lastSyncedAt) return null;
+    const diff = Date.now() - new Date(lastSyncedAt).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Synced just now';
+    if (mins === 1) return 'Synced 1 min ago';
+    if (mins < 60) return `Synced ${mins} mins ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs === 1) return 'Synced 1 hr ago';
+    return `Synced ${hrs} hrs ago`;
+  }, [lastSyncedAt]);
 
   const renderHeader = () => (
     <LinearGradient
@@ -425,6 +472,9 @@ export default function WearableScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.connectedLabel}>Connected</Text>
                 <Text style={styles.connectedDevice}>{connectedDeviceName}</Text>
+                {lastSyncedLabel ? (
+                  <Text style={styles.lastSyncedText}>{lastSyncedLabel}</Text>
+                ) : null}
               </View>
               <TouchableOpacity onPress={handleRefresh} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ marginRight: 12 }}>
                 <Feather name="refresh-cw" size={18} color={Colors.textSecondary} />
@@ -433,6 +483,12 @@ export default function WearableScreen() {
                 <Feather name="x-circle" size={20} color={Colors.textTertiary} />
               </TouchableOpacity>
             </View>
+            {errorMessage ? (
+              <View style={styles.inlineErrorBox}>
+                <Feather name="alert-circle" size={14} color={Colors.error} style={{ marginRight: 6, flexShrink: 0 }} />
+                <Text style={styles.inlineErrorText}>{errorMessage}</Text>
+              </View>
+            ) : null}
           </View>
         ) : status === 'requesting' || status === 'fetching' ? (
           <View style={[styles.connectionCard, cardShadow]}>
@@ -719,6 +775,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.text,
     marginTop: 2,
+  },
+  lastSyncedText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 12,
+    color: Colors.textTertiary,
+    marginTop: 2,
+  },
+  inlineErrorBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: `${Colors.error}10`,
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 12,
+  },
+  inlineErrorText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: Colors.error,
+    flex: 1,
+    lineHeight: 18,
   },
   loadingRow: {
     flexDirection: 'row',

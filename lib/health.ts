@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WearableDataPoint } from '@/lib/storage';
 
 const HEALTH_KEY = '@interosense:health_connection';
+const LAST_SYNC_KEY = '@interosense:health_last_synced';
 
 export type HealthPlatform = 'apple' | 'google' | null;
 
@@ -37,6 +38,22 @@ export async function saveHealthConnection(state: HealthConnectionState): Promis
 
 export async function clearHealthConnection(): Promise<void> {
   await AsyncStorage.removeItem(HEALTH_KEY);
+}
+
+export async function getLastSyncedAt(): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(LAST_SYNC_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export async function saveLastSyncedAt(isoString: string): Promise<void> {
+  await AsyncStorage.setItem(LAST_SYNC_KEY, isoString);
+}
+
+export async function clearLastSyncedAt(): Promise<void> {
+  await AsyncStorage.removeItem(LAST_SYNC_KEY);
 }
 
 export async function requestHealthPermissions(platform: 'apple' | 'google'): Promise<{ granted: boolean; error?: string }> {
