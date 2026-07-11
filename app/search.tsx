@@ -60,6 +60,7 @@ export default function SearchScreen() {
     return ARTICLES.filter(
       (a) =>
         a.title.toLowerCase().includes(query) ||
+        a.subtitle.toLowerCase().includes(query) ||
         a.category.toLowerCase().includes(query)
     );
   }, [query]);
@@ -200,6 +201,9 @@ export default function SearchScreen() {
       case 'article': {
         const article = item.data;
         const catInfo = ARTICLE_CATEGORIES[article.category];
+        const isNew = article.releaseDate
+          ? Date.now() - new Date(article.releaseDate).getTime() <= 30 * 24 * 60 * 60 * 1000
+          : false;
         return (
           <TouchableOpacity
             style={styles.articleCard}
@@ -210,9 +214,16 @@ export default function SearchScreen() {
               <Feather name={catInfo.icon as any} size={18} color={Colors.primary} />
             </View>
             <View style={styles.articleTextWrap}>
-              <Text style={styles.articleTitle} numberOfLines={2}>
-                {article.title}
-              </Text>
+              <View style={styles.articleTitleRow}>
+                <Text style={styles.articleTitle} numberOfLines={1}>
+                  {article.title}
+                </Text>
+                {isNew && (
+                  <View style={styles.newBadge}>
+                    <Text style={styles.newBadgeText}>New</Text>
+                  </View>
+                )}
+              </View>
               <Text style={styles.articleCategory}>{catInfo.label}</Text>
             </View>
             <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
@@ -497,16 +508,35 @@ const styles = StyleSheet.create({
   articleTextWrap: {
     flex: 1,
   },
+  articleTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
   articleTitle: {
     fontSize: 15,
     fontFamily: 'Nunito_600SemiBold',
     color: Colors.text,
-    marginBottom: 2,
+    flexShrink: 1,
   },
   articleCategory: {
     fontSize: 12,
     fontFamily: 'Nunito_500Medium',
     color: Colors.textTertiary,
+  },
+  newBadge: {
+    backgroundColor: Colors.primary + '18',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: Colors.primary + '30',
+  },
+  newBadgeText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 11,
+    color: Colors.primary,
   },
   conditionCard: {
     flexDirection: 'row',

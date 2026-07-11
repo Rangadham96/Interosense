@@ -54,6 +54,13 @@ export default function ArticlesScreen() {
     return ARTICLES.slice(0, FREE_LIMITS.articles).map(a => a.id);
   }, []);
 
+  const isNewArticle = (article: typeof ARTICLES[0]) => {
+    if (!article.releaseDate) return false;
+    const release = new Date(article.releaseDate).getTime();
+    const now = Date.now();
+    return now - release <= 30 * 24 * 60 * 60 * 1000;
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -75,7 +82,7 @@ export default function ArticlesScreen() {
         <TouchableOpacity style={styles.premiumBanner} activeOpacity={0.8} onPress={() => router.push('/premium' as any)}>
           <Feather name="star" size={14} color={Colors.warning} />
           <Text style={styles.premiumBannerText}>
-            {FREE_LIMITS.articles} free articles. Unlock all 15 with Premium.
+            {FREE_LIMITS.articles} free articles. Unlock all {ARTICLES.length} with Premium.
           </Text>
           <Feather name="chevron-right" size={14} color={Colors.warning} />
         </TouchableOpacity>
@@ -178,6 +185,7 @@ export default function ArticlesScreen() {
             const isBookmarked = bookmarks.includes(article.id);
             const isRead = articlesRead.includes(article.id);
             const isLocked = !isPremium && !freeArticleIds.includes(article.id);
+            const isNew = isNewArticle(article);
 
             if (isLocked) {
               return (
@@ -221,6 +229,11 @@ export default function ArticlesScreen() {
                     </View>
                     <Feather name="clock" size={12} color={Colors.textTertiary} />
                     <Text style={styles.readTime}>{article.readTimeMinutes} min</Text>
+                    {isNew && (
+                      <View style={styles.newBadge}>
+                        <Text style={styles.newBadgeText}>New</Text>
+                      </View>
+                    )}
                     {isRead && (
                       <View style={styles.readBadge}>
                         <Feather name="check" size={10} color={Colors.success} />
@@ -539,6 +552,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_600SemiBold',
     fontSize: 11,
     color: Colors.success,
+  },
+  newBadge: {
+    backgroundColor: Colors.primary + '18',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: Colors.primary + '30',
+  },
+  newBadgeText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 11,
+    color: Colors.primary,
   },
   premiumBadge: {
     flexDirection: 'row',
