@@ -329,6 +329,24 @@ export function getMaia2OverallAverage(subscaleScores: Record<string, number>): 
   return Math.round(values.reduce((s, v) => s + v, 0) / values.length * 100) / 100;
 }
 
+export const MAIA2_REQUIRED_SUBSCALE_KEYS = [
+  'noticing',
+  'notDistracting',
+  'notWorrying',
+  'attentionRegulation',
+  'emotionalAwareness',
+  'selfRegulation',
+  'bodyListening',
+  'trusting',
+] as const;
+
+export function hasCompleteSubscaleScores(scores: Record<string, number> | undefined | null): boolean {
+  if (!scores) return false;
+  return MAIA2_REQUIRED_SUBSCALE_KEYS.every(
+    key => key in scores && typeof scores[key] === 'number' && !isNaN(scores[key]),
+  );
+}
+
 export interface Maia2ClinicalFlag {
   key: string;
   type: 'professional' | 'distress' | 'encouragement';
@@ -337,10 +355,11 @@ export interface Maia2ClinicalFlag {
 }
 
 export function getMaia2ClinicalFlags(subscaleScores: Record<string, number>): Maia2ClinicalFlag[] {
+  if (!hasCompleteSubscaleScores(subscaleScores)) return [];
   const flags: Maia2ClinicalFlag[] = [];
-  const trusting = subscaleScores['trusting'] ?? 0;
-  const noticing = subscaleScores['noticing'] ?? 0;
-  const notWorrying = subscaleScores['notWorrying'] ?? 0;
+  const trusting = subscaleScores['trusting'];
+  const noticing = subscaleScores['noticing'];
+  const notWorrying = subscaleScores['notWorrying'];
   const avg = getMaia2OverallAverage(subscaleScores);
 
   if (trusting < 2.0) {

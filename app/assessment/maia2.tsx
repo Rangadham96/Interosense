@@ -13,6 +13,7 @@ import {
   getMaia2OverallAverage,
   getMaia2ClinicalFlags,
   generateClinicianReport,
+  hasCompleteSubscaleScores,
 } from '@/constants/clinical-scales';
 import { useApp } from '@/contexts/AppContext';
 import { apiPost } from '@/lib/api';
@@ -307,8 +308,8 @@ export default function Maia2Screen() {
   const strongest = sortedSubscales.slice(0, 2);
   const growing = sortedSubscales.slice(-2).reverse();
 
-  const previousSubscaleScores = previousMaia2.length > 0 && previousMaia2[0].subscaleScores
-    ? previousMaia2[0].subscaleScores
+  const previousSubscaleScores = previousMaia2.length > 0 && hasCompleteSubscaleScores(previousMaia2[0].subscaleScores)
+    ? previousMaia2[0].subscaleScores!
     : null;
 
   return (

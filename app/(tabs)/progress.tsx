@@ -8,7 +8,7 @@ import { format, parseISO, startOfWeek, addDays, isSameDay, differenceInDays } f
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { ACHIEVEMENTS, TIER_COLORS } from '@/constants/achievements';
-import { CLINICAL_SCALES, MAIA2_SCALE, getMaia2OverallAverage, getMaia2ClinicalFlags, generateClinicianReport, PastMaia2Assessment } from '@/constants/clinical-scales';
+import { CLINICAL_SCALES, MAIA2_SCALE, getMaia2OverallAverage, getMaia2ClinicalFlags, generateClinicianReport, PastMaia2Assessment, hasCompleteSubscaleScores } from '@/constants/clinical-scales';
 import RadarChart from '@/components/RadarChart';
 import Svg, { Circle } from 'react-native-svg';
 
@@ -89,42 +89,47 @@ export default function ProgressScreen() {
   const latestMaia2 = maia2Assessments[0] ?? null;
   const previousMaia2 = maia2Assessments[1] ?? null;
 
+  const latestMaia2SubscalesComplete = useMemo(
+    () => hasCompleteSubscaleScores(latestMaia2?.subscaleScores),
+    [latestMaia2],
+  );
+
   const maia2RadarDimensions = useMemo(() => {
-    if (!latestMaia2?.subscaleScores) return null;
+    if (!latestMaia2SubscalesComplete || !latestMaia2?.subscaleScores) return null;
     return MAIA2_SCALE.subscales.map(s => ({
       key: s.key,
       label: s.name,
-      value: latestMaia2.subscaleScores![s.key] ?? 0,
+      value: latestMaia2.subscaleScores![s.key],
       maxValue: 5,
     }));
-  }, [latestMaia2]);
+  }, [latestMaia2, latestMaia2SubscalesComplete]);
 
   const maia2PrevRadarDimensions = useMemo(() => {
-    if (!previousMaia2?.subscaleScores) return undefined;
+    if (!hasCompleteSubscaleScores(previousMaia2?.subscaleScores)) return undefined;
     return MAIA2_SCALE.subscales.map(s => ({
       key: s.key,
       label: s.name,
-      value: previousMaia2.subscaleScores![s.key] ?? 0,
+      value: previousMaia2!.subscaleScores![s.key],
       maxValue: 5,
     }));
   }, [previousMaia2]);
 
   const maia2OverallScore = useMemo(() => {
-    if (!latestMaia2?.subscaleScores) return null;
+    if (!latestMaia2SubscalesComplete || !latestMaia2?.subscaleScores) return null;
     return getMaia2OverallAverage(latestMaia2.subscaleScores);
-  }, [latestMaia2]);
+  }, [latestMaia2, latestMaia2SubscalesComplete]);
 
   const maia2ClinicalFlags = useMemo(() => {
-    if (!latestMaia2?.subscaleScores) return [];
+    if (!latestMaia2SubscalesComplete || !latestMaia2?.subscaleScores) return [];
     return getMaia2ClinicalFlags(latestMaia2.subscaleScores);
-  }, [latestMaia2]);
+  }, [latestMaia2, latestMaia2SubscalesComplete]);
 
   const handleShareWithClinician = useCallback(async () => {
-    if (!latestMaia2?.subscaleScores) return;
+    if (!latestMaia2SubscalesComplete || !latestMaia2?.subscaleScores) return;
     const date = format(parseISO(latestMaia2.completedAt), 'MMMM d, yyyy');
     const pastAssessments: PastMaia2Assessment[] = maia2Assessments
       .slice(1, 4)
-      .filter(a => !!a.subscaleScores)
+      .filter(a => hasCompleteSubscaleScores(a.subscaleScores))
       .map(a => ({
         date: format(parseISO(a.completedAt), 'MMMM d, yyyy'),
         subscaleScores: a.subscaleScores!,
@@ -356,7 +361,7 @@ export default function ProgressScreen() {
           </TouchableOpacity>
         )}
 
-        {latestMaia2 && maia2RadarDimensions && (
+        {latestMaia2 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Body Awareness Profile</Text>
@@ -375,102 +380,135 @@ export default function ProgressScreen() {
               <Text style={styles.maia2CardDate}>
                 {format(parseISO(latestMaia2.completedAt), 'MMM d, yyyy')} · MAIA-2
               </Text>
-              <View style={styles.maia2RadarWrap}>
-                <RadarChart
-                  dimensions={maia2RadarDimensions}
-                  size={260}
-                  color={Colors.primary}
-                  secondaryColor={Colors.secondary}
-                  secondaryDimensions={maia2PrevRadarDimensions}
-                />
-              </View>
-              {maia2PrevRadarDimensions && previousMaia2 && (
-                <View style={styles.maia2Legend}>
-                  <View style={styles.maia2LegendItem}>
-                    <View style={[styles.maia2LegendDot, { backgroundColor: Colors.primary }]} />
-                    <Text style={styles.maia2LegendText}>{format(parseISO(latestMaia2.completedAt), 'MMM d')}</Text>
+
+              {latestMaia2SubscalesComplete && maia2RadarDimensions ? (
+                <>
+                  <View style={styles.maia2RadarWrap}>
+                    <RadarChart
+                      dimensions={maia2RadarDimensions}
+                      size={260}
+                      color={Colors.primary}
+                      secondaryColor={Colors.secondary}
+                      secondaryDimensions={maia2PrevRadarDimensions}
+                    />
                   </View>
-                  <View style={styles.maia2LegendItem}>
-                    <View style={[styles.maia2LegendDot, { backgroundColor: Colors.secondary, borderStyle: 'dashed' as const }]} />
-                    <Text style={styles.maia2LegendText}>{format(parseISO(previousMaia2.completedAt), 'MMM d')}</Text>
+                  {maia2PrevRadarDimensions && previousMaia2 && (
+                    <View style={styles.maia2Legend}>
+                      <View style={styles.maia2LegendItem}>
+                        <View style={[styles.maia2LegendDot, { backgroundColor: Colors.primary }]} />
+                        <Text style={styles.maia2LegendText}>{format(parseISO(latestMaia2.completedAt), 'MMM d')}</Text>
+                      </View>
+                      <View style={styles.maia2LegendItem}>
+                        <View style={[styles.maia2LegendDot, { backgroundColor: Colors.secondary, borderStyle: 'dashed' as const }]} />
+                        <Text style={styles.maia2LegendText}>{format(parseISO(previousMaia2.completedAt), 'MMM d')}</Text>
+                      </View>
+                    </View>
+                  )}
+
+                  <View style={styles.subscaleProfileSection}>
+                    <Text style={styles.subscaleProfileTitle}>8-Dimension Subscale Profile</Text>
+                    <Text style={styles.subscaleProfileNote}>
+                      MAIA-2 authors advise against a single composite score. The pattern across all 8 subscales is the clinically meaningful result.
+                    </Text>
+                    {MAIA2_SCALE.subscales.map(s => {
+                      const score = latestMaia2.subscaleScores![s.key];
+                      const pct = (score / 5) * 100;
+                      const barColor = score >= 3.5 ? Colors.success : score >= 2 ? Colors.primary : Colors.warning;
+                      return (
+                        <View key={s.key} style={styles.subscaleProfileRow}>
+                          <View style={styles.subscaleProfileHeader}>
+                            <Text style={styles.subscaleProfileName}>{s.name}</Text>
+                            <Text style={[styles.subscaleProfileScore, { color: barColor }]}>{score.toFixed(1)}/5</Text>
+                          </View>
+                          <View style={styles.subscaleProfileTrack}>
+                            <View style={[styles.subscaleProfileFill, { width: `${pct}%` as any, backgroundColor: barColor }]} />
+                          </View>
+                          <Text style={styles.subscaleProfileDesc}>{getSubscaleOneLiner(s.key, score)}</Text>
+                        </View>
+                      );
+                    })}
                   </View>
+
+                  {maia2ClinicalFlags.length > 0 && (
+                    <View style={styles.clinicalFlagsSection}>
+                      <Text style={styles.clinicalFlagsTitle}>Clinical Interpretation</Text>
+                      {maia2ClinicalFlags.map(flag => (
+                        <View key={flag.key} style={[styles.clinicalFlagCard, styles[`flagType_${flag.type}` as keyof typeof styles] as any]}>
+                          <View style={styles.clinicalFlagHeader}>
+                            <Feather
+                              name={flag.type === 'professional' ? 'user' : flag.type === 'distress' ? 'alert-circle' : 'trending-up'}
+                              size={15}
+                              color={flag.type === 'professional' ? '#4A6FA5' : flag.type === 'distress' ? '#E07A5F' : Colors.success}
+                            />
+                            <Text style={[styles.clinicalFlagTitle, {
+                              color: flag.type === 'professional' ? '#2D4A7A' : flag.type === 'distress' ? '#7A3020' : '#1A5C30',
+                            }]}>{flag.title}</Text>
+                          </View>
+                          <Text style={styles.clinicalFlagMessage}>{flag.message}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                  {hasCompleteSubscaleScores(previousMaia2?.subscaleScores) && previousMaia2?.subscaleScores && (
+                    <View style={styles.maia2Comparisons}>
+                      <Text style={styles.maia2ComparisonTitle}>Month-over-Month</Text>
+                      {MAIA2_SCALE.subscales.map(s => {
+                        const current = latestMaia2.subscaleScores![s.key];
+                        const prev = previousMaia2.subscaleScores![s.key];
+                        const diff = current - prev;
+                        const arrow = diff > 0.1 ? '↑' : diff < -0.1 ? '↓' : '→';
+                        const arrowColor = diff > 0.1 ? Colors.success : diff < -0.1 ? Colors.error : Colors.textTertiary;
+                        return (
+                          <View key={s.key} style={styles.maia2CompRow}>
+                            <Text style={styles.maia2CompLabel}>{s.name}</Text>
+                            <Text style={[styles.maia2CompArrow, { color: arrowColor }]}>{arrow}</Text>
+                            <Text style={styles.maia2CompValues}>{prev.toFixed(1)} → {current.toFixed(1)}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
+                </>
+              ) : (
+                <View style={styles.subscaleIncompleteState}>
+                  <Feather name="alert-circle" size={28} color={Colors.warning} />
+                  <Text style={styles.subscaleIncompleteTitle}>Subscale data incomplete</Text>
+                  <Text style={styles.subscaleIncompleteText}>
+                    This assessment is missing one or more subscale scores and cannot be displayed. This can happen if the assessment was saved before the full subscale profile was introduced, or if data was lost during sync.
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.subscaleIncompleteBtn}
+                    onPress={() => router.push('/assessment/maia2' as any)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.subscaleIncompleteBtnText}>Retake Assessment</Text>
+                  </TouchableOpacity>
                 </View>
               )}
 
-              <View style={styles.subscaleProfileSection}>
-                <Text style={styles.subscaleProfileTitle}>8-Dimension Subscale Profile</Text>
-                <Text style={styles.subscaleProfileNote}>
-                  MAIA-2 authors advise against a single composite score. The pattern across all 8 subscales is the clinically meaningful result.
+              <TouchableOpacity
+                style={[styles.shareClinicianBtn, !latestMaia2SubscalesComplete && styles.shareClinicianBtnDisabled]}
+                onPress={handleShareWithClinician}
+                activeOpacity={latestMaia2SubscalesComplete ? 0.8 : 1}
+                disabled={!latestMaia2SubscalesComplete}
+              >
+                <Feather name="share-2" size={16} color={latestMaia2SubscalesComplete ? Colors.primary : Colors.textTertiary} />
+                <Text style={[styles.shareClinicianText, !latestMaia2SubscalesComplete && styles.shareClinicianTextDisabled]}>
+                  Share with Clinician
                 </Text>
-                {MAIA2_SCALE.subscales.map(s => {
-                  const score = latestMaia2.subscaleScores?.[s.key] ?? 0;
-                  const pct = (score / 5) * 100;
-                  const barColor = score >= 3.5 ? Colors.success : score >= 2 ? Colors.primary : Colors.warning;
-                  return (
-                    <View key={s.key} style={styles.subscaleProfileRow}>
-                      <View style={styles.subscaleProfileHeader}>
-                        <Text style={styles.subscaleProfileName}>{s.name}</Text>
-                        <Text style={[styles.subscaleProfileScore, { color: barColor }]}>{score.toFixed(1)}/5</Text>
-                      </View>
-                      <View style={styles.subscaleProfileTrack}>
-                        <View style={[styles.subscaleProfileFill, { width: `${pct}%` as any, backgroundColor: barColor }]} />
-                      </View>
-                      <Text style={styles.subscaleProfileDesc}>{getSubscaleOneLiner(s.key, score)}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-
-              {maia2ClinicalFlags.length > 0 && (
-                <View style={styles.clinicalFlagsSection}>
-                  <Text style={styles.clinicalFlagsTitle}>Clinical Interpretation</Text>
-                  {maia2ClinicalFlags.map(flag => (
-                    <View key={flag.key} style={[styles.clinicalFlagCard, styles[`flagType_${flag.type}` as keyof typeof styles] as any]}>
-                      <View style={styles.clinicalFlagHeader}>
-                        <Feather
-                          name={flag.type === 'professional' ? 'user' : flag.type === 'distress' ? 'alert-circle' : 'trending-up'}
-                          size={15}
-                          color={flag.type === 'professional' ? '#4A6FA5' : flag.type === 'distress' ? '#E07A5F' : Colors.success}
-                        />
-                        <Text style={[styles.clinicalFlagTitle, {
-                          color: flag.type === 'professional' ? '#2D4A7A' : flag.type === 'distress' ? '#7A3020' : '#1A5C30',
-                        }]}>{flag.title}</Text>
-                      </View>
-                      <Text style={styles.clinicalFlagMessage}>{flag.message}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-
-              {previousMaia2?.subscaleScores && (
-                <View style={styles.maia2Comparisons}>
-                  <Text style={styles.maia2ComparisonTitle}>Month-over-Month</Text>
-                  {MAIA2_SCALE.subscales.map(s => {
-                    const current = latestMaia2.subscaleScores?.[s.key] ?? 0;
-                    const prev = previousMaia2.subscaleScores![s.key] ?? 0;
-                    const diff = current - prev;
-                    const arrow = diff > 0.1 ? '↑' : diff < -0.1 ? '↓' : '→';
-                    const arrowColor = diff > 0.1 ? Colors.success : diff < -0.1 ? Colors.error : Colors.textTertiary;
-                    return (
-                      <View key={s.key} style={styles.maia2CompRow}>
-                        <Text style={styles.maia2CompLabel}>{s.name}</Text>
-                        <Text style={[styles.maia2CompArrow, { color: arrowColor }]}>{arrow}</Text>
-                        <Text style={styles.maia2CompValues}>{prev.toFixed(1)} → {current.toFixed(1)}</Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
-
-              <TouchableOpacity style={styles.shareClinicianBtn} onPress={handleShareWithClinician} activeOpacity={0.8}>
-                <Feather name="share-2" size={16} color={Colors.primary} />
-                <Text style={styles.shareClinicianText}>Share with Clinician</Text>
               </TouchableOpacity>
-              <Text style={styles.shareClinicianNote}>
-                {maia2Assessments.length >= 2
-                  ? `Generates a formatted report with your current profile plus ${Math.min(maia2Assessments.length - 1, 3)} prior assessment${Math.min(maia2Assessments.length - 1, 3) !== 1 ? 's' : ''} for longitudinal context.`
-                  : 'Generates a formatted report of your 8 subscale scores you can send by email, messages, or print.'}
-              </Text>
+              {!latestMaia2SubscalesComplete ? (
+                <Text style={styles.shareClinicianNote}>
+                  Sharing is unavailable until a complete assessment with all 8 subscale scores is recorded.
+                </Text>
+              ) : (
+                <Text style={styles.shareClinicianNote}>
+                  {maia2Assessments.length >= 2
+                    ? `Generates a formatted report with your current profile plus ${Math.min(maia2Assessments.length - 1, 3)} prior assessment${Math.min(maia2Assessments.length - 1, 3) !== 1 ? 's' : ''} for longitudinal context.`
+                    : 'Generates a formatted report of your 8 subscale scores you can send by email, messages, or print.'}
+                </Text>
+              )}
               {maia2Assessments.length >= 2 && (
                 <TouchableOpacity
                   style={styles.viewHistoryBtn}
@@ -975,12 +1013,33 @@ const styles = StyleSheet.create({
   clinicalFlagTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, flex: 1 },
   clinicalFlagMessage: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.textSecondary, lineHeight: 18 },
 
+  subscaleIncompleteState: {
+    alignItems: 'center', paddingVertical: 20, paddingHorizontal: 8, gap: 10,
+  },
+  subscaleIncompleteTitle: {
+    fontFamily: 'Nunito_700Bold', fontSize: 15, color: Colors.warning, textAlign: 'center',
+  },
+  subscaleIncompleteText: {
+    fontFamily: 'Nunito_400Regular', fontSize: 13, color: Colors.textSecondary,
+    textAlign: 'center', lineHeight: 19,
+  },
+  subscaleIncompleteBtn: {
+    marginTop: 6, paddingVertical: 10, paddingHorizontal: 24,
+    backgroundColor: Colors.primary, borderRadius: 10,
+  },
+  subscaleIncompleteBtnText: {
+    fontFamily: 'Nunito_700Bold', fontSize: 14, color: '#FFF',
+  },
   shareClinicianBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     borderWidth: 1.5, borderColor: Colors.primary, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 20,
     width: '100%', marginTop: 16,
   },
+  shareClinicianBtnDisabled: {
+    borderColor: Colors.border, opacity: 0.5,
+  },
   shareClinicianText: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: Colors.primary },
+  shareClinicianTextDisabled: { color: Colors.textTertiary },
   shareClinicianNote: {
     fontFamily: 'Nunito_400Regular', fontSize: 11, color: Colors.textTertiary,
     textAlign: 'center', marginTop: 8, lineHeight: 16,
