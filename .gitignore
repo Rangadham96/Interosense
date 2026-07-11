@@ -38,3 +38,7 @@ yarn-error.*
 .vercel
 
 .env
+
+# Playwright
+playwright-report/
+test-results/
