@@ -106,7 +106,7 @@ function getTodayFocus(profile: UserProfile | null, sessions: SessionRecord[], c
     return 'Focus on breathing exercises today - they reduce anxiety by activating the vagus nerve.';
   }
   if (conditions.includes('ptsd')) {
-    return 'Today\'s focus: grounding exercises that reconnect you safely with your body.';
+    return 'Today\'s focus: trauma-informed somatic exercises that reconnect you safely with your body.';
   }
   if (conditions.includes('depression')) {
     return 'Movement-based practices help lift mood through the body-brain connection.';
@@ -123,6 +123,7 @@ function getExerciseRecommendations(
   sessions: SessionRecord[],
   checkins: CheckinRecord[],
   assessments: AssessmentRecord[],
+  wearableData: WearableDataPoint[],
 ): Recommendation[] {
   const recs: Recommendation[] = [];
   const completedIds = new Set(sessions.map(s => s.exerciseId));
@@ -139,6 +140,25 @@ function getExerciseRecommendations(
   const recentMood = recentCheckin?.mood || '';
   const recentEnergy = recentCheckin?.energyLevel || 5;
   const recentSleep = recentCheckin?.sleepQuality || 5;
+  const recentStress = recentCheckin?.stressLevel ?? 5;
+
+  const hasPtsdCondition = conditions.includes('ptsd' as TargetCondition);
+
+  const latestPcl5 = assessments
+    .filter(a => a.scaleId === 'pcl-5')
+    .sort((a, b) => b.completedAt.localeCompare(a.completedAt))[0];
+  const pcl5Score = latestPcl5?.totalScore ?? 0;
+  const highPcl5 = pcl5Score >= 33;
+
+  const recentWearable = wearableData.length > 0
+    ? wearableData.filter(w => w.hrv !== undefined).slice(-3)
+    : [];
+  const avgRecentHrv = recentWearable.length > 0
+    ? recentWearable.reduce((s, w) => s + (w.hrv || 0), 0) / recentWearable.length
+    : null;
+  const lowHrv = avgRecentHrv !== null && avgRecentHrv < 40;
+
+  const highStress = recentStress >= 7 || recentMood === 'anxious' || recentMood === 'stressed';
 
   const scored = EXERCISES.map(ex => {
     let score = 0;
@@ -161,6 +181,11 @@ function getExerciseRecommendations(
     if ((recentMood === 'sad' || recentMood === 'down') && ex.targetConditions.includes('depression')) score += 25;
     if (recentSleep <= 3 && ex.targetConditions.includes('sleep')) score += 20;
     if (recentEnergy <= 3 && ex.category === 'movement') score += 15;
+
+    if (highStress && ex.category === 'nervousSystem') score += 30;
+    if (lowHrv && ex.category === 'nervousSystem') score += 25;
+    if ((hasPtsdCondition || highPcl5) && ex.category === 'traumaInformed') score += 35;
+    if (highPcl5 && ex.targetConditions.includes('ptsd')) score += 20;
 
     if (tod === 'morning' && (ex.category === 'bodyScanning' || ex.category === 'breathing')) score += 10;
     if (tod === 'evening' && (ex.category === 'tension' || ex.id === '478-breathing')) score += 10;
@@ -188,6 +213,18 @@ function getExerciseRecommendations(
     }
     if (recentMood === 'anxious' && ex.targetConditions.includes('anxiety')) {
       reason = 'Based on your recent check-in: helps with anxiety';
+    }
+    if (highStress && ex.category === 'nervousSystem') {
+      reason = 'Your stress signals are elevated - this exercise regulates your autonomic nervous system';
+    }
+    if (lowHrv && ex.category === 'nervousSystem') {
+      reason = `Your HRV is low (${avgRecentHrv!.toFixed(0)} ms) - vagal regulation exercises help restore balance`;
+    }
+    if (hasPtsdCondition && ex.category === 'traumaInformed') {
+      reason = 'Trauma-informed practice: gentle somatic work designed for nervous system safety';
+    }
+    if (highPcl5 && ex.category === 'traumaInformed') {
+      reason = 'Your PCL-5 results suggest trauma-informed exercises would be most supportive right now';
     }
     if (!completedIds.has(ex.id)) {
       reason = `New exercise: ${reason}`;
@@ -469,7 +506,7 @@ export function generateAdvisorState(
   const streakMessage = getStreakMessage(currentStreak);
   const todayFocus = getTodayFocus(profile, sessions, checkins, assessments);
 
-  const exerciseRecs = getExerciseRecommendations(profile, sessions, checkins, assessments);
+  const exerciseRecs = getExerciseRecommendations(profile, sessions, checkins, assessments, wearableData);
   const systemRecs = getSystemRecommendations(profile, sessions, checkins, assessments, todayCheckedIn, currentStreak);
   const allRecs = [...systemRecs, ...exerciseRecs].sort((a, b) => b.priority - a.priority);
 
