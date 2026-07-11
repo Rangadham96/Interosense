@@ -10,6 +10,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByStripeCustomerId(customerId: string): Promise<User | undefined>;
+  getUserByProviderId(provider: string, providerId: string): Promise<User | undefined>;
   createUser(user: Partial<User> & { email: string }): Promise<User>;
   updateUser(id: string, data: Partial<User>): Promise<User | undefined>;
 }
@@ -27,6 +28,14 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByStripeCustomerId(customerId: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.stripeCustomerId, customerId));
+    return user;
+  }
+
+  async getUserByProviderId(provider: string, providerId: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(and(eq(users.provider, provider), eq(users.providerId, providerId)));
     return user;
   }
 

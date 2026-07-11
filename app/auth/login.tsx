@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,16 +12,22 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Feather } from '@expo/vector-icons';
+import { Feather, AntDesign } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
+
+WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { from, banner } = useLocalSearchParams<{ from?: string; banner?: string }>();
-  const { login } = useAuth();
+  const { login, loginWithSocial } = useAuth();
   const topPadding = Platform.OS === 'web' ? 67 : insets.top;
 
   const [email, setEmail] = useState('');
@@ -29,6 +35,81 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const [appleAvailable, setAppleAvailable] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      import('expo-apple-authentication').then((mod) => {
+        mod.isAvailableAsync().then(setAppleAvailable).catch(() => {});
+      }).catch(() => {});
+    }
+  }, []);
+
+  const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
+    webClientId: GOOGLE_CLIENT_ID,
+    iosClientId: GOOGLE_CLIENT_ID,
+    androidClientId: GOOGLE_CLIENT_ID,
+  });
+
+  useEffect(() => {
+    if (googleResponse?.type === 'success') {
+      const auth = googleResponse.authentication;
+      if (auth?.accessToken) {
+        handleGoogleToken(auth.accessToken, auth.idToken ?? undefined);
+      }
+    }
+  }, [googleResponse]);
+
+  const handleGoogleToken = async (accessToken: string, idToken?: string) => {
+    setLoading(true);
+    setError('');
+    const result = await loginWithSocial({ provider: 'google', accessToken, idToken });
+    setLoading(false);
+    if (!result.success) {
+      setError(result.message || 'Google sign-in failed. Please try again.');
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (!GOOGLE_CLIENT_ID) {
+      setError('Google sign-in is not configured yet.');
+      return;
+    }
+    setError('');
+    await promptGoogleAsync();
+  };
+
+  const handleAppleSignIn = async () => {
+    try {
+      const AppleAuthentication = await import('expo-apple-authentication');
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      const fullName = credential.fullName
+        ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(' ')
+        : undefined;
+      setLoading(true);
+      setError('');
+      const result = await loginWithSocial({
+        provider: 'apple',
+        idToken: credential.identityToken ?? undefined,
+        email: credential.email ?? undefined,
+        name: fullName,
+      });
+      setLoading(false);
+      if (!result.success) {
+        setError(result.message || 'Apple sign-in failed. Please try again.');
+      }
+    } catch (e: any) {
+      if (e.code !== 'ERR_REQUEST_CANCELED') {
+        setError('Apple sign-in failed. Please try again.');
+      }
+    }
+  };
 
   const handleLogin = async () => {
     setError('');
@@ -94,6 +175,36 @@ export default function LoginScreen() {
               </View>
             ) : null}
 
+            <View style={styles.socialRow}>
+              <Pressable
+                style={styles.socialButton}
+                onPress={handleGoogleSignIn}
+                disabled={loading}
+                testID="login-google"
+              >
+                <GoogleIcon />
+                <Text style={styles.socialButtonText}>Google</Text>
+              </Pressable>
+
+              {appleAvailable && (
+                <Pressable
+                  style={[styles.socialButton, styles.appleButton]}
+                  onPress={handleAppleSignIn}
+                  disabled={loading}
+                  testID="login-apple"
+                >
+                  <AntDesign name="apple" size={18} color="#fff" />
+                  <Text style={[styles.socialButtonText, styles.appleButtonText]}>Apple</Text>
+                </Pressable>
+              )}
+            </View>
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or sign in with email</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
             <View style={styles.inputGroup}>
               <View style={styles.inputWrapper}>
                 <Feather name="mail" size={18} color={Colors.textTertiary} style={styles.inputIcon} />
@@ -141,7 +252,7 @@ export default function LoginScreen() {
                   <Text style={styles.loginButtonText}>Just a moment...</Text>
                 </>
               ) : (
-                <Text style={styles.loginButtonText}>Continue →</Text>
+                <Text style={styles.loginButtonText}>Continue</Text>
               )}
             </Pressable>
 
@@ -158,6 +269,14 @@ export default function LoginScreen() {
         </View>
       </View>
     </KeyboardAvoidingView>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <View style={styles.googleIcon}>
+      <Text style={styles.googleIconText}>G</Text>
+    </View>
   );
 }
 
@@ -189,6 +308,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFEBEE', borderRadius: 12, padding: 12, marginBottom: 16,
   },
   errorText: { fontSize: 13, fontFamily: 'Nunito_500Medium', color: '#C62828', flex: 1 },
+  socialRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  socialButton: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: Colors.backgroundSecondary, borderRadius: 14, paddingVertical: 13,
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  socialButtonText: { fontSize: 15, fontFamily: 'Nunito_600SemiBold', color: Colors.text },
+  appleButton: { backgroundColor: '#1C1C1E', borderColor: '#1C1C1E' },
+  appleButtonText: { color: '#fff' },
+  googleIcon: {
+    width: 20, height: 20, borderRadius: 10,
+    backgroundColor: '#fff', borderWidth: 1, borderColor: '#E0E0E0',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  googleIconText: { fontSize: 13, fontFamily: 'Nunito_700Bold', color: '#4285F4' },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
+  dividerText: { fontSize: 12, fontFamily: 'Nunito_500Medium', color: Colors.textTertiary },
   inputGroup: { marginBottom: 14 },
   inputWrapper: {
     flexDirection: 'row', alignItems: 'center',

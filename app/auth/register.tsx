@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,10 +13,16 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Feather } from '@expo/vector-icons';
+import { Feather, AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
+
+WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
 
 const TRUST_ITEMS = [
   'Your data is encrypted and never sold',
@@ -28,7 +34,7 @@ const TRUST_ITEMS = [
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { register } = useAuth();
+  const { register, loginWithSocial } = useAuth();
   const topPadding = Platform.OS === 'web' ? 67 : insets.top;
 
   const [name, setName] = useState('');
@@ -37,6 +43,81 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const [appleAvailable, setAppleAvailable] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      import('expo-apple-authentication').then((mod) => {
+        mod.isAvailableAsync().then(setAppleAvailable).catch(() => {});
+      }).catch(() => {});
+    }
+  }, []);
+
+  const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
+    webClientId: GOOGLE_CLIENT_ID,
+    iosClientId: GOOGLE_CLIENT_ID,
+    androidClientId: GOOGLE_CLIENT_ID,
+  });
+
+  useEffect(() => {
+    if (googleResponse?.type === 'success') {
+      const auth = googleResponse.authentication;
+      if (auth?.accessToken) {
+        handleGoogleToken(auth.accessToken, auth.idToken ?? undefined);
+      }
+    }
+  }, [googleResponse]);
+
+  const handleGoogleToken = async (accessToken: string, idToken?: string) => {
+    setLoading(true);
+    setError('');
+    const result = await loginWithSocial({ provider: 'google', accessToken, idToken });
+    setLoading(false);
+    if (!result.success) {
+      setError(result.message || 'Google sign-in failed. Please try again.');
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (!GOOGLE_CLIENT_ID) {
+      setError('Google sign-in is not configured yet.');
+      return;
+    }
+    setError('');
+    await promptGoogleAsync();
+  };
+
+  const handleAppleSignIn = async () => {
+    try {
+      const AppleAuthentication = await import('expo-apple-authentication');
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      const fullName = credential.fullName
+        ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(' ')
+        : undefined;
+      setLoading(true);
+      setError('');
+      const result = await loginWithSocial({
+        provider: 'apple',
+        idToken: credential.identityToken ?? undefined,
+        email: credential.email ?? undefined,
+        name: fullName,
+      });
+      setLoading(false);
+      if (!result.success) {
+        setError(result.message || 'Apple sign-in failed. Please try again.');
+      }
+    } catch (e: any) {
+      if (e.code !== 'ERR_REQUEST_CANCELED') {
+        setError('Apple sign-in failed. Please try again.');
+      }
+    }
+  };
 
   const handleRegister = async () => {
     setError('');
@@ -87,6 +168,47 @@ export default function RegisterScreen() {
             <Text style={styles.tagline}>Sense your inner world</Text>
           </View>
 
+          <View style={styles.socialCard}>
+            <Text style={styles.socialCardTitle}>Quick sign-up</Text>
+
+            {error ? (
+              <View style={styles.errorBox}>
+                <Feather name="alert-circle" size={16} color="#C62828" />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
+
+            <View style={styles.socialRow}>
+              <Pressable
+                style={styles.socialButton}
+                onPress={handleGoogleSignIn}
+                disabled={loading}
+                testID="register-google"
+              >
+                <GoogleIcon />
+                <Text style={styles.socialButtonText}>Continue with Google</Text>
+              </Pressable>
+            </View>
+
+            {appleAvailable && (
+              <Pressable
+                style={[styles.socialButton, styles.appleButton]}
+                onPress={handleAppleSignIn}
+                disabled={loading}
+                testID="register-apple"
+              >
+                <AntDesign name="apple" size={18} color="#fff" />
+                <Text style={[styles.socialButtonText, styles.appleButtonText]}>Continue with Apple</Text>
+              </Pressable>
+            )}
+          </View>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or create with email</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
           <View style={styles.trustCard}>
             {TRUST_ITEMS.map((item, i) => (
               <View key={i} style={styles.trustItem}>
@@ -100,13 +222,6 @@ export default function RegisterScreen() {
 
           <View style={styles.formCard}>
             <Text style={styles.formTitle}>Create My Account</Text>
-
-            {error ? (
-              <View style={styles.errorBox}>
-                <Feather name="alert-circle" size={16} color="#C62828" />
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            ) : null}
 
             <View style={styles.inputGroup}>
               <View style={styles.inputWrapper}>
@@ -188,6 +303,14 @@ export default function RegisterScreen() {
   );
 }
 
+function GoogleIcon() {
+  return (
+    <View style={styles.googleIcon}>
+      <Text style={styles.googleIconText}>G</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   gradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 400 },
@@ -196,6 +319,33 @@ const styles = StyleSheet.create({
   logoImage: { width: 88, height: 88, marginBottom: 12 },
   appName: { fontSize: 28, fontFamily: 'Nunito_800ExtraBold', color: Colors.text },
   tagline: { fontSize: 14, fontFamily: 'Nunito_400Regular', color: Colors.textSecondary, marginTop: 4 },
+  socialCard: {
+    backgroundColor: Colors.surface, borderRadius: 20, padding: 20, marginBottom: 8,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12 },
+      android: { elevation: 3 },
+      web: { boxShadow: '0 4px 16px rgba(0,0,0,0.06)' },
+    }),
+  },
+  socialCardTitle: { fontSize: 14, fontFamily: 'Nunito_600SemiBold', color: Colors.textSecondary, marginBottom: 14, textAlign: 'center' },
+  socialRow: { marginBottom: 10 },
+  socialButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    backgroundColor: Colors.backgroundSecondary, borderRadius: 14, paddingVertical: 14,
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  socialButtonText: { fontSize: 15, fontFamily: 'Nunito_600SemiBold', color: Colors.text },
+  appleButton: { backgroundColor: '#1C1C1E', borderColor: '#1C1C1E' },
+  appleButtonText: { color: '#fff' },
+  googleIcon: {
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: '#fff', borderWidth: 1, borderColor: '#E0E0E0',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  googleIconText: { fontSize: 14, fontFamily: 'Nunito_700Bold', color: '#4285F4' },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16, marginTop: 8 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
+  dividerText: { fontSize: 12, fontFamily: 'Nunito_500Medium', color: Colors.textTertiary },
   trustCard: {
     backgroundColor: Colors.surface, borderRadius: 16, padding: 16, marginBottom: 16, gap: 10,
     ...Platform.select({
@@ -221,7 +371,7 @@ const styles = StyleSheet.create({
   formTitle: { fontSize: 22, fontFamily: 'Nunito_700Bold', color: Colors.text, marginBottom: 20, textAlign: 'center' },
   errorBox: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#FFEBEE', borderRadius: 12, padding: 12, marginBottom: 16,
+    backgroundColor: '#FFEBEE', borderRadius: 12, padding: 12, marginBottom: 14,
   },
   errorText: { fontSize: 13, fontFamily: 'Nunito_500Medium', color: '#C62828', flex: 1 },
   inputGroup: { marginBottom: 14 },

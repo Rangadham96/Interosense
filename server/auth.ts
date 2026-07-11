@@ -4,6 +4,125 @@ import crypto from "crypto";
 import { storage, createResetToken, getResetToken, markTokenUsed } from "./storage";
 import { loginSchema, registerSchema } from "../shared/schema";
 
+// ── Apple JWT verification ─────────────────────────────────────────────────
+// Fetches Apple's JWKS and verifies the identity token's signature + claims.
+// Derives email/sub only from the verified payload — never from client body.
+let appleJwksCache: { keys: any[]; fetchedAt: number } | null = null;
+
+async function fetchAppleJwks(): Promise<any[]> {
+  const now = Date.now();
+  if (appleJwksCache && now - appleJwksCache.fetchedAt < 3600_000) {
+    return appleJwksCache.keys;
+  }
+  const res = await fetch("https://appleid.apple.com/auth/keys");
+  if (!res.ok) throw new Error("Failed to fetch Apple JWKS");
+  const { keys } = await res.json();
+  appleJwksCache = { keys, fetchedAt: now };
+  return keys;
+}
+
+interface AppleClaims {
+  sub: string;
+  email: string | null;
+  email_verified?: string | boolean;
+}
+
+async function verifyAppleToken(identityToken: string): Promise<AppleClaims> {
+  const parts = identityToken.split(".");
+  if (parts.length !== 3) throw new Error("Malformed Apple identity token");
+
+  const [headerB64, payloadB64, signatureB64] = parts;
+
+  // Decode header to find the key id
+  const header = JSON.parse(Buffer.from(headerB64, "base64url").toString("utf8"));
+  if (header.alg !== "RS256") throw new Error("Unexpected Apple token algorithm");
+
+  // Find matching JWKS key
+  const keys = await fetchAppleJwks();
+  const jwk = keys.find((k: any) => k.kid === header.kid);
+  if (!jwk) throw new Error("No matching Apple key found for kid: " + header.kid);
+
+  // Import public key from JWK and verify signature
+  const publicKey = crypto.createPublicKey({ key: jwk, format: "jwk" });
+  const signingInput = Buffer.from(`${headerB64}.${payloadB64}`);
+  const signature = Buffer.from(signatureB64, "base64url");
+
+  const valid = crypto.verify("sha256", signingInput, publicKey, signature);
+  if (!valid) throw new Error("Apple token signature verification failed");
+
+  // Validate claims
+  const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"));
+
+  if (payload.iss !== "https://appleid.apple.com") {
+    throw new Error("Invalid Apple token issuer");
+  }
+  if (Math.floor(Date.now() / 1000) > payload.exp) {
+    throw new Error("Apple token has expired");
+  }
+  if (!payload.sub) {
+    throw new Error("Apple token missing sub claim");
+  }
+
+  // Validate audience — must match this app's bundle ID / Service ID.
+  // APPLE_APP_BUNDLE_ID should be set in secrets when Apple Sign-In is configured.
+  // Falls back to the known bundle ID so development/staging still validates correctly.
+  const expectedAud = process.env.APPLE_APP_BUNDLE_ID || "com.interosense";
+  const tokenAud: string | string[] = payload.aud;
+  const audMatches = Array.isArray(tokenAud)
+    ? tokenAud.includes(expectedAud)
+    : tokenAud === expectedAud;
+  if (!audMatches) {
+    throw new Error(`Apple token audience mismatch: expected "${expectedAud}", got "${tokenAud}"`);
+  }
+
+  return { sub: payload.sub, email: payload.email ?? null, email_verified: payload.email_verified };
+}
+
+// ── Google token verification ──────────────────────────────────────────────
+interface GoogleClaims {
+  sub: string;
+  email: string;
+  name?: string;
+  email_verified?: string | boolean;
+  aud?: string;
+}
+
+async function verifyGoogleToken(token: string, isIdToken: boolean): Promise<GoogleClaims> {
+  let data: any;
+
+  if (isIdToken) {
+    // tokeninfo verifies signature + expiry server-side
+    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
+    if (!res.ok) throw new Error("Google tokeninfo request failed");
+    data = await res.json();
+    if (data.error || data.error_description) throw new Error("Invalid Google id_token: " + (data.error_description || data.error));
+
+    // Validate audience when client ID is configured
+    const expectedAud = process.env.GOOGLE_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
+    if (expectedAud && data.aud !== expectedAud) {
+      throw new Error("Google token audience mismatch");
+    }
+    if (!data.email_verified || data.email_verified === "false") {
+      throw new Error("Google account email is not verified");
+    }
+  } else {
+    // Access token — fetch verified user info from Google
+    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Google userinfo request failed");
+    data = await res.json();
+    if (data.error) throw new Error("Invalid Google access_token: " + data.error);
+    if (!data.email_verified) {
+      throw new Error("Google account email is not verified");
+    }
+  }
+
+  if (!data.email) throw new Error("Google token missing email claim");
+
+  return { sub: data.sub, email: data.email.toLowerCase(), name: data.name, email_verified: data.email_verified };
+}
+
 declare module "express-session" {
   interface SessionData {
     userId: string;
@@ -227,6 +346,97 @@ router.post("/api/auth/reset-password", async (req: Request, res: Response) => {
     return res.status(200).json({ message: "Password updated successfully." });
   } catch (error) {
     console.error("Reset password error:", error);
+    return res.status(500).json({ message: "Something went wrong. Please try again." });
+  }
+});
+
+router.post("/api/auth/social", async (req: Request, res: Response) => {
+  try {
+    const { provider, idToken, accessToken, name, email } = req.body;
+
+    if (!provider || (!idToken && !accessToken)) {
+      return res.status(400).json({ message: "Missing provider or token." });
+    }
+
+    let verifiedEmail: string | null = null;
+    let verifiedName: string | null = name || null;
+    let providerId: string | null = null;
+
+    if (provider === "google") {
+      if (!idToken && !accessToken) {
+        return res.status(400).json({ message: "Google token is required." });
+      }
+      let claims: GoogleClaims;
+      try {
+        claims = await verifyGoogleToken(
+          (idToken || accessToken) as string,
+          !!idToken,
+        );
+      } catch (err: any) {
+        console.error("Google token verification failed:", err?.message);
+        return res.status(401).json({ message: "Google sign-in could not be verified. Please try again." });
+      }
+      verifiedEmail = claims.email;
+      verifiedName = claims.name || name || null;
+      providerId = claims.sub;
+    } else if (provider === "apple") {
+      if (!idToken) {
+        return res.status(400).json({ message: "Apple identity token is required." });
+      }
+      let claims: AppleClaims;
+      try {
+        claims = await verifyAppleToken(idToken);
+      } catch (err: any) {
+        console.error("Apple token verification failed:", err?.message);
+        return res.status(401).json({ message: "Apple sign-in could not be verified. Please try again." });
+      }
+      // Apple only sends email on the first sign-in; subsequent sign-ins omit it.
+      // On repeat sign-ins, look up the existing account by providerId (sub).
+      verifiedEmail = claims.email ?? null;
+      verifiedName = name || null;
+      providerId = claims.sub;
+
+      if (!verifiedEmail) {
+        // Repeat Apple sign-in — find existing account by providerId
+        const existingByProvider = await storage.getUserByProviderId("apple", providerId);
+        if (!existingByProvider) {
+          return res.status(400).json({ message: "Could not retrieve your Apple account. Please sign in with Apple again on your original device." });
+        }
+        // Skip find-or-create below; session for existing user
+        req.session.userId = existingByProvider.id;
+        const { password: _p, ...safeExisting } = existingByProvider;
+        return res.status(200).json({ user: safeExisting });
+      }
+    } else {
+      return res.status(400).json({ message: "Unsupported provider." });
+    }
+
+    if (!verifiedEmail) {
+      return res.status(400).json({ message: "Could not retrieve email from provider." });
+    }
+
+    // Find or create user
+    let user = await storage.getUserByEmail(verifiedEmail);
+    if (user) {
+      // Update provider info if signing in via social for the first time
+      if (user.provider === "email" || !user.provider) {
+        user = await storage.updateUser(user.id, { provider, providerId }) ?? user;
+      }
+    } else {
+      user = await storage.createUser({
+        email: verifiedEmail,
+        password: null,
+        name: verifiedName,
+        provider,
+        providerId,
+      });
+    }
+
+    req.session.userId = user.id;
+    const { password: _, ...safeUser } = user;
+    return res.status(200).json({ user: safeUser });
+  } catch (error) {
+    console.error("Social auth error:", error);
     return res.status(500).json({ message: "Something went wrong. Please try again." });
   }
 });

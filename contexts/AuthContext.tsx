@@ -56,6 +56,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   register: (email: string, password: string, name: string) => Promise<{ success: boolean; message?: string }>;
+  loginWithSocial: (payload: { provider: string; idToken?: string; accessToken?: string; name?: string; email?: string }) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   updateAuthProfile: (data: Partial<AuthUser>) => Promise<{ success: boolean; message?: string }>;
   refreshUser: () => Promise<void>;
@@ -158,6 +159,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const loginWithSocial = useCallback(async (payload: { provider: string; idToken?: string; accessToken?: string; name?: string; email?: string }) => {
+    try {
+      const response = await apiCall('/api/auth/social', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUser(data.user);
+        return { success: true };
+      }
+      return { success: false, message: data.message || 'Sign-in failed' };
+    } catch {
+      return { success: false, message: 'Network error. Please check your connection.' };
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await apiCall('/api/auth/logout', { method: 'POST' });
@@ -189,11 +207,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!user,
     login,
     register,
+    loginWithSocial,
     logout,
     updateAuthProfile,
     refreshUser,
     fetchServerData,
-  }), [user, isLoading, login, register, logout, updateAuthProfile, refreshUser, fetchServerData]);
+  }), [user, isLoading, login, register, loginWithSocial, logout, updateAuthProfile, refreshUser, fetchServerData]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
