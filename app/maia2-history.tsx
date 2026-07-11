@@ -1,11 +1,12 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import {
-  StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform, Share, Alert, ActivityIndicator,
+  StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform, Share, Alert, ActivityIndicator, Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { format, parseISO } from 'date-fns';
+import Svg, { Polyline, Circle, Line, Text as SvgText, Rect, Path } from 'react-native-svg';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { MAIA2_SCALE, getMaia2OverallAverage, generateClinicianReport, PastMaia2Assessment } from '@/constants/clinical-scales';
@@ -23,6 +24,245 @@ const SUBSCALE_SHORT: Record<string, string> = {
   trusting: 'Tru',
 };
 
+const SUBSCALE_FULL: Record<string, string> = {
+  noticing: 'Noticing',
+  notDistracting: 'Not-Distracting',
+  notWorrying: 'Not-Worrying',
+  attentionRegulation: 'Attention Reg.',
+  emotionalAwareness: 'Emotional Awareness',
+  selfRegulation: 'Self-Regulation',
+  bodyListening: 'Body Listening',
+  trusting: 'Trusting',
+};
+
+interface TrendPoint {
+  date: string;
+  value: number;
+}
+
+interface SubscaleTrendChartProps {
+  subscaleKey: string;
+  subscaleName: string;
+  points: TrendPoint[];
+  expanded: boolean;
+  onPress: () => void;
+  cardWidth: number;
+}
+
+function SubscaleTrendChart({ subscaleKey, subscaleName, points, expanded, onPress, cardWidth }: SubscaleTrendChartProps) {
+  if (points.length < 2) return null;
+
+  const compactH = 80;
+  const expandedH = 160;
+  const chartH = expanded ? expandedH : compactH;
+
+  const paddingLeft = expanded ? 32 : 8;
+  const paddingRight = expanded ? 12 : 8;
+  const paddingTop = expanded ? 14 : 10;
+  const paddingBottom = expanded ? 28 : 10;
+
+  const innerW = cardWidth - paddingLeft - paddingRight;
+  const innerH = chartH - paddingTop - paddingBottom;
+
+  const minVal = 0;
+  const maxVal = 5;
+
+  function xPos(i: number) {
+    if (points.length === 1) return paddingLeft + innerW / 2;
+    return paddingLeft + (i / (points.length - 1)) * innerW;
+  }
+
+  function yPos(v: number) {
+    return paddingTop + ((maxVal - v) / (maxVal - minVal)) * innerH;
+  }
+
+  const polyPoints = points.map((p, i) => `${xPos(i)},${yPos(p.value)}`).join(' ');
+
+  const first = points[0].value;
+  const last = points[points.length - 1].value;
+  const diff = last - first;
+  const lineColor = diff > 0.15 ? Colors.success : diff < -0.15 ? Colors.error : Colors.primary;
+
+  const yGridValues = expanded ? [0, 1, 2, 3, 4, 5] : [];
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.82}
+      style={[
+        trendStyles.card,
+        expanded ? trendStyles.cardExpanded : { width: cardWidth },
+      ]}
+    >
+      <View style={trendStyles.cardHeader}>
+        <Text style={trendStyles.cardTitle} numberOfLines={1}>
+          {expanded ? (SUBSCALE_FULL[subscaleKey] ?? subscaleName) : (SUBSCALE_SHORT[subscaleKey] ?? subscaleName)}
+        </Text>
+        <View style={trendStyles.cardHeaderRight}>
+          <Text style={[trendStyles.cardScore, { color: lineColor }]}>{last.toFixed(1)}</Text>
+          {diff > 0.15 ? (
+            <Feather name="trending-up" size={12} color={Colors.success} />
+          ) : diff < -0.15 ? (
+            <Feather name="trending-down" size={12} color={Colors.error} />
+          ) : (
+            <Feather name="minus" size={12} color={Colors.textTertiary} />
+          )}
+        </View>
+      </View>
+
+      <Svg width={cardWidth} height={chartH} style={{ marginTop: 4 }}>
+        {expanded && yGridValues.map(v => {
+          const y = yPos(v);
+          return (
+            <React.Fragment key={`grid-${v}`}>
+              <Line
+                x1={paddingLeft}
+                y1={y}
+                x2={cardWidth - paddingRight}
+                y2={y}
+                stroke={Colors.border}
+                strokeWidth={v === 0 || v === 5 ? 1 : 0.5}
+                opacity={0.7}
+              />
+              <SvgText
+                x={paddingLeft - 4}
+                y={y + 3.5}
+                textAnchor="end"
+                fontSize={8}
+                fontFamily="Nunito_500Medium"
+                fill={Colors.textTertiary}
+              >
+                {v}
+              </SvgText>
+            </React.Fragment>
+          );
+        })}
+
+        {expanded && points.map((p, i) => {
+          const x = xPos(i);
+          const dateLabel = format(parseISO(p.date), 'MMM d');
+          return (
+            <SvgText
+              key={`xlabel-${i}`}
+              x={x}
+              y={chartH - 4}
+              textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}
+              fontSize={7.5}
+              fontFamily="Nunito_500Medium"
+              fill={Colors.textTertiary}
+            >
+              {dateLabel}
+            </SvgText>
+          );
+        })}
+
+        <Polyline
+          points={polyPoints}
+          fill="none"
+          stroke={lineColor}
+          strokeWidth={expanded ? 2 : 1.5}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+
+        {points.map((p, i) => {
+          const cx = xPos(i);
+          const cy = yPos(p.value);
+          const isFirst = i === 0;
+          const isLast = i === points.length - 1;
+          const showDot = expanded || isFirst || isLast;
+
+          if (!showDot) return null;
+
+          return (
+            <React.Fragment key={`dot-${i}`}>
+              <Circle
+                cx={cx}
+                cy={cy}
+                r={expanded ? 3.5 : 3}
+                fill={Colors.surface}
+                stroke={lineColor}
+                strokeWidth={1.5}
+              />
+              {expanded && (
+                <>
+                  <Rect
+                    x={cx - 10}
+                    y={cy - 17}
+                    width={20}
+                    height={12}
+                    rx={4}
+                    fill={lineColor + 'EE'}
+                  />
+                  <SvgText
+                    x={cx}
+                    y={cy - 8}
+                    textAnchor="middle"
+                    fontSize={8}
+                    fontFamily="Nunito_700Bold"
+                    fill={Colors.surface}
+                  >
+                    {p.value.toFixed(1)}
+                  </SvgText>
+                </>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </Svg>
+
+      {expanded && (
+        <Text style={trendStyles.expandedNote}>
+          {points.length} assessment{points.length !== 1 ? 's' : ''} — scale 0 to 5
+        </Text>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+const trendStyles = StyleSheet.create({
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: 10,
+    paddingBottom: 6,
+    marginBottom: 8,
+  },
+  cardExpanded: {
+    borderWidth: 1.5,
+    borderColor: Colors.primary + '40',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 0,
+  },
+  cardHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  cardTitle: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 10,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  cardScore: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 12,
+    marginRight: 2,
+  },
+  expandedNote: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 9.5,
+    color: Colors.textTertiary,
+    textAlign: 'right',
+    marginTop: 2,
+  },
+});
+
 export default function Maia2HistoryScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -32,12 +272,30 @@ export default function Maia2HistoryScreen() {
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [expandedTrendKey, setExpandedTrendKey] = useState<string | null>(null);
+
+  const screenWidth = Dimensions.get('window').width;
+  const horizontalPadding = 32;
+  const cardGap = 8;
+  const compactCardWidth = Math.floor((screenWidth - horizontalPadding - cardGap) / 2);
 
   const maia2Assessments = useMemo(() => {
     return assessments
       .filter(a => a.scaleId === 'maia2')
       .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
   }, [assessments]);
+
+  const chronological = useMemo(() => [...maia2Assessments].reverse(), [maia2Assessments]);
+
+  const subscaleTrends = useMemo(() => {
+    if (chronological.length < 2) return null;
+    return MAIA2_SCALE.subscales.map(s => {
+      const pts: TrendPoint[] = chronological
+        .filter(a => !!a.subscaleScores)
+        .map(a => ({ date: a.completedAt, value: a.subscaleScores![s.key] ?? 0 }));
+      return { key: s.key, name: s.name, points: pts };
+    });
+  }, [chronological]);
 
   const handleShareMulti = useCallback(async () => {
     if (maia2Assessments.length === 0) return;
@@ -203,6 +461,66 @@ export default function Maia2HistoryScreen() {
                 );
               })}
             </View>
+          </View>
+        )}
+
+        {subscaleTrends && maia2Assessments.length >= 2 && (
+          <View style={styles.trendsSection}>
+            <View style={styles.trendsSectionHeader}>
+              <Text style={styles.sectionTitle}>Subscale Trends</Text>
+              <Text style={styles.trendsSectionHint}>Tap to expand</Text>
+            </View>
+
+            {MAIA2_SCALE.subscales.map((s, idx) => {
+              const trend = subscaleTrends.find(t => t.key === s.key)!;
+              const isExpanded = expandedTrendKey === s.key;
+              const chartWidth = isExpanded
+                ? screenWidth - horizontalPadding
+                : compactCardWidth;
+
+              if (isExpanded) {
+                return (
+                  <SubscaleTrendChart
+                    key={s.key}
+                    subscaleKey={s.key}
+                    subscaleName={s.name}
+                    points={trend.points}
+                    expanded={true}
+                    onPress={() => setExpandedTrendKey(null)}
+                    cardWidth={chartWidth}
+                  />
+                );
+              }
+
+              if (idx % 2 === 0) {
+                const nextS = MAIA2_SCALE.subscales[idx + 1];
+                const nextTrend = nextS ? subscaleTrends.find(t => t.key === nextS.key) : null;
+                return (
+                  <View key={s.key} style={styles.trendRow}>
+                    <SubscaleTrendChart
+                      subscaleKey={s.key}
+                      subscaleName={s.name}
+                      points={trend.points}
+                      expanded={false}
+                      onPress={() => setExpandedTrendKey(s.key)}
+                      cardWidth={compactCardWidth}
+                    />
+                    {nextTrend && nextS && (
+                      <SubscaleTrendChart
+                        subscaleKey={nextS.key}
+                        subscaleName={nextS.name}
+                        points={nextTrend.points}
+                        expanded={false}
+                        onPress={() => setExpandedTrendKey(nextS.key)}
+                        cardWidth={compactCardWidth}
+                      />
+                    )}
+                  </View>
+                );
+              }
+
+              return null;
+            })}
           </View>
         )}
 
@@ -406,6 +724,26 @@ const styles = StyleSheet.create({
   trendGridLabel: { fontSize: 11, fontFamily: 'Nunito_600SemiBold', color: Colors.textSecondary, marginBottom: 2 },
   trendGridArrow: { fontSize: 16, fontFamily: 'Nunito_700Bold' },
   trendGridDiff: { fontSize: 11, fontFamily: 'Nunito_600SemiBold' },
+
+  trendsSection: {
+    marginBottom: 20,
+  },
+  trendsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  trendsSectionHint: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 11,
+    color: Colors.textTertiary,
+  },
+  trendRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 0,
+  },
 
   shareCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
