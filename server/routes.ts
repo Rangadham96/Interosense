@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import type { Request, Response } from "express";
+import { MAIA2_REQUIRED_SUBSCALE_KEYS } from "../constants/clinical-scales";
 import { createServer, type Server } from "node:http";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
@@ -150,6 +151,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const { id, scaleId, scaleName, completedAt, totalScore, severity, answers, subscaleScores } = req.body;
+
+      if (scaleId === "maia2") {
+        const scores = subscaleScores ?? {};
+        const missingKeys = MAIA2_REQUIRED_SUBSCALE_KEYS.filter(
+          key => !(key in scores) || typeof scores[key] !== "number" || isNaN(scores[key])
+        );
+        if (missingKeys.length > 0) {
+          return res.status(422).json({
+            message: "MAIA-2 assessment rejected: subscaleScores is missing required keys",
+            missingKeys,
+          });
+        }
+      }
+
       const assessment = await createAssessment({
         id,
         userId: req.session.userId,
