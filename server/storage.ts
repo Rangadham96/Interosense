@@ -92,18 +92,37 @@ export async function markTokenUsed(id: string): Promise<void> {
 
 export type DailyInsight = typeof dailyInsights.$inferSelect;
 
-export async function getTodayInsight(userId: string, generatedDate: string): Promise<DailyInsight | undefined> {
+export async function getTodayInsight(
+  userId: string,
+  generatedDate: string,
+  currentlyHasWearableContext: boolean = false,
+): Promise<DailyInsight | undefined> {
   const [insight] = await db
     .select()
     .from(dailyInsights)
-    .where(and(eq(dailyInsights.userId, userId), eq(dailyInsights.generatedDate, generatedDate)));
+    .where(
+      and(
+        eq(dailyInsights.userId, userId),
+        eq(dailyInsights.generatedDate, generatedDate),
+        eq(dailyInsights.hasWearableContext, currentlyHasWearableContext),
+      ),
+    );
   return insight;
 }
 
-export async function saveInsight(userId: string, insightText: string, generatedDate: string): Promise<DailyInsight> {
+export async function saveInsight(
+  userId: string,
+  insightText: string,
+  generatedDate: string,
+  hasWearableContext: boolean = false,
+): Promise<DailyInsight> {
   const [insight] = await db
     .insert(dailyInsights)
-    .values({ userId, insightText, generatedDate })
+    .values({ userId, insightText, generatedDate, hasWearableContext })
+    .onConflictDoUpdate({
+      target: [dailyInsights.userId, dailyInsights.generatedDate, dailyInsights.hasWearableContext],
+      set: { insightText },
+    })
     .returning();
   return insight;
 }

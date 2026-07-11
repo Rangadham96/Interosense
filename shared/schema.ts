@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, jsonb, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, jsonb, boolean, integer, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -92,8 +92,15 @@ export const dailyInsights = pgTable("daily_insights", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   insightText: text("insight_text").notNull(),
   generatedDate: text("generated_date").notNull(),
+  hasWearableContext: boolean("has_wearable_context").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => ({
+  userDateWearableUnique: unique("daily_insights_user_date_wearable_unique").on(
+    t.userId,
+    t.generatedDate,
+    t.hasWearableContext,
+  ),
+}));
 
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,

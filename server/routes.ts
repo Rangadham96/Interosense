@@ -196,8 +196,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const today = new Date().toISOString().split("T")[0];
+      const wearableContext = req.body?.wearableContext ?? null;
+      const hasWearableContext = wearableContext !== null && wearableContext !== undefined;
 
-      const cached = await getTodayInsight(req.session.userId, today);
+      const cached = await getTodayInsight(req.session.userId, today, hasWearableContext);
       if (cached) {
         return res.status(200).json({ insight: cached.insightText, cached: true });
       }
@@ -242,8 +244,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const wearableContext = req.body?.wearableContext ?? null;
-
       const insightText = await generateInsight({
         name: user?.name || "there",
         conditions: (user?.conditions as string[]) || [],
@@ -265,7 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         wearableContext,
       });
 
-      await saveInsight(req.session.userId, insightText, today);
+      await saveInsight(req.session.userId, insightText, today, hasWearableContext);
 
       return res.status(200).json({ insight: insightText, cached: false });
     } catch (error) {
