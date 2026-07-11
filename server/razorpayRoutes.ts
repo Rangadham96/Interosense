@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getRazorpayKeyId, getRazorpayClient, verifyPaymentSignature, isRazorpayConfigured, PLANS } from './razorpayClient';
+import { getRazorpayKeyId, getRazorpayClient, verifyPaymentSignature, verifyWebhookSignature, isRazorpayConfigured, PLANS } from './razorpayClient';
 import { storage } from './storage';
 
 const router = Router();
@@ -119,6 +119,21 @@ router.post('/api/razorpay/verify-payment', async (req: Request, res: Response) 
 });
 
 router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
+  const rawBody = (req as any).rawBody;
+  const signature = req.headers['x-razorpay-signature'] as string | undefined;
+
+  if (!verifyWebhookSignature(
+    rawBody ? rawBody.toString() : JSON.stringify(req.body),
+    signature || '',
+  )) {
+    if (!process.env.RAZORPAY_WEBHOOK_SECRET) {
+      console.error('Razorpay webhook: RAZORPAY_WEBHOOK_SECRET not configured — request rejected');
+      return res.status(503).json({ error: 'Webhook secret not configured on server' });
+    }
+    console.warn('Razorpay webhook: invalid signature — request rejected');
+    return res.status(401).json({ error: 'Invalid webhook signature' });
+  }
+
   const event = req.body;
   if (!event?.event) return res.status(400).json({ error: 'Invalid webhook payload' });
 

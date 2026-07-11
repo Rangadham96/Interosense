@@ -18,7 +18,16 @@ export function getRazorpayClient(): Razorpay {
 
 export function verifyWebhookSignature(body: string, signature: string): boolean {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-  if (!secret) return true;
+  if (!secret) {
+    console.error(
+      'RAZORPAY_WEBHOOK_SECRET is not set — all webhook requests will be rejected. ' +
+      'Add the secret from Razorpay Dashboard → Settings → Webhooks to enable webhook processing.',
+    );
+    return false;
+  }
+  if (!signature) {
+    return false;
+  }
   const expectedSignature = crypto
     .createHmac('sha256', secret)
     .update(body)
