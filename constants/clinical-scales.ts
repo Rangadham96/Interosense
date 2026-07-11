@@ -373,10 +373,16 @@ export function getMaia2ClinicalFlags(subscaleScores: Record<string, number>): M
   return flags;
 }
 
+export interface PastMaia2Assessment {
+  date: string;
+  subscaleScores: Record<string, number>;
+}
+
 export function generateClinicianReport(
   subscaleScores: Record<string, number>,
   assessmentDate: string,
   userName?: string,
+  pastAssessments?: PastMaia2Assessment[],
 ): string {
   const lines: string[] = [];
   lines.push('MAIA-2, Multidimensional Assessment of Interoceptive Awareness');
@@ -392,6 +398,25 @@ export function generateClinicianReport(
     lines.push(`${subscale.name.padEnd(22)} ${bar}  ${score.toFixed(1)}/5`);
     lines.push(`  ${subscale.description}`);
     lines.push('');
+  }
+
+  if (pastAssessments && pastAssessments.length > 0) {
+    const history = pastAssessments.slice(0, 3);
+    lines.push('─────────────────────────────────────────');
+    lines.push('LONGITUDINAL HISTORY (up to 3 prior assessments)');
+    lines.push('');
+    for (const past of history) {
+      lines.push(`Assessment date: ${past.date}`);
+      for (const subscale of MAIA2_SCALE.subscales) {
+        const pastScore = past.subscaleScores[subscale.key] ?? 0;
+        const currScore = subscaleScores[subscale.key] ?? 0;
+        const diff = currScore - pastScore;
+        const trend = diff > 0.1 ? `+${diff.toFixed(1)}` : diff < -0.1 ? diff.toFixed(1) : '—';
+        const bar = '█'.repeat(Math.round(pastScore)) + '░'.repeat(5 - Math.round(pastScore));
+        lines.push(`  ${subscale.name.padEnd(22)} ${bar}  ${pastScore.toFixed(1)}/5  (${trend} to current)`);
+      }
+      lines.push('');
+    }
   }
 
   lines.push('─────────────────────────────────────────');

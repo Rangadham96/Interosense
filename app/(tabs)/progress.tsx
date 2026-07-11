@@ -8,7 +8,7 @@ import { format, parseISO, startOfWeek, addDays, isSameDay, differenceInDays } f
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { ACHIEVEMENTS, TIER_COLORS } from '@/constants/achievements';
-import { CLINICAL_SCALES, MAIA2_SCALE, getMaia2OverallAverage, getMaia2ClinicalFlags, generateClinicianReport } from '@/constants/clinical-scales';
+import { CLINICAL_SCALES, MAIA2_SCALE, getMaia2OverallAverage, getMaia2ClinicalFlags, generateClinicianReport, PastMaia2Assessment } from '@/constants/clinical-scales';
 import RadarChart from '@/components/RadarChart';
 import Svg, { Circle } from 'react-native-svg';
 
@@ -122,13 +122,25 @@ export default function ProgressScreen() {
   const handleShareWithClinician = useCallback(async () => {
     if (!latestMaia2?.subscaleScores) return;
     const date = format(parseISO(latestMaia2.completedAt), 'MMMM d, yyyy');
-    const report = generateClinicianReport(latestMaia2.subscaleScores, date);
+    const pastAssessments: PastMaia2Assessment[] = maia2Assessments
+      .slice(1, 4)
+      .filter(a => !!a.subscaleScores)
+      .map(a => ({
+        date: format(parseISO(a.completedAt), 'MMMM d, yyyy'),
+        subscaleScores: a.subscaleScores!,
+      }));
+    const report = generateClinicianReport(
+      latestMaia2.subscaleScores,
+      date,
+      undefined,
+      pastAssessments.length > 0 ? pastAssessments : undefined,
+    );
     try {
       await Share.share({ message: report, title: 'MAIA-2 Body Awareness Profile' });
     } catch {
       Alert.alert('Unable to share', 'Please try again.');
     }
-  }, [latestMaia2]);
+  }, [latestMaia2, maia2Assessments]);
 
   const showMaia2Prompt = useMemo(() => {
     if (maia2Assessments.length === 0 && totalSessions >= 10) return true;
@@ -348,9 +360,16 @@ export default function ProgressScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Body Awareness Profile</Text>
-              <TouchableOpacity onPress={() => router.push('/assessment/maia2' as any)}>
-                <Text style={styles.seeAll}>Retake</Text>
-              </TouchableOpacity>
+              <View style={styles.sectionHeaderActions}>
+                {maia2Assessments.length >= 2 && (
+                  <TouchableOpacity onPress={() => router.push('/maia2-history' as any)} style={{ marginRight: 12 }}>
+                    <Text style={styles.seeAll}>History</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={() => router.push('/assessment/maia2' as any)}>
+                  <Text style={styles.seeAll}>Retake</Text>
+                </TouchableOpacity>
+              </View>
             </View>
             <View style={[styles.card, styles.maia2Card]}>
               <Text style={styles.maia2CardDate}>
@@ -448,8 +467,21 @@ export default function ProgressScreen() {
                 <Text style={styles.shareClinicianText}>Share with Clinician</Text>
               </TouchableOpacity>
               <Text style={styles.shareClinicianNote}>
-                Generates a formatted report of your 8 subscale scores you can send by email, messages, or print.
+                {maia2Assessments.length >= 2
+                  ? `Generates a formatted report with your current profile plus ${Math.min(maia2Assessments.length - 1, 3)} prior assessment${Math.min(maia2Assessments.length - 1, 3) !== 1 ? 's' : ''} for longitudinal context.`
+                  : 'Generates a formatted report of your 8 subscale scores you can send by email, messages, or print.'}
               </Text>
+              {maia2Assessments.length >= 2 && (
+                <TouchableOpacity
+                  style={styles.viewHistoryBtn}
+                  onPress={() => router.push('/maia2-history' as any)}
+                  activeOpacity={0.8}
+                >
+                  <Feather name="clock" size={14} color={Colors.textSecondary} />
+                  <Text style={styles.viewHistoryText}>View full history ({maia2Assessments.length} assessments)</Text>
+                  <Feather name="chevron-right" size={14} color={Colors.textTertiary} />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         )}
@@ -803,6 +835,7 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 13, fontFamily: 'Nunito_500Medium', color: Colors.textSecondary, marginTop: 2 },
   section: { marginBottom: 24 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sectionHeaderActions: { flexDirection: 'row', alignItems: 'center' },
   sectionTitle: { fontSize: 18, fontFamily: 'Nunito_700Bold', color: Colors.text, marginBottom: 12 },
   seeAll: { fontSize: 14, fontFamily: 'Nunito_600SemiBold', color: Colors.primary, marginBottom: 12 },
   card: { backgroundColor: Colors.surface, borderRadius: 16, padding: 20 },
@@ -951,5 +984,12 @@ const styles = StyleSheet.create({
   shareClinicianNote: {
     fontFamily: 'Nunito_400Regular', fontSize: 11, color: Colors.textTertiary,
     textAlign: 'center', marginTop: 8, lineHeight: 16,
+  },
+  viewHistoryBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 10, marginTop: 8, borderTopWidth: 1, borderTopColor: Colors.borderLight,
+  },
+  viewHistoryText: {
+    flex: 1, fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: Colors.textSecondary,
   },
 });
