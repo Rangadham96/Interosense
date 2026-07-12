@@ -229,7 +229,21 @@ export default function WearableScreen() {
   useFocusEffect(
     useCallback(() => {
       getHealthConnection().then(async (conn) => {
-        if (!isMounted.current || !conn.connected || !conn.platform) return;
+        if (!isMounted.current) return;
+
+        if (!conn.connected || !conn.platform) {
+          setStatus((prev) => {
+            if (prev === 'connected') {
+              setConnectedPlatform(null);
+              setHealthData([]);
+              setLastSyncedAt(null);
+              setErrorMessage('Your health connection was lost. Please reconnect to continue syncing data.');
+              return 'idle';
+            }
+            return prev;
+          });
+          return;
+        }
 
         const storedSync = await getLastSyncedAt();
         const lastSyncMs = storedSync ? new Date(storedSync).getTime() : 0;
