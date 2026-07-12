@@ -193,10 +193,19 @@ export default function WearableScreen() {
 
   const SYNC_THROTTLE_MS = 30 * 60 * 1000;
 
+  const [tick, setTick] = useState(0);
+
   const isMounted = useRef(true);
   useEffect(() => {
     isMounted.current = true;
     return () => { isMounted.current = false; };
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -391,7 +400,7 @@ export default function WearableScreen() {
     const hrs = Math.floor(mins / 60);
     if (hrs === 1) return 'Synced 1 hr ago';
     return `Synced ${hrs} hrs ago`;
-  }, [lastSyncedAt]);
+  }, [lastSyncedAt, tick]);
 
   const renderHeader = () => (
     <LinearGradient
