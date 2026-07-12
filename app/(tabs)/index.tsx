@@ -16,7 +16,7 @@ import { router } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
-import { CATEGORY_INFO, ExerciseCategory } from '@/constants/exercises';
+import { EXERCISES, CATEGORY_INFO, ExerciseCategory } from '@/constants/exercises';
 import { CONDITIONS } from '@/constants/conditions';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import Svg from 'react-native-svg';
@@ -96,11 +96,58 @@ function RecommendationCard({ rec, onPress }: { rec: Recommendation; onPress: ()
   );
 }
 
+interface ContextualSectionProps {
+  title: string;
+  subtitle: string;
+  accentColor: string;
+  iconName: string;
+  exerciseIds: string[];
+}
+
+function ContextualExerciseSection({ title, subtitle, accentColor, iconName, exerciseIds }: ContextualSectionProps) {
+  const exercises = EXERCISES.filter(e => exerciseIds.includes(e.id)).slice(0, 3);
+  if (exercises.length === 0) return null;
+  return (
+    <View style={[styles.contextualSection, { borderColor: accentColor + '40', backgroundColor: accentColor + '0C' }]}>
+      <View style={[styles.contextualAccentBar, { backgroundColor: accentColor }]} />
+      <View style={styles.contextualInner}>
+        <View style={styles.contextualHeader}>
+          <View style={[styles.contextualIconWrap, { backgroundColor: accentColor + '20' }]}>
+            <Feather name={iconName as any} size={16} color={accentColor} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.contextualTitle, { color: accentColor }]}>{title}</Text>
+            <Text style={styles.contextualSubtitle}>{subtitle}</Text>
+          </View>
+        </View>
+        {exercises.map(ex => (
+          <TouchableOpacity
+            key={ex.id}
+            style={styles.contextualExerciseRow}
+            onPress={() => router.push(`/exercise/${ex.id}`)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.contextualExIconBox, { backgroundColor: accentColor + '18' }]}>
+              <Feather name={ex.iconName as any} size={16} color={accentColor} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.contextualExTitle} numberOfLines={1}>{ex.title}</Text>
+              <Text style={styles.contextualExMeta}>{ex.durationMinutes} min · {ex.difficulty}</Text>
+            </View>
+            <Feather name="chevron-right" size={15} color={accentColor + 'AA'} />
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const {
     profile,
     sessions,
+    checkins,
     currentStreak,
     longestStreak,
     totalMinutes,
@@ -191,6 +238,41 @@ export default function HomeScreen() {
 
   const topRecommendations = advisorState.recommendations.slice(0, 5);
   const topInsights = advisorState.insights.slice(0, 3);
+
+  const recentCheckin = useMemo(() => {
+    return checkins
+      .slice()
+      .sort((a, b) => b.date.localeCompare(a.date))[0] ?? null;
+  }, [checkins]);
+
+  const showNervousSystemSection = useMemo(() => {
+    if (!recentCheckin) return false;
+    const highMood = recentCheckin.mood === 'anxious' || recentCheckin.mood === 'stressed';
+    const highStress = (recentCheckin.stressLevel ?? 0) >= 7;
+    return highMood || highStress;
+  }, [recentCheckin]);
+
+  const nervousSystemExerciseIds = useMemo(() => {
+    return EXERCISES
+      .filter(e => e.category === 'nervousSystem')
+      .sort((a, b) => a.durationMinutes - b.durationMinutes)
+      .map(e => e.id);
+  }, []);
+
+  const showTraumaSection = useMemo(() => {
+    const hasPtsd = (profile?.conditions ?? []).includes('ptsd');
+    const latestPcl5 = assessments
+      .filter(a => a.scaleId === 'pcl-5')
+      .sort((a, b) => b.completedAt.localeCompare(a.completedAt))[0];
+    const highPcl5 = (latestPcl5?.totalScore ?? 0) >= 33;
+    return hasPtsd || highPcl5;
+  }, [profile, assessments]);
+
+  const traumaExerciseIds = useMemo(() => {
+    return EXERCISES
+      .filter(e => e.category === 'traumaInformed')
+      .map(e => e.id);
+  }, []);
 
   const handleRecPress = (rec: Recommendation) => {
     switch (rec.type) {
@@ -477,6 +559,30 @@ export default function HomeScreen() {
           ))}
         </View>
 
+        {showNervousSystemSection && (
+          <View style={styles.section}>
+            <ContextualExerciseSection
+              title="Your nervous system needs support"
+              subtitle="Elevated stress detected — these exercises activate your vagal brake for rapid calm"
+              accentColor="#88B3B5"
+              iconName="radio"
+              exerciseIds={nervousSystemExerciseIds}
+            />
+          </View>
+        )}
+
+        {showTraumaSection && (
+          <View style={styles.section}>
+            <ContextualExerciseSection
+              title="Trauma-informed practice"
+              subtitle="Gentle somatic exercises designed for nervous system safety and grounding"
+              accentColor="#8FAF8A"
+              iconName="anchor"
+              exerciseIds={traumaExerciseIds}
+            />
+          </View>
+        )}
+
         {topRecommendations.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Personalized For You</Text>
@@ -714,5 +820,76 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: Colors.textTertiary,
     opacity: 0.7,
+  },
+
+  contextualSection: {
+    borderRadius: 18,
+    borderWidth: 1,
+    overflow: 'hidden',
+    flexDirection: 'row',
+    shadowColor: Colors.cardShadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  contextualAccentBar: {
+    width: 4,
+  },
+  contextualInner: {
+    flex: 1,
+    padding: 16,
+  },
+  contextualHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginBottom: 14,
+  },
+  contextualIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  contextualTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 14,
+    lineHeight: 19,
+    marginBottom: 3,
+  },
+  contextualSubtitle: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 12,
+    color: Colors.textSecondary,
+    lineHeight: 17,
+  },
+  contextualExerciseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border + '50',
+  },
+  contextualExIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contextualExTitle: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 13,
+    color: Colors.text,
+  },
+  contextualExMeta: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: 1,
   },
 });
