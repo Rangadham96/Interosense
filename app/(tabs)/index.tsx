@@ -13,7 +13,7 @@ import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { CATEGORY_INFO, ExerciseCategory } from '@/constants/exercises';
@@ -115,6 +115,8 @@ export default function HomeScreen() {
     wearableData,
   } = useApp();
 
+  const queryClient = useQueryClient();
+
   const STREAK_MILESTONES = [7, 14, 30, 60];
   const isMilestone = STREAK_MILESTONES.includes(currentStreak);
   const milestoneScale = useRef(new Animated.Value(1)).current;
@@ -132,6 +134,15 @@ export default function HomeScreen() {
   }, [currentStreak]);
 
   const wearableContext = useMemo(() => getWearableContext(wearableData), [wearableData]);
+
+  const prevWearableContextRef = useRef(wearableContext);
+  useEffect(() => {
+    const prev = prevWearableContextRef.current;
+    prevWearableContextRef.current = wearableContext;
+    if (prev === null && wearableContext !== null) {
+      queryClient.invalidateQueries({ queryKey: ['/api/advisor/insight'] });
+    }
+  }, [wearableContext, queryClient]);
 
   useEffect(() => {
     if (!isLoading && !onboardingComplete) {
