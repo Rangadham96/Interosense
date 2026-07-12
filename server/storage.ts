@@ -106,17 +106,40 @@ export async function getTodayInsight(
   generatedDate: string,
   currentlyHasWearableContext: boolean = false,
 ): Promise<DailyInsight | undefined> {
-  const [insight] = await db
-    .select()
-    .from(dailyInsights)
-    .where(
-      and(
-        eq(dailyInsights.userId, userId),
-        eq(dailyInsights.generatedDate, generatedDate),
-        eq(dailyInsights.hasWearableContext, currentlyHasWearableContext),
-      ),
-    );
-  return insight;
+  if (currentlyHasWearableContext) {
+    // Wearable data is present: only serve a wearable-enriched insight.
+    // A plain cached insight (hasWearableContext=false) is intentionally ignored so
+    // that the richer wearable insight is generated and stored.
+    const [insight] = await db
+      .select()
+      .from(dailyInsights)
+      .where(
+        and(
+          eq(dailyInsights.userId, userId),
+          eq(dailyInsights.generatedDate, generatedDate),
+          eq(dailyInsights.hasWearableContext, true),
+        ),
+      );
+    return insight;
+  } else {
+    // Wearable data is absent: serve any cached insight for today.
+    // If a wearable-enriched insight was cached earlier in the day and the health
+    // connection since dropped, we prefer to return that richer cached insight
+    // rather than generating and persisting a second, stale plain insight.
+    // ORDER BY has_wearable_context DESC gives priority to true > false.
+    const insights = await db
+      .select()
+      .from(dailyInsights)
+      .where(
+        and(
+          eq(dailyInsights.userId, userId),
+          eq(dailyInsights.generatedDate, generatedDate),
+        ),
+      );
+    if (insights.length === 0) return undefined;
+    // Prefer wearable insight if present, otherwise fall back to plain insight
+    return insights.find(i => i.hasWearableContext) ?? insights[0];
+  }
 }
 
 export async function saveInsight(
