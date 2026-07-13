@@ -55,7 +55,7 @@ export default function RegisterScreen() {
   }, []);
 
   const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
-    webClientId: GOOGLE_CLIENT_ID,
+    webClientId: GOOGLE_CLIENT_ID || 'not-configured',
     iosClientId: GOOGLE_CLIENT_ID,
     androidClientId: GOOGLE_CLIENT_ID,
   });

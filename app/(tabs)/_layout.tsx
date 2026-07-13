@@ -1,6 +1,5 @@
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
-import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
 import { BlurView } from "expo-blur";
 import { Platform, StyleSheet, useColorScheme, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -9,6 +8,7 @@ import React from "react";
 import Colors from "@/constants/colors";
 
 function NativeTabLayout() {
+  const { NativeTabs, Icon, Label } = require("expo-router/unstable-native-tabs");
   return (
     <NativeTabs
       screenOptions={{
@@ -130,7 +130,7 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
+  if (Platform.OS === 'ios' && isLiquidGlassAvailable()) {
     return <NativeTabLayout />;
   }
   return <ClassicTabLayout />;
