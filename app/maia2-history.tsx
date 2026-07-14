@@ -213,7 +213,7 @@ function SubscaleTrendChart({ subscaleKey, subscaleName, points, expanded, onPre
 
       {expanded && (
         <Text style={trendStyles.expandedNote}>
-          {points.length} assessment{points.length !== 1 ? 's' : ''} — scale 0 to 5
+          {points.length} assessment{points.length !== 1 ? 's' : ''} (scale 0 to 5)
         </Text>
       )}
     </TouchableOpacity>
@@ -648,7 +648,7 @@ export default function Maia2HistoryScreen() {
                               <Text style={[styles.subscaleDiff, {
                                 color: diff > 0.1 ? Colors.success : diff < -0.1 ? Colors.error : Colors.textTertiary,
                               }]}>
-                                {diff > 0.1 ? '+' : ''}{diff !== 0 ? diff.toFixed(1) : '—'}
+                                {diff > 0.1 ? '+' : ''}{diff !== 0 ? diff.toFixed(1) : '-'}
                               </Text>
                             )}
                             <Text style={[styles.subscaleScore, { color: barColor }]}>{score.toFixed(1)}</Text>

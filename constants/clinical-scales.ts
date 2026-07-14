@@ -430,7 +430,7 @@ export function generateClinicianReport(
         const pastScore = past.subscaleScores[subscale.key] ?? 0;
         const currScore = subscaleScores[subscale.key] ?? 0;
         const diff = currScore - pastScore;
-        const trend = diff > 0.1 ? `+${diff.toFixed(1)}` : diff < -0.1 ? diff.toFixed(1) : '—';
+        const trend = diff > 0.1 ? `+${diff.toFixed(1)}` : diff < -0.1 ? diff.toFixed(1) : '-';
         const bar = '█'.repeat(Math.round(pastScore)) + '░'.repeat(5 - Math.round(pastScore));
         lines.push(`  ${subscale.name.padEnd(22)} ${bar}  ${pastScore.toFixed(1)}/5  (${trend} to current)`);
       }

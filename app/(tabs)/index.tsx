@@ -570,7 +570,7 @@ export default function HomeScreen() {
           <View style={styles.section}>
             <ContextualExerciseSection
               title="Your nervous system needs support"
-              subtitle="Elevated stress detected — these exercises activate your vagal brake for rapid calm"
+              subtitle="Elevated stress detected. These exercises activate your vagal brake for rapid calm."
               accentColor="#88B3B5"
               iconName="radio"
               exerciseIds={nervousSystemExerciseIds}

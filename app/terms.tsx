@@ -62,7 +62,7 @@ export default function TermsScreen() {
             <Text style={styles.disclaimerHeading}>Not a Medical Device</Text>
           </View>
           <Body>
-            Interosense is a wellness and educational tool. It is not a medical device, clinical service, or substitute for professional medical advice, diagnosis, or treatment. Clinical assessment tools within the app (including GAD-7, PHQ-9, PCL-5, and MAIA-2) are for self-reflection and psychoeducation only — they are not diagnostic instruments when used outside a clinical setting.
+            Interosense is a wellness and educational tool. It is not a medical device, clinical service, or substitute for professional medical advice, diagnosis, or treatment. Clinical assessment tools within the app (including GAD-7, PHQ-9, PCL-5, and MAIA-2) are for self-reflection and psychoeducation only. They are not diagnostic instruments when used outside a clinical setting.
           </Body>
           <Body style={{ marginTop: 10 }}>
             Always seek the advice of a qualified healthcare professional for any medical or mental health concerns. If you are in crisis, please contact emergency services or a crisis helpline immediately.
@@ -125,7 +125,7 @@ export default function TermsScreen() {
         <View style={styles.card}>
           <SectionHeading>5. Intellectual Property</SectionHeading>
           <Body>
-            All content in the Interosense Service — including exercise scripts, article text, UI design, clinical scale adaptations, AI advisor prompts, and branding — is owned by or licensed to Interosense and protected by copyright and other intellectual property laws.
+            All content in the Interosense Service, including exercise scripts, article text, UI design, clinical scale adaptations, AI advisor prompts, and branding, is owned by or licensed to Interosense and protected by copyright and other intellectual property laws.
           </Body>
           <Body style={{ marginTop: 10 }}>
             You are granted a limited, non-exclusive, non-transferable licence to use the Service for personal, non-commercial wellness purposes. You may not reproduce, distribute, or create derivative works from any part of the Service without our prior written permission.
@@ -138,7 +138,7 @@ export default function TermsScreen() {
         <View style={styles.card}>
           <SectionHeading>6. AI Advisor (Sense)</SectionHeading>
           <Body>
-            The Sense AI advisor generates personalised wellness insights using Anthropic's Claude AI model. These insights are for general wellbeing guidance only and do not constitute medical advice. AI-generated content may occasionally be inaccurate or inappropriate — always apply your own judgement and consult a professional when needed.
+            The Sense AI advisor generates personalised wellness insights using Anthropic's Claude AI model. These insights are for general wellbeing guidance only and do not constitute medical advice. AI-generated content may occasionally be inaccurate or inappropriate. Always apply your own judgement and consult a professional when needed.
           </Body>
           <Body style={{ marginTop: 10 }}>
             By using the Sense advisor, you acknowledge that your anonymised activity data (conditions, check-in scores, exercise history) is sent to Anthropic's API to generate your insight, in accordance with our Privacy Policy.

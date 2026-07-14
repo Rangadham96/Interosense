@@ -32,8 +32,8 @@ interface SubscriptionData {
 }
 
 function formatDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  try { return format(parseISO(iso), 'd MMM yyyy'); } catch { return '—'; }
+  if (!iso) return '-';
+  try { return format(parseISO(iso), 'd MMM yyyy'); } catch { return '-'; }
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -183,7 +183,7 @@ export default function SubscriptionScreen() {
               <View style={styles.trialBanner}>
                 <Feather name="clock" size={16} color="#1565C0" />
                 <Text style={styles.trialText}>
-                  Free trial active — your card will be charged on {formatDate(sub.trialEndAt)}
+                  Free trial active. Your card will be charged on {formatDate(sub.trialEndAt)}
                 </Text>
               </View>
             )}
@@ -193,7 +193,7 @@ export default function SubscriptionScreen() {
               <View style={styles.pendingBanner}>
                 <Feather name="clock" size={16} color="#E65100" />
                 <Text style={styles.pendingText}>
-                  Cancellation scheduled. You keep full access until {formatDate(sub.currentEnd)} — no further charges.
+                  Cancellation scheduled. You keep full access until {formatDate(sub.currentEnd)}. No further charges.
                 </Text>
               </View>
             )}
@@ -220,7 +220,7 @@ export default function SubscriptionScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.renewTitle}>Want to stay Premium?</Text>
                     <Text style={styles.renewSubtitle}>
-                      Start a new subscription anytime — your history and progress are saved.
+                      Start a new subscription anytime. Your history and progress are saved.
                     </Text>
                   </View>
                 </View>

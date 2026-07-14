@@ -72,7 +72,7 @@ export default function PrivacyPolicyScreen() {
 
           <Text style={styles.subHeading}>Account Information</Text>
           <BulletItem>Name and email address when you register</BulletItem>
-          <BulletItem>Password (stored as a secure cryptographic hash — we never store the plain text)</BulletItem>
+          <BulletItem>Password (stored as a secure cryptographic hash; we never store the plain text)</BulletItem>
           <BulletItem>Experience level and wellness goals selected during onboarding</BulletItem>
           <BulletItem>Health conditions you choose to disclose (e.g. anxiety, PTSD, chronic pain)</BulletItem>
 
@@ -140,7 +140,7 @@ export default function PrivacyPolicyScreen() {
         <View style={styles.card}>
           <SectionHeading>5. Sensitive Health Data</SectionHeading>
           <Body>
-            Some information you provide — such as mental health conditions, clinical assessment scores, and body sensations — is considered sensitive health data. We treat this information with particular care:
+            Some of the information you provide, including mental health conditions, clinical assessment scores and body sensations, is sensitive health data. We treat it with particular care:
           </Body>
           <BulletItem>It is never shared with advertisers, data brokers, or any third party for commercial purposes</BulletItem>
           <BulletItem>It is used only to personalise your experience within the app</BulletItem>
@@ -151,19 +151,19 @@ export default function PrivacyPolicyScreen() {
         <View style={styles.card}>
           <SectionHeading>6. Your Rights</SectionHeading>
           <BulletItem>
-            <Text><Text style={styles.bold}>Access</Text> — You can export all your data at any time from Settings &gt; Export Data.</Text>
+            <Text><Text style={styles.bold}>Access:</Text> You can export all your data at any time from Settings &gt; Export Data.</Text>
           </BulletItem>
           <BulletItem>
-            <Text><Text style={styles.bold}>Deletion</Text> — You can delete your account and all associated data from Settings &gt; Delete My Account. Deletion is permanent and cannot be undone.</Text>
+            <Text><Text style={styles.bold}>Deletion:</Text> You can delete your account and all associated data from Settings &gt; Delete My Account. Deletion is permanent and cannot be undone.</Text>
           </BulletItem>
           <BulletItem>
-            <Text><Text style={styles.bold}>Correction</Text> — You can update your profile information at any time from the Profile screen.</Text>
+            <Text><Text style={styles.bold}>Correction:</Text> You can update your profile information at any time from the Profile screen.</Text>
           </BulletItem>
           <BulletItem>
-            <Text><Text style={styles.bold}>Withdraw consent</Text> — You can revoke Apple Health or Health Connect permissions at any time from your device settings.</Text>
+            <Text><Text style={styles.bold}>Withdraw consent:</Text> You can revoke Apple Health or Health Connect permissions at any time from your device settings.</Text>
           </BulletItem>
           <BulletItem>
-            <Text><Text style={styles.bold}>Contact us</Text> — To exercise any other rights or ask a privacy question, email us at privacy@interosense.com.</Text>
+            <Text><Text style={styles.bold}>Contact us:</Text> To exercise any other rights or ask a privacy question, email us at privacy@interosense.com.</Text>
           </BulletItem>
         </View>
 
