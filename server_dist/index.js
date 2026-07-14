@@ -442,7 +442,9 @@ router.post("/api/auth/forgot-password", async (req, res) => {
       const token = crypto.randomBytes(32).toString("hex");
       const expiresAt = new Date(Date.now() + 60 * 60 * 1e3);
       await createResetToken(user.id, token, expiresAt);
-      const resetUrl = `${process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "http://localhost:8081"}/auth/reset-password?token=${token}`;
+      const forwardedProto = req.header("x-forwarded-proto") || req.protocol || "https";
+      const forwardedHost = req.header("x-forwarded-host") || req.get("host") || "localhost:8081";
+      const resetUrl = `${forwardedProto}://${forwardedHost}/auth/reset-password?token=${token}`;
       const resendApiKey = process.env.RESEND_API_KEY;
       if (resendApiKey) {
         try {
