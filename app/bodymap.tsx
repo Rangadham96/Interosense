@@ -616,8 +616,10 @@ const styles = StyleSheet.create({
   },
   regionStatsTitle: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 15,
-    color: Colors.text,
+    fontSize: 11,
+    color: Colors.textSecondary,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
     marginBottom: 14,
   },
   statRow: {
@@ -679,12 +681,12 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   modalLabel: {
-    fontFamily: 'Nunito_600SemiBold',
-    fontSize: 13,
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 11,
     color: Colors.textSecondary,
     marginBottom: 8,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1.4,
   },
   regionBadge: {
     flexDirection: 'row',
