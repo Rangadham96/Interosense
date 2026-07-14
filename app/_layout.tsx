@@ -129,6 +129,7 @@ function AuthGate() {
       <Stack.Screen name="about" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="articles" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="subscription-success" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="subscription" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="assessment/maia2" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom', gestureDirection: 'vertical' }} />
       <Stack.Screen name="auth/forgot-password" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="auth/reset-password" options={{ headerShown: false, animation: 'slide_from_right' }} />

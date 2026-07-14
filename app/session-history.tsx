@@ -92,7 +92,7 @@ type ListItem = { type: 'header'; label: string; key: string } | { type: 'sessio
 export default function SessionHistoryScreen() {
   const insets = useSafeAreaInsets();
   const { sessions, totalSessions, totalMinutes } = useApp();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
   const averageRating = useMemo(() => {
     if (sessions.length === 0) return 0;

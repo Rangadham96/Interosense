@@ -44,7 +44,7 @@ function getDaysInMonth(month: number, year: number) {
 export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
   const { profile, updateProfile } = useApp();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
   const [name, setName] = useState(profile?.name || '');
   const [gender, setGender] = useState<GenderOption>(profile?.gender || '');

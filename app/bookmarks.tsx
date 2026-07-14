@@ -18,7 +18,7 @@ import Colors from '@/constants/colors';
 export default function BookmarksScreen() {
   const insets = useSafeAreaInsets();
   const { bookmarks, toggleBookmark } = useApp();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
   const bookmarkedArticles = ARTICLES.filter(a => bookmarks.includes(a.id));
 

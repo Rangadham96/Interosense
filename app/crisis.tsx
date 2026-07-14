@@ -408,7 +408,7 @@ export default function CrisisScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { profile } = useApp();
-  const topInset = Platform.OS === 'web' ? 67 : insets.top;
+  const topInset = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
   const [activeTechnique, setActiveTechnique] = useState<typeof FASTEST_EXERCISES[0] | null>(null);
   const [showGrounding, setShowGrounding] = useState(false);

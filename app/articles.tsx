@@ -25,7 +25,7 @@ export default function ArticlesScreen() {
   const insets = useSafeAreaInsets();
   const { bookmarks, toggleBookmark, articlesRead } = useApp();
   const { user } = useAuth();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const isPremium = user?.isPremium ?? false;
 
   const [selectedCategory, setSelectedCategory] = useState<ArticleCategory | 'all'>('all');

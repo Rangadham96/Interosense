@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Platform,
   Modal,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -19,7 +18,6 @@ import Colors from '@/constants/colors';
 import { CONDITIONS } from '@/constants/conditions';
 import { format, differenceInCalendarDays } from 'date-fns';
 import GetHelpLink from '@/components/GetHelpLink';
-import { apiPostJson } from '@/lib/api';
 
 const FOUR_WEEK_PROGRAMME = [
   { week: 1, title: 'Foundation', description: 'Begin with heartbeat detection and diaphragmatic breathing to build your interoceptive baseline.' },
@@ -33,7 +31,6 @@ export default function ProfileScreen() {
   const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const bottomPadding = Platform.OS === 'web' ? 34 : insets.bottom;
   const [showSignOutModal, setShowSignOutModal] = useState(false);
-  const [portalLoading, setPortalLoading] = useState(false);
 
   const {
     profile,
@@ -77,28 +74,7 @@ export default function ProfileScreen() {
   };
 
   const handleManageSubscription = () => {
-    Alert.alert(
-      'Manage Subscription',
-      'Your subscription is active. Would you like to cancel it?',
-      [
-        { text: 'Keep Subscription', style: 'cancel' },
-        {
-          text: 'Cancel Subscription',
-          style: 'destructive',
-          onPress: async () => {
-            setPortalLoading(true);
-            try {
-              await apiPostJson('/api/razorpay/cancel', {});
-              Alert.alert('Cancelled', 'Your subscription has been cancelled. You will retain access until the current period ends.');
-            } catch (error: any) {
-              Alert.alert('Error', error.message || 'Could not cancel subscription. Please try again.');
-            } finally {
-              setPortalLoading(false);
-            }
-          },
-        },
-      ]
-    );
+    router.push('/subscription' as any);
   };
 
   return (
@@ -250,7 +226,7 @@ export default function ProfileScreen() {
                 <MenuRow
                   icon="star"
                   iconColor={Colors.warning}
-                  label={portalLoading ? 'Opening portal...' : 'Manage Subscription'}
+                  label="Manage Subscription"
                   onPress={handleManageSubscription}
                 />
                 <View style={styles.menuDivider} />

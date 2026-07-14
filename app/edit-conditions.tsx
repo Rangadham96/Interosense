@@ -17,7 +17,7 @@ import { CONDITIONS } from '@/constants/conditions';
 export default function EditConditionsScreen() {
   const insets = useSafeAreaInsets();
   const { profile, updateProfile } = useApp();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
   const [selectedConditions, setSelectedConditions] = useState<string[]>(
     profile?.conditions || []

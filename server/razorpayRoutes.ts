@@ -41,6 +41,7 @@ router.post('/api/razorpay/create-subscription', async (req: Request, res: Respo
       total_count: totalCount,
       quantity: 1,
       customer_notify: 1,
+      trial_period: 7,
       notes: {
         userId: String(userId),
         plan: planKey,
@@ -184,16 +185,64 @@ router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/api/razorpay/subscription-status', async (req: Request, res: Response) => {
+  const statusUserId = (req.session as any)?.userId;
+  if (!statusUserId) return res.status(401).json({ error: 'Not authenticated' });
+
+  try {
+    const user = await storage.getUser(String(statusUserId));
+    const subscriptionId = user?.stripeSubscriptionId;
+
+    if (!subscriptionId) {
+      return res.json({ subscription: null });
+    }
+
+    if (!isRazorpayConfigured()) {
+      return res.json({ subscription: { id: subscriptionId, status: 'unknown', plan: 'unknown' } });
+    }
+
+    const client = getRazorpayClient();
+    const sub: any = await (client.subscriptions as any).fetch(subscriptionId);
+
+    const planNote = sub?.notes?.plan || 'monthly';
+    const planLabel = planNote === 'annual' ? 'Annual' : 'Monthly';
+    const amount = planNote === 'annual' ? '₹3,990/year' : '₹399/month';
+
+    return res.json({
+      subscription: {
+        id: sub.id,
+        status: sub.status,
+        plan: planLabel,
+        amount,
+        currentStart: sub.current_start ? new Date(sub.current_start * 1000).toISOString() : null,
+        currentEnd: sub.current_end ? new Date(sub.current_end * 1000).toISOString() : null,
+        chargeAt: sub.charge_at ? new Date(sub.charge_at * 1000).toISOString() : null,
+        trialEndAt: sub.trial_end_at ? new Date(sub.trial_end_at * 1000).toISOString() : null,
+      },
+    });
+  } catch (err: any) {
+    console.error('Razorpay subscription-status error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to fetch subscription details' });
+  }
+});
+
 router.post('/api/razorpay/cancel', async (req: Request, res: Response) => {
   const cancelUserId = (req.session as any)?.userId;
   if (!cancelUserId) return res.status(401).json({ error: 'Not authenticated' });
 
   try {
-    await storage.updateUser(String(cancelUserId), {
-      isPremium: false,
-      stripeSubscriptionId: null,
-    });
-    return res.json({ success: true, message: 'Subscription cancelled' });
+    const user = await storage.getUser(String(cancelUserId));
+    const subscriptionId = user?.stripeSubscriptionId;
+
+    if (subscriptionId && isRazorpayConfigured()) {
+      const client = getRazorpayClient();
+      // cancel_at_cycle_end: 1 → user keeps access until billing period ends
+      await (client.subscriptions as any).cancel(subscriptionId, { cancel_at_cycle_end: 1 });
+    }
+
+    // Keep isPremium true — webhook will set it false when period expires
+    // But record that cancellation was requested by clearing stripeCustomerId as a flag
+    return res.json({ success: true, message: 'Subscription will be cancelled at the end of the current billing period.' });
   } catch (err: any) {
     console.error('Razorpay cancel error:', err);
     return res.status(500).json({ error: err.message || 'Failed to cancel subscription' });

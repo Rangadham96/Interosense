@@ -17,7 +17,7 @@ export default function SubscriptionSuccessScreen() {
     signature?: string;
   }>();
   const { refreshUser } = useAuth();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const bottomPadding = Platform.OS === 'web' ? 34 : Math.max(insets.bottom, 24);
 
   const [status, setStatus] = useState<'loading' | 'success' | 'pending'>('loading');

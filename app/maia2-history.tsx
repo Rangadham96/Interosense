@@ -267,7 +267,7 @@ export default function Maia2HistoryScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { assessments, profile } = useApp();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const bottomPadding = Platform.OS === 'web' ? 34 : insets.bottom;
 
   const [expandedId, setExpandedId] = useState<string | null>(null);

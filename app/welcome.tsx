@@ -44,7 +44,7 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const flatRef = useRef<FlatList>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const bottomPadding = Platform.OS === 'web' ? 34 : insets.bottom;
 
   const markSeen = async () => {

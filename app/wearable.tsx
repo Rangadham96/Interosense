@@ -182,7 +182,7 @@ export default function WearableScreen() {
   const { user } = useAuth();
   const isPremium = user?.isPremium;
 
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const bottomPadding = Platform.OS === 'web' ? 34 : insets.bottom;
 
   const [status, setStatus] = useState<ConnectionStatus>('idle');
