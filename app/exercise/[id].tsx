@@ -103,11 +103,20 @@ function formatTime(seconds: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
+function getSessionMilestone(total: number): string {
+  if (total === 1) return 'First session. Your insular cortex (the brain region that processes body signals) has begun to receive new structured input.';
+  if (total <= 4) return 'Early practice. Interoceptive pathways are forming. Consistent repetition is what creates lasting change.';
+  if (total <= 9) return `${total} sessions in. Research shows self-reported body awareness begins to shift after 5 or more practices.`;
+  if (total <= 19) return `${total} sessions of practice. MRI studies show measurable changes in insula thickness and activation begin around session 10.`;
+  if (total <= 29) return `${total} sessions. Your autonomic nervous system (the network governing heart rate, breathing, and stress response) is building durable regulation.`;
+  return `${total} sessions. Long-term practitioners show structural differences in interoceptive brain networks. You are building something lasting.`;
+}
+
 export default function ExerciseSessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { addSession, sessions, totalSessions, currentStreak, unlockedAchievements, exerciseBookmarks, toggleExerciseBookmark, profile } = useApp();
+  const { addSession, sessions, totalSessions, currentStreak, unlockedAchievements, exerciseBookmarks, toggleExerciseBookmark, profile, averageAwareness, checkins } = useApp();
   const exercise = getExerciseById(id);
 
   const [phase, setPhase] = useState<SessionPhase>('prestart');
@@ -469,12 +478,26 @@ export default function ExerciseSessionScreen() {
               </View>
               <View style={styles.statBox}>
                 <Text style={styles.statValue}>{totalSessions}</Text>
-                <Text style={styles.statLabel}>Total Sessions</Text>
+                <Text style={styles.statLabel}>Sessions</Text>
               </View>
               <View style={styles.statBox}>
                 <Text style={styles.statValue}>{currentStreak}</Text>
-                <Text style={styles.statLabel}>Day Streak</Text>
+                <Text style={styles.statLabel}>Streak</Text>
               </View>
+              {checkins.length > 0 && (
+                <View style={styles.statBox}>
+                  <Text style={styles.statValue}>{averageAwareness.toFixed(1)}</Text>
+                  <Text style={styles.statLabel}>Awareness</Text>
+                </View>
+              )}
+            </View>
+
+            <View style={styles.sessionMilestoneCard}>
+              <View style={styles.sessionMilestoneRow}>
+                <Feather name="activity" size={13} color="rgba(255,255,255,0.55)" />
+                <Text style={styles.sessionMilestoneLabel}>SESSION {totalSessions} OF YOUR PRACTICE</Text>
+              </View>
+              <Text style={styles.sessionMilestoneText}>{getSessionMilestone(totalSessions)}</Text>
             </View>
 
             {practiceCount > 0 && (
@@ -830,6 +853,33 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_500Medium',
     fontSize: 12,
     color: 'rgba(255,255,255,0.65)',
+  },
+  sessionMilestoneCard: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  sessionMilestoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  sessionMilestoneLabel: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 1.2,
+  },
+  sessionMilestoneText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.78)',
+    lineHeight: 20,
   },
   contraindicationCard: {
     backgroundColor: 'rgba(240,192,90,0.15)',

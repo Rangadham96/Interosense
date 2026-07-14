@@ -417,7 +417,10 @@ export default function ProgressScreen() {
                       return (
                         <View key={s.key} style={styles.subscaleProfileRow}>
                           <View style={styles.subscaleProfileHeader}>
-                            <Text style={styles.subscaleProfileName}>{s.name}</Text>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.subscaleProfileName}>{s.name}</Text>
+                              <Text style={styles.subscaleDimensionWhat}>{MAIA2_DIMENSION_WHAT[s.key]}</Text>
+                            </View>
                             <Text style={[styles.subscaleProfileScore, { color: barColor }]}>{score.toFixed(1)}/5</Text>
                           </View>
                           <View style={styles.subscaleProfileTrack}>
@@ -780,6 +783,17 @@ export default function ProgressScreen() {
   );
 }
 
+const MAIA2_DIMENSION_WHAT: Record<string, string> = {
+  noticing: 'Detecting physical sensations (heartbeat, breath, hunger, tension) before they demand your attention',
+  notDistracting: 'Staying present with discomfort rather than distracting yourself from unpleasant sensations',
+  notWorrying: 'Noticing body signals without turning them into anxiety or catastrophic thoughts',
+  attentionRegulation: 'Deliberately directing and sustaining your attention to specific areas of your body',
+  emotionalAwareness: 'Recognising how emotions create physical sensations and how sensations colour your mood',
+  selfRegulation: 'Using body awareness to calm yourself when distressed, overwhelmed, or anxious',
+  bodyListening: 'Consulting your body as a source of wisdom for decisions, rest, and self-care',
+  trusting: 'Experiencing your body as a safe, reliable place to be rather than something threatening',
+};
+
 function getSubscaleOneLiner(key: string, score: number): string {
   const level = score >= 3.5 ? 'high' : score >= 2 ? 'moderate' : 'developing';
   const map: Record<string, Record<string, string>> = {
@@ -992,8 +1006,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundSecondary, borderRadius: 8, padding: 10,
   },
   subscaleProfileRow: { marginBottom: 14 },
-  subscaleProfileHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
+  subscaleProfileHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 },
   subscaleProfileName: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: Colors.text },
+  subscaleDimensionWhat: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: Colors.textTertiary, lineHeight: 15, marginTop: 2 },
   subscaleProfileScore: { fontFamily: 'Nunito_700Bold', fontSize: 13 },
   subscaleProfileTrack: {
     height: 6, backgroundColor: Colors.backgroundSecondary, borderRadius: 3, overflow: 'hidden' as const, marginBottom: 5,
