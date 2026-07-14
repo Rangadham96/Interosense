@@ -192,8 +192,38 @@ export default function SubscriptionScreen() {
                 <Text style={styles.cancelledText}>
                   {cancelSuccess
                     ? `Subscription cancelled. You keep access until ${formatDate(sub.currentEnd)}.`
-                    : `This subscription is no longer active.`}
+                    : sub.currentEnd
+                      ? `Subscription cancelled. Access ends ${formatDate(sub.currentEnd)}.`
+                      : `This subscription is no longer active.`}
                 </Text>
+              </View>
+            )}
+
+            {/* Renew CTA — shown when cancelled or just cancelled */}
+            {(isCancelled || cancelSuccess) && (
+              <View style={styles.renewCard}>
+                <View style={styles.renewTop}>
+                  <LinearGradient colors={['#F0C05A', '#E8A830']} style={styles.renewIcon}>
+                    <Feather name="star" size={18} color="#fff" />
+                  </LinearGradient>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.renewTitle}>Want to stay Premium?</Text>
+                    <Text style={styles.renewSubtitle}>
+                      Start a new subscription anytime — your history and progress are saved.
+                    </Text>
+                  </View>
+                </View>
+                <Pressable style={styles.renewButton} onPress={() => router.push('/premium' as any)}>
+                  <LinearGradient
+                    colors={['#6B5B95', '#524578']}
+                    style={styles.renewGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Feather name="star" size={16} color="#fff" />
+                    <Text style={styles.renewButtonText}>Renew Premium</Text>
+                  </LinearGradient>
+                </Pressable>
               </View>
             )}
 
@@ -364,6 +394,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   confirmCancelText: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: '#fff' },
+
+  renewCard: {
+    backgroundColor: '#fff', borderRadius: 16, padding: 20,
+    borderWidth: 1, borderColor: Colors.borderLight, gap: 16,
+  },
+  renewTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
+  renewIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  renewTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: Colors.text, marginBottom: 4 },
+  renewSubtitle: { fontFamily: 'Nunito_400Regular', fontSize: 13, color: Colors.textSecondary, lineHeight: 19 },
+  renewButton: { borderRadius: 14, overflow: 'hidden' },
+  renewGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 14 },
+  renewButtonText: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: '#fff' },
 
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 },
   emptyTitle: { fontFamily: 'Nunito_700Bold', fontSize: 22, color: Colors.text },
