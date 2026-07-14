@@ -63,8 +63,8 @@ var users = pgTable("users", {
   dateOfBirth: text("date_of_birth"),
   bio: text("bio"),
   isPremium: boolean("is_premium").default(false),
-  stripeCustomerId: text("stripe_customer_id"),
-  stripeSubscriptionId: text("stripe_subscription_id"),
+  razorpayCustomerId: text("razorpay_customer_id"),
+  razorpaySubscriptionId: text("razorpay_subscription_id"),
   interoceptiveBaseline: jsonb("interoceptive_baseline").$type().default({}),
   onboardingPlan: jsonb("onboarding_plan").$type().default([]),
   createdAt: timestamp("created_at").defaultNow(),
@@ -166,8 +166,8 @@ var DatabaseStorage = class {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
-  async getUserByStripeCustomerId(customerId) {
-    const [user] = await db.select().from(users).where(eq(users.stripeCustomerId, customerId));
+  async getUserByRazorpayCustomerId(customerId) {
+    const [user] = await db.select().from(users).where(eq(users.razorpayCustomerId, customerId));
     return user;
   }
   async getUserByProviderId(provider, providerId) {
@@ -828,7 +828,7 @@ router2.post("/api/razorpay/create-subscription", async (req, res) => {
     const user = await storage.getUser(userId);
     const client = getRazorpayClient();
     const totalCount = planKey === "annual" ? 10 : 120;
-    const isFirstTimeSubscriber = !user?.stripeSubscriptionId;
+    const isFirstTimeSubscriber = !user?.razorpaySubscriptionId;
     const sub = await client.subscriptions.create({
       plan_id: planIdEnv,
       total_count: totalCount,
@@ -891,8 +891,8 @@ router2.post("/api/razorpay/verify-payment", async (req, res) => {
   try {
     await storage.updateUser(String(verifyUserId), {
       isPremium: true,
-      stripeCustomerId: razorpay_subscription_id,
-      stripeSubscriptionId: razorpay_subscription_id
+      razorpayCustomerId: razorpay_subscription_id,
+      razorpaySubscriptionId: razorpay_subscription_id
     });
     return res.json({ success: true });
   } catch (err) {
@@ -925,21 +925,19 @@ router2.post("/api/razorpay/webhook", async (req, res) => {
       if (userId) {
         await storage.updateUser(String(userId), {
           isPremium: true,
-          stripeSubscriptionId: subscriptionId
+          razorpaySubscriptionId: subscriptionId
         });
       }
     } else if (event.event === "subscription.cancelled" || event.event === "subscription.expired" || event.event === "subscription.completed") {
       if (userId) {
         await storage.updateUser(String(userId), {
-          isPremium: false,
-          stripeSubscriptionId: null
+          isPremium: false
         });
       }
     } else if (event.event === "subscription.halted") {
       if (userId) {
         await storage.updateUser(String(userId), {
-          isPremium: false,
-          stripeSubscriptionId: null
+          isPremium: false
         });
         const user = await storage.getUser(String(userId));
         if (user) {
@@ -960,7 +958,7 @@ router2.get("/api/razorpay/subscription-status", async (req, res) => {
   if (!statusUserId) return res.status(401).json({ error: "Not authenticated" });
   try {
     const user = await storage.getUser(String(statusUserId));
-    const subscriptionId = user?.stripeSubscriptionId;
+    const subscriptionId = user?.razorpaySubscriptionId;
     if (!subscriptionId) {
       return res.json({ subscription: null });
     }
@@ -981,7 +979,9 @@ router2.get("/api/razorpay/subscription-status", async (req, res) => {
         currentStart: sub.current_start ? new Date(sub.current_start * 1e3).toISOString() : null,
         currentEnd: sub.current_end ? new Date(sub.current_end * 1e3).toISOString() : null,
         chargeAt: sub.charge_at ? new Date(sub.charge_at * 1e3).toISOString() : null,
-        trialEndAt: sub.trial_end_at ? new Date(sub.trial_end_at * 1e3).toISOString() : null
+        trialEndAt: sub.trial_end_at ? new Date(sub.trial_end_at * 1e3).toISOString() : null,
+        // true when user cancelled with cancel_at_cycle_end — status stays "active" until period ends
+        cancelAtCycleEnd: sub.cancel_at_cycle_end === true || sub.cancel_at_cycle_end === 1
       }
     });
   } catch (err) {
@@ -994,7 +994,7 @@ router2.post("/api/razorpay/cancel", async (req, res) => {
   if (!cancelUserId) return res.status(401).json({ error: "Not authenticated" });
   try {
     const user = await storage.getUser(String(cancelUserId));
-    const subscriptionId = user?.stripeSubscriptionId;
+    const subscriptionId = user?.razorpaySubscriptionId;
     if (subscriptionId && isRazorpayConfigured()) {
       const client = getRazorpayClient();
       await client.subscriptions.cancel(subscriptionId, { cancel_at_cycle_end: 1 });

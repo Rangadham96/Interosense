@@ -28,6 +28,7 @@ interface SubscriptionData {
   currentEnd: string | null;
   chargeAt: string | null;
   trialEndAt: string | null;
+  cancelAtCycleEnd: boolean;
 }
 
 function formatDate(iso: string | null | undefined): string {
@@ -96,8 +97,10 @@ export default function SubscriptionScreen() {
   });
 
   const isCancelled = sub?.status === 'cancelled' || sub?.status === 'completed' || sub?.status === 'expired';
+  // cancelAtCycleEnd: active but scheduled to cancel at period end (cancel_at_cycle_end: 1)
+  const isPendingCancel = !isCancelled && (sub?.cancelAtCycleEnd || cancelSuccess);
   const isTrial = sub?.status === 'authenticated' || sub?.status === 'created';
-  const canCancel = sub && !isCancelled && !cancelSuccess;
+  const canCancel = sub && !isCancelled && !isPendingCancel;
 
   const handleCancelConfirm = () => {
     setCancelError('');
@@ -185,22 +188,30 @@ export default function SubscriptionScreen() {
               </View>
             )}
 
-            {/* Cancelled banner */}
-            {(isCancelled || cancelSuccess) && (
-              <View style={styles.cancelledBanner}>
-                <Feather name="info" size={16} color="#6A1B9A" />
-                <Text style={styles.cancelledText}>
-                  {cancelSuccess
-                    ? `Subscription cancelled. You keep access until ${formatDate(sub.currentEnd)}.`
-                    : sub.currentEnd
-                      ? `Subscription cancelled. Access ends ${formatDate(sub.currentEnd)}.`
-                      : `This subscription is no longer active.`}
+            {/* Pending cancellation banner — subscription active but will not renew */}
+            {isPendingCancel && !isCancelled && (
+              <View style={styles.pendingBanner}>
+                <Feather name="clock" size={16} color="#E65100" />
+                <Text style={styles.pendingText}>
+                  Cancellation scheduled. You keep full access until {formatDate(sub.currentEnd)} — no further charges.
                 </Text>
               </View>
             )}
 
-            {/* Renew CTA — shown when cancelled or just cancelled */}
-            {(isCancelled || cancelSuccess) && (
+            {/* Cancelled banner */}
+            {isCancelled && (
+              <View style={styles.cancelledBanner}>
+                <Feather name="info" size={16} color="#6A1B9A" />
+                <Text style={styles.cancelledText}>
+                  {sub.currentEnd
+                    ? `Subscription cancelled. Access ended ${formatDate(sub.currentEnd)}.`
+                    : `This subscription is no longer active.`}
+                </Text>
+              </View>
+            )}
+
+            {/* Renew CTA — shown when cancelled or pending cancellation */}
+            {(isCancelled || isPendingCancel) && (
               <View style={styles.renewCard}>
                 <View style={styles.renewTop}>
                   <LinearGradient colors={['#F0C05A', '#E8A830']} style={styles.renewIcon}>
@@ -230,12 +241,12 @@ export default function SubscriptionScreen() {
             {/* Billing details */}
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Billing Details</Text>
-              {sub.chargeAt && !isCancelled && (
+              {sub.chargeAt && !isCancelled && !isPendingCancel && (
                 <InfoRow label="Next billing date" value={formatDate(sub.chargeAt)} />
               )}
               {sub.currentEnd && (
                 <InfoRow
-                  label={isCancelled || cancelSuccess ? 'Access until' : 'Current period ends'}
+                  label={isCancelled || isPendingCancel ? 'Access until' : 'Current period ends'}
                   value={formatDate(sub.currentEnd)}
                 />
               )}
@@ -339,6 +350,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#E3F2FD', borderRadius: 12, padding: 14,
   },
   trialText: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: '#1565C0', flex: 1, lineHeight: 20 },
+
+  pendingBanner: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    backgroundColor: '#FFF3E0', borderRadius: 12, padding: 14,
+  },
+  pendingText: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: '#E65100', flex: 1, lineHeight: 20 },
 
   cancelledBanner: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,

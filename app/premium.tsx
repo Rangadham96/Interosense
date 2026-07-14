@@ -99,7 +99,7 @@ export default function PremiumScreen() {
   const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
   // Returning subscribers (previously had a subscription) do not get a free trial
-  const isReturningSubscriber = !!user?.stripeSubscriptionId;
+  const isReturningSubscriber = !!user?.razorpaySubscriptionId;
 
   const [selectedPlan, setSelectedPlan] = useState('annual');
   const [loading, setLoading] = useState(false);

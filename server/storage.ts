@@ -26,8 +26,8 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getUserByStripeCustomerId(customerId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.stripeCustomerId, customerId));
+  async getUserByRazorpayCustomerId(customerId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.razorpayCustomerId, customerId));
     return user;
   }
 

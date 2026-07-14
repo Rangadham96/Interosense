@@ -39,7 +39,7 @@ interface AuthUser {
   dateOfBirth: string | null;
   bio: string | null;
   isPremium: boolean | null;
-  stripeSubscriptionId: string | null;
+  razorpaySubscriptionId: string | null;
   createdAt: string | null;
   interoceptiveBaseline?: Record<string, string> | null;
   onboardingPlan?: Record<string, unknown>[] | null;

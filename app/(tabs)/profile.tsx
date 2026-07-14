@@ -142,10 +142,10 @@ export default function ProfileScreen() {
               <Feather name="star" size={18} color="#fff" />
               <View style={styles.premiumUpsellText}>
                 <Text style={styles.premiumUpsellTitle}>
-                  {user?.stripeSubscriptionId ? 'Rejoin Premium' : 'Try Premium Free'}
+                  {user?.razorpaySubscriptionId ? 'Rejoin Premium' : 'Try Premium Free'}
                 </Text>
                 <Text style={styles.premiumUpsellSub}>
-                  {user?.stripeSubscriptionId
+                  {user?.razorpaySubscriptionId
                     ? 'All exercises, assessments & more'
                     : '7-day trial · All exercises, assessments & more'}
                 </Text>

@@ -151,7 +151,7 @@ describe('POST /api/razorpay/webhook — signature guard', () => {
     const [calledId, calledData] = updateUserMock.mock.calls[0].arguments as [string, Record<string, unknown>];
     assert.equal(calledId, TEST_USER_ID);
     assert.equal(calledData.isPremium, true, 'isPremium must be true for subscription.charged');
-    assert.equal(calledData.stripeSubscriptionId, TEST_SUB_ID);
+    assert.equal(calledData.razorpaySubscriptionId, TEST_SUB_ID);
   });
 
   // ── Valid signature — subscription.activated (also grants premium) ──────────

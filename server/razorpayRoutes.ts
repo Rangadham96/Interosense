@@ -37,7 +37,7 @@ router.post('/api/razorpay/create-subscription', async (req: Request, res: Respo
 
     const totalCount = planKey === 'annual' ? 10 : 120;
     // Only give trial to first-time subscribers — returning/cancelled members get no trial
-    const isFirstTimeSubscriber = !user?.stripeSubscriptionId;
+    const isFirstTimeSubscriber = !user?.razorpaySubscriptionId;
 
     const sub: any = await (client.subscriptions as any).create({
       plan_id: planIdEnv,
@@ -113,8 +113,8 @@ router.post('/api/razorpay/verify-payment', async (req: Request, res: Response) 
   try {
     await storage.updateUser(String(verifyUserId), {
       isPremium: true,
-      stripeCustomerId: razorpay_subscription_id,
-      stripeSubscriptionId: razorpay_subscription_id,
+      razorpayCustomerId: razorpay_subscription_id,
+      razorpaySubscriptionId: razorpay_subscription_id,
     });
     return res.json({ success: true });
   } catch (err: any) {
@@ -152,7 +152,7 @@ router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
       if (userId) {
         await storage.updateUser(String(userId), {
           isPremium: true,
-          stripeSubscriptionId: subscriptionId,
+          razorpaySubscriptionId: subscriptionId,
         });
       }
     } else if (
@@ -161,16 +161,16 @@ router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
       event.event === 'subscription.completed'
     ) {
       if (userId) {
+        // Preserve razorpaySubscriptionId so returning subscribers never get a free trial again
         await storage.updateUser(String(userId), {
           isPremium: false,
-          stripeSubscriptionId: null,
         });
       }
     } else if (event.event === 'subscription.halted') {
       if (userId) {
+        // Preserve razorpaySubscriptionId so returning subscribers never get a free trial again
         await storage.updateUser(String(userId), {
           isPremium: false,
-          stripeSubscriptionId: null,
         });
         const user = await storage.getUser(String(userId));
         if (user) {
@@ -194,7 +194,7 @@ router.get('/api/razorpay/subscription-status', async (req: Request, res: Respon
 
   try {
     const user = await storage.getUser(String(statusUserId));
-    const subscriptionId = user?.stripeSubscriptionId;
+    const subscriptionId = user?.razorpaySubscriptionId;
 
     if (!subscriptionId) {
       return res.json({ subscription: null });
@@ -221,6 +221,8 @@ router.get('/api/razorpay/subscription-status', async (req: Request, res: Respon
         currentEnd: sub.current_end ? new Date(sub.current_end * 1000).toISOString() : null,
         chargeAt: sub.charge_at ? new Date(sub.charge_at * 1000).toISOString() : null,
         trialEndAt: sub.trial_end_at ? new Date(sub.trial_end_at * 1000).toISOString() : null,
+        // true when user cancelled with cancel_at_cycle_end — status stays "active" until period ends
+        cancelAtCycleEnd: sub.cancel_at_cycle_end === true || sub.cancel_at_cycle_end === 1,
       },
     });
   } catch (err: any) {
@@ -235,7 +237,7 @@ router.post('/api/razorpay/cancel', async (req: Request, res: Response) => {
 
   try {
     const user = await storage.getUser(String(cancelUserId));
-    const subscriptionId = user?.stripeSubscriptionId;
+    const subscriptionId = user?.razorpaySubscriptionId;
 
     if (subscriptionId && isRazorpayConfigured()) {
       const client = getRazorpayClient();
