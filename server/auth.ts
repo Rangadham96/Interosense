@@ -518,4 +518,20 @@ router.post("/api/auth/google/verify", async (req: Request, res: Response) => {
   }
 });
 
+router.delete("/api/auth/account", async (req: Request, res: Response) => {
+  if (!req.session?.userId) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  try {
+    await storage.deleteUser(req.session.userId);
+    req.session.destroy((err) => {
+      if (err) console.error("Session destroy error:", err);
+    });
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Delete account error:", err);
+    return res.status(500).json({ error: "Failed to delete account" });
+  }
+});
+
 export default router;

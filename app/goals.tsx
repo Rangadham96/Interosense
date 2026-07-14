@@ -92,6 +92,11 @@ export default function GoalsScreen() {
     }
   }, [updatedGoals]);
 
+  const handleDeleteGoal = (id: string) => {
+    const filtered = goals.filter(g => g.id !== id);
+    updateGoals(filtered);
+  };
+
   const handleCreate = async () => {
     if (!title.trim() || !targetValue.trim()) return;
     const target = parseInt(targetValue, 10);
@@ -132,8 +137,12 @@ export default function GoalsScreen() {
             <Text style={styles.goalTitle}>{item.title}</Text>
             <Text style={styles.goalTypeLabel}>{TYPE_LABELS[item.type]}</Text>
           </View>
-          {item.completed && (
+          {item.completed ? (
             <Feather name="check-circle" size={22} color={Colors.success} />
+          ) : (
+            <Pressable onPress={() => handleDeleteGoal(item.id)} hitSlop={12} style={styles.deleteBtn}>
+              <Feather name="trash-2" size={16} color={Colors.textTertiary} />
+            </Pressable>
           )}
         </View>
         <View style={styles.progressBarBg}>
@@ -148,7 +157,7 @@ export default function GoalsScreen() {
           />
         </View>
         <Text style={styles.progressText}>
-          {item.currentValue} / {item.targetValue}
+          {item.type === 'awareness' ? item.currentValue.toFixed(1) : item.currentValue} / {item.type === 'awareness' ? item.targetValue.toFixed(1) : item.targetValue}
           <Text style={styles.percentageText}>  {percentage}%</Text>
         </Text>
       </View>
@@ -169,7 +178,7 @@ export default function GoalsScreen() {
 
       <View style={styles.titleSection}>
         <Text style={styles.pageTitle}>Goals & Intentions</Text>
-        <Text style={styles.pageSubtitle}>Research shows if-then plans increase follow-through by 2–3×</Text>
+        <Text style={styles.pageSubtitle}>Research shows specific practice intentions increase follow-through by 2 to 3 times</Text>
       </View>
 
       {updatedGoals.length === 0 ? (
@@ -365,6 +374,9 @@ const styles = StyleSheet.create({
   progressBarFill: {
     height: '100%',
     borderRadius: 4,
+  },
+  deleteBtn: {
+    padding: 4,
   },
   progressText: {
     fontFamily: 'Nunito_700Bold',

@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { File, Paths } from 'expo-file-system/next';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
+import { getApiUrl } from '@/lib/query-client';
 
 const FONT_SIZE_OPTIONS: Array<{ label: string; value: 'small' | 'medium' | 'large' }> = [
   { label: 'Small', value: 'small' },
@@ -121,13 +122,17 @@ export default function SettingsScreen() {
   const handleDeleteAccount = () => {
     Alert.alert(
       'Delete My Account',
-      'This will permanently delete your profile and all data. You will need to start fresh if you come back. This action cannot be undone.',
+      'This will permanently delete your account and all data from our servers. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Yes, Delete Everything',
           style: 'destructive',
           onPress: async () => {
+            try {
+              const url = new URL('/api/auth/account', getApiUrl());
+              await fetch(url.toString(), { method: 'DELETE', credentials: 'include' });
+            } catch (_) {}
             await AsyncStorage.clear();
             router.replace('/onboarding');
           },

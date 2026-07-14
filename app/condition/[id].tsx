@@ -157,13 +157,20 @@ export default function ConditionDetailScreen() {
               <Text style={styles.sectionTitle}>Resources</Text>
             </View>
             {condition.resources.map((r, i) => (
-              <View key={i} style={styles.resourceRow}>
-                <View style={styles.resourceDot} />
+              <TouchableOpacity
+                key={i}
+                style={[styles.resourceRow, r.url && styles.resourceRowTappable]}
+                activeOpacity={r.url ? 0.7 : 1}
+                onPress={() => r.url && Linking.openURL(r.url)}
+                disabled={!r.url}
+              >
+                <View style={[styles.resourceDot, r.url && { backgroundColor: Colors.secondary }]} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.resourceName}>{r.name}</Text>
+                  <Text style={[styles.resourceName, r.url && { color: Colors.primary }]}>{r.name}</Text>
                   <Text style={styles.resourceDesc}>{r.description}</Text>
                 </View>
-              </View>
+                {r.url && <Feather name="external-link" size={14} color={Colors.primary} style={{ marginTop: 2 }} />}
+              </TouchableOpacity>
             ))}
           </View>
         )}
@@ -319,7 +326,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+  },
+  resourceRowTappable: {
+    borderWidth: 1,
+    borderColor: Colors.primary + '20',
+    backgroundColor: Colors.primary + '05',
   },
   resourceDot: {
     width: 8,

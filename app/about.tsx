@@ -13,6 +13,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Colors from '@/constants/colors';
+import { EXERCISES } from '@/constants/exercises';
+import { ARTICLES } from '@/constants/articles';
+import { CONDITIONS } from '@/constants/conditions';
+import { CLINICAL_SCALES, MAIA2_SCALE } from '@/constants/clinical-scales';
 
 function FeatureCard({ icon, value, label }: { icon: string; value: string; label: string }) {
   return (
@@ -89,10 +93,10 @@ export default function AboutScreen() {
         </Section>
 
         <View style={styles.featuresGrid}>
-          <FeatureCard icon="activity" value="25" label="Guided Exercises" />
-          <FeatureCard icon="grid" value="8" label="Categories" />
-          <FeatureCard icon="clipboard" value="3" label="Clinical Assessments" />
-          <FeatureCard icon="layers" value="7" label="Condition Programs" />
+          <FeatureCard icon="activity" value={String(EXERCISES.length)} label="Guided Exercises" />
+          <FeatureCard icon="book-open" value={String(ARTICLES.length)} label="Science Articles" />
+          <FeatureCard icon="clipboard" value={String(CLINICAL_SCALES.length + 1)} label="Clinical Assessments" />
+          <FeatureCard icon="layers" value={String(CONDITIONS.length)} label="Condition Programs" />
         </View>
 
         <View style={styles.versionContainer}>

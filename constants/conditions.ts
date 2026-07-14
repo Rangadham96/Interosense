@@ -13,7 +13,7 @@ export interface Condition {
   recommendedScaleId: string | null;
   selfCareStrategies: string[];
   warningSignsForProfessionalHelp: string[];
-  resources: { name: string; description: string }[];
+  resources: { name: string; description: string; url?: string }[];
   researchCitations: string[];
   disclaimer: string;
 }
@@ -47,8 +47,8 @@ export const CONDITIONS: Condition[] = [
       'Physical symptoms (chest pain, breathing difficulty) cause repeated ER visits',
     ],
     resources: [
-      { name: 'ADAA (Anxiety & Depression Association)', description: 'Evidence-based resources for understanding and treating anxiety disorders' },
-      { name: 'NICE Clinical Guidelines', description: 'UK National Institute for Health and Care Excellence treatment recommendations' },
+      { name: 'ADAA (Anxiety & Depression Association)', description: 'Evidence-based resources for understanding and treating anxiety disorders', url: 'https://adaa.org' },
+      { name: 'NICE Clinical Guidelines', description: 'UK National Institute for Health and Care Excellence treatment recommendations', url: 'https://www.nice.org.uk/guidance/cg113' },
     ],
     researchCitations: [
       'Garfinkel et al. (2015). Knowing your own heart: Distinguishing interoceptive accuracy from interoceptive sensibility. Biological Psychology, 104, 65-74.',
@@ -85,8 +85,8 @@ export const CONDITIONS: Condition[] = [
       'You feel unable to cope with the fear of future attacks',
     ],
     resources: [
-      { name: 'Panic Disorder Treatment (APA)', description: 'American Psychological Association guidelines for panic disorder treatment' },
-      { name: 'CBT for Panic Protocol', description: 'Cognitive-behavioral therapy with interoceptive exposure - gold standard treatment' },
+      { name: 'Panic Disorder Treatment (APA)', description: 'American Psychological Association guidelines for panic disorder treatment', url: 'https://www.apa.org/topics/anxiety/panic-disorder' },
+      { name: 'CBT for Panic Protocol', description: 'Cognitive-behavioral therapy with interoceptive exposure: the gold standard treatment', url: 'https://adaa.org/understanding-anxiety/panic-disorder-agoraphobia' },
     ],
     researchCitations: [
       'Craske et al. (2008). Interoceptive exposure versus breathing retraining within CBT for panic disorder. BJCP, 47(1), 1-14.',
@@ -123,8 +123,8 @@ export const CONDITIONS: Condition[] = [
       'Avoidance behaviors are limiting your life',
     ],
     resources: [
-      { name: 'National Center for PTSD', description: 'U.S. Department of Veterans Affairs - comprehensive PTSD information and resources' },
-      { name: 'EMDR International Association', description: 'Information about Eye Movement Desensitization and Reprocessing therapy' },
+      { name: 'National Center for PTSD', description: 'U.S. Department of Veterans Affairs: comprehensive PTSD information and resources', url: 'https://www.ptsd.va.gov' },
+      { name: 'EMDR International Association', description: 'Information about Eye Movement Desensitization and Reprocessing therapy', url: 'https://www.emdria.org' },
       { name: 'The Body Keeps the Score', description: 'Bessel van der Kolk\'s seminal work on trauma and the body' },
     ],
     researchCitations: [
@@ -162,8 +162,8 @@ export const CONDITIONS: Condition[] = [
       'Sleep or appetite changes are severe',
     ],
     resources: [
-      { name: 'NIMH Depression Information', description: 'National Institute of Mental Health - comprehensive depression resources' },
-      { name: 'WHO Depression Fact Sheet', description: 'World Health Organization global depression information' },
+      { name: 'NIMH Depression Information', description: 'National Institute of Mental Health: comprehensive depression resources', url: 'https://www.nimh.nih.gov/health/topics/depression' },
+      { name: 'WHO Depression Fact Sheet', description: 'World Health Organization global depression information', url: 'https://www.who.int/news-room/fact-sheets/detail/depression' },
     ],
     researchCitations: [
       'Paulus & Stein (2010). Interoception in anxiety and depression. Brain Structure and Function, 214(5-6), 451-463.',
@@ -200,8 +200,8 @@ export const CONDITIONS: Condition[] = [
       'Dizziness, fainting, or cardiac symptoms occur',
     ],
     resources: [
-      { name: 'NEDA (National Eating Disorders Association)', description: 'Screening tools, treatment finder, and support resources' },
-      { name: 'BEAT (UK)', description: 'UK eating disorders charity with helpline and support groups' },
+      { name: 'NEDA (National Eating Disorders Association)', description: 'Screening tools, treatment finder, and support resources', url: 'https://www.nationaleatingdisorders.org' },
+      { name: 'BEAT (UK)', description: 'UK eating disorders charity with helpline and support groups', url: 'https://www.beateatingdisorders.org.uk' },
     ],
     researchCitations: [
       'Merwin et al. (2010). Interoceptive awareness in eating disorders. Eating Behaviors, 11(1), 1-5.',
@@ -238,8 +238,8 @@ export const CONDITIONS: Condition[] = [
       'Depression or hopelessness related to pain is increasing',
     ],
     resources: [
-      { name: 'American Chronic Pain Association', description: 'Self-management tools and support for chronic pain' },
-      { name: 'Pain Management Best Practices (HHS)', description: 'U.S. federal guidelines for comprehensive pain management' },
+      { name: 'American Chronic Pain Association', description: 'Self-management tools and support for chronic pain', url: 'https://theacpa.org' },
+      { name: 'Pain Management Best Practices (HHS)', description: 'U.S. federal guidelines for comprehensive pain management', url: 'https://www.hhs.gov/ash/advisory-committees/pain/reports/index.html' },
     ],
     researchCitations: [
       'Zeidan et al. (2015). Mindfulness meditation-based pain relief employs different neural mechanisms than placebo. Journal of Neuroscience, 35(46), 15307-15325.',
@@ -275,8 +275,8 @@ export const CONDITIONS: Condition[] = [
       'Alexithymia is accompanied by depression or anxiety',
     ],
     resources: [
-      { name: 'Kelly Mahler\'s Interoception Resources', description: 'Evidence-based curriculum for developing interoceptive awareness and emotional identification' },
-      { name: 'TAS-20 Self-Assessment', description: 'Toronto Alexithymia Scale - validated self-report measure' },
+      { name: 'Kelly Mahler\'s Interoception Resources', description: 'Evidence-based curriculum for developing interoceptive awareness and emotional identification', url: 'https://www.kelly-mahler.com' },
+      { name: 'TAS-20 Self-Assessment', description: 'Toronto Alexithymia Scale: a validated 20-item self-report measure for alexithymia' },
     ],
     researchCitations: [
       'Brewer et al. (2016). Can neuroimaging studies of alexithymia inform a psychological model? Neuroscience & Biobehavioral Reviews, 61, 64-80.',
