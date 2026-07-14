@@ -141,8 +141,14 @@ export default function ProfileScreen() {
             >
               <Feather name="star" size={18} color="#fff" />
               <View style={styles.premiumUpsellText}>
-                <Text style={styles.premiumUpsellTitle}>Try Premium Free</Text>
-                <Text style={styles.premiumUpsellSub}>7-day trial · All exercises, assessments & more</Text>
+                <Text style={styles.premiumUpsellTitle}>
+                  {user?.stripeSubscriptionId ? 'Rejoin Premium' : 'Try Premium Free'}
+                </Text>
+                <Text style={styles.premiumUpsellSub}>
+                  {user?.stripeSubscriptionId
+                    ? 'All exercises, assessments & more'
+                    : '7-day trial · All exercises, assessments & more'}
+                </Text>
               </View>
               <Feather name="arrow-right" size={18} color="#fff" />
             </LinearGradient>

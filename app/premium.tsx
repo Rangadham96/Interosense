@@ -98,6 +98,9 @@ export default function PremiumScreen() {
   const { user, refreshUser } = useAuth();
   const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
+  // Returning subscribers (previously had a subscription) do not get a free trial
+  const isReturningSubscriber = !!user?.stripeSubscriptionId;
+
   const [selectedPlan, setSelectedPlan] = useState('annual');
   const [loading, setLoading] = useState(false);
   const [subscribeError, setSubscribeError] = useState('');
@@ -357,14 +360,18 @@ export default function PremiumScreen() {
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <>
-                <Text style={styles.subscribeText}>Subscribe Now</Text>
+                <Text style={styles.subscribeText}>
+                  {isReturningSubscriber ? 'Renew Premium' : 'Start Free Trial'}
+                </Text>
                 <Feather name="arrow-right" size={20} color="#fff" />
               </>
             )}
           </LinearGradient>
         </Pressable>
         <Text style={styles.termsText}>
-          Secure payment via Razorpay · Cancel anytime · INR billing
+          {isReturningSubscriber
+            ? 'No free trial · Billed immediately · Cancel anytime'
+            : '7-day free trial · Cancel before trial ends and pay nothing'}
         </Text>
       </View>
 

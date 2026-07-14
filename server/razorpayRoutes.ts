@@ -36,12 +36,15 @@ router.post('/api/razorpay/create-subscription', async (req: Request, res: Respo
     const client = getRazorpayClient();
 
     const totalCount = planKey === 'annual' ? 10 : 120;
+    // Only give trial to first-time subscribers — returning/cancelled members get no trial
+    const isFirstTimeSubscriber = !user?.stripeSubscriptionId;
+
     const sub: any = await (client.subscriptions as any).create({
       plan_id: planIdEnv,
       total_count: totalCount,
       quantity: 1,
       customer_notify: 1,
-      trial_period: 7,
+      ...(isFirstTimeSubscriber ? { trial_period: 7 } : {}),
       notes: {
         userId: String(userId),
         plan: planKey,

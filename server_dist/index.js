@@ -828,12 +828,13 @@ router2.post("/api/razorpay/create-subscription", async (req, res) => {
     const user = await storage.getUser(userId);
     const client = getRazorpayClient();
     const totalCount = planKey === "annual" ? 10 : 120;
+    const isFirstTimeSubscriber = !user?.stripeSubscriptionId;
     const sub = await client.subscriptions.create({
       plan_id: planIdEnv,
       total_count: totalCount,
       quantity: 1,
       customer_notify: 1,
-      trial_period: 7,
+      ...isFirstTimeSubscriber ? { trial_period: 7 } : {},
       notes: {
         userId: String(userId),
         plan: planKey,
