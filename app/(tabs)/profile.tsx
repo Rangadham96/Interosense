@@ -301,7 +301,7 @@ export default function ProfileScreen() {
               icon="help-circle"
               iconColor={Colors.textSecondary}
               label="Help & Support"
-              onPress={() => {}}
+              onPress={() => router.push('/support' as any)}
             />
             <View style={styles.menuDivider} />
             <MenuRow
@@ -309,6 +309,13 @@ export default function ProfileScreen() {
               iconColor={Colors.textSecondary}
               label="Privacy Policy"
               onPress={() => router.push('/privacy-policy' as any)}
+            />
+            <View style={styles.menuDivider} />
+            <MenuRow
+              icon="file-text"
+              iconColor={Colors.textSecondary}
+              label="Terms of Service"
+              onPress={() => router.push('/terms' as any)}
             />
             <View style={styles.menuDivider} />
             <TouchableOpacity

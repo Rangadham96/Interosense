@@ -359,6 +359,19 @@ export default function SettingsScreen() {
             <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
           </TouchableOpacity>
           <View style={styles.divider} />
+          <TouchableOpacity style={styles.row} activeOpacity={0.6} onPress={() => router.push('/support' as any)}>
+            <View style={styles.rowLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: `${Colors.primary}15` }]}>
+                <Feather name="help-circle" size={18} color={Colors.primary} />
+              </View>
+              <View style={styles.rowTextWrap}>
+                <Text style={styles.rowLabel}>Help & Support</Text>
+                <Text style={styles.rowSubtext}>FAQs and contact options</Text>
+              </View>
+            </View>
+            <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
+          </TouchableOpacity>
+          <View style={styles.divider} />
           <TouchableOpacity style={styles.row} activeOpacity={0.6} onPress={() => router.push('/privacy-policy' as any)}>
             <View style={styles.rowLeft}>
               <View style={[styles.iconContainer, { backgroundColor: `${Colors.primary}15` }]}>
