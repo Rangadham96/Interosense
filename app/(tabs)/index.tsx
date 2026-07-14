@@ -447,7 +447,7 @@ export default function HomeScreen() {
 
         {nextExercise && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recommended for You</Text>
+            <Text style={styles.sectionTitle}>Today's Exercise</Text>
             <TouchableOpacity
               style={styles.nextExerciseCard}
               onPress={() => router.push(`/exercise/${nextExercise!.id}`)}
@@ -470,6 +470,12 @@ export default function HomeScreen() {
                 </View>
                 <Text style={styles.nextExerciseTitle}>{nextExercise.title}</Text>
                 <Text style={styles.nextExerciseSubtitle}>{nextExercise.subtitle}</Text>
+                {topRecommendations[0]?.reason ? (
+                  <View style={styles.recReasonRow}>
+                    <Feather name="zap" size={11} color="rgba(255,255,255,0.7)" />
+                    <Text style={styles.recReasonText}>{topRecommendations[0].reason}</Text>
+                  </View>
+                ) : null}
                 <View style={styles.nextExerciseMeta}>
                   <Feather name="clock" size={13} color="rgba(255,255,255,0.7)" />
                   <Text style={styles.nextExerciseDuration}>{nextExercise.durationMinutes} min</Text>
@@ -712,6 +718,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF', borderRadius: 14, paddingVertical: 12, marginTop: 16,
   },
   startButtonText: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: Colors.primary },
+  recReasonRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 10, marginBottom: 2 },
+  recReasonText: { fontFamily: 'Nunito_400Regular', fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 18, flex: 1 },
   actionsGrid: { flexDirection: 'row', flexWrap: 'nowrap', gap: 10 },
   actionCard: {
     flex: 1, minWidth: 60, backgroundColor: Colors.surface, borderRadius: 18,

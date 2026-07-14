@@ -19,6 +19,7 @@ import { isToday, parseISO } from 'date-fns';
 import { apiPost } from '@/lib/api';
 import { router } from 'expo-router';
 import GetHelpLink from '@/components/GetHelpLink';
+import { EXERCISES, CATEGORY_INFO } from '@/constants/exercises';
 
 type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
 
@@ -159,40 +160,78 @@ function ScaleSelector({
   );
 }
 
-function getPersonalisedCompletion(awareness: number, energy: number, stress: number, mood: string): { heading: string; body: string } {
-  if (stress >= 7) {
+interface CheckinDiagnosis {
+  state: string;
+  heading: string;
+  body: string;
+  recommendedExerciseId: string;
+  exerciseReason: string;
+}
+
+function getNervousSystemDiagnosis(
+  awareness: number,
+  energy: number,
+  stress: number,
+  mood: string,
+  sleep: number,
+): CheckinDiagnosis {
+  if (stress >= 7 && sleep <= 4) {
+    const ex = EXERCISES.find(e => e.category === 'breathing' && e.difficulty === 'beginner') ?? EXERCISES.find(e => e.category === 'breathing');
     return {
-      heading: 'Your nervous system is working hard right now',
-      body: 'High stress is information, not failure. Your body is doing its job. A short breathing exercise can help regulate your autonomic nervous system.',
+      state: 'Sympathetic overdrive',
+      heading: 'High stress and low sleep are compounding',
+      body: 'Your sympathetic system (fight-or-flight mode) is sustaining high activation. Poor sleep prevents your nervous system from resetting overnight, so stress compounds. Your amygdala (the brain\'s threat-detection center) is running the show. The fastest clinical reset: breathwork that directly stimulates your vagus nerve (the calming nerve connecting brain, heart, and gut).',
+      recommendedExerciseId: ex?.id ?? '',
+      exerciseReason: 'Slow breathing activates your vagus nerve, which directly suppresses your amygdala\'s threat signal and drops cortisol within 5 minutes.',
+    };
+  }
+  if (stress >= 7 || mood === 'anxious' || mood === 'stressed') {
+    const ex = EXERCISES.find(e => e.category === 'breathing');
+    return {
+      state: 'Elevated stress response',
+      heading: 'Your nervous system is working hard',
+      body: 'High stress is information, not failure. Your sympathetic system (fight-or-flight) is activated. The good news: your parasympathetic system (rest-and-recover mode) is one breath away. Slow, extended exhales directly stimulate the vagus nerve (your calming nerve) and can downregulate stress within 90 seconds.',
+      recommendedExerciseId: ex?.id ?? '',
+      exerciseReason: 'This exercise stimulates your vagus nerve through controlled breathing, activating your parasympathetic system and reducing cortisol measurably in a single session.',
     };
   }
   if (energy <= 3) {
+    const ex = EXERCISES.find(e => e.category === 'bodyScanning' && e.difficulty === 'beginner') ?? EXERCISES.find(e => e.category === 'bodyScanning');
     return {
-      heading: 'Your body is asking for rest today',
-      body: 'Low energy is your body\'s wisdom, not a weakness. Gentle interoceptive practice can help you reconnect without depleting you further.',
+      state: 'Parasympathetic depletion',
+      heading: 'Your body is asking for rest',
+      body: 'Low energy is your body\'s wisdom. Your parasympathetic system (rest-and-recover mode) is depleted. A gentle body scan can help you reconnect without draining you further. It often reveals hidden tension patterns that are quietly consuming your energy reserves without your awareness.',
+      recommendedExerciseId: ex?.id ?? '',
+      exerciseReason: 'Body scanning is low-effort interoceptive practice. It activates your insular cortex (the brain region that maps body signals) without taxing your energy system.',
     };
   }
-  if (mood === 'anxious') {
+  if (mood === 'sad' || mood === 'down') {
+    const ex = EXERCISES.find(e => e.category === 'gut') ?? EXERCISES.find(e => e.category === 'movement');
     return {
-      heading: 'Your body is in a state of alertness',
-      body: 'Anxiety lives in the body before it reaches the mind. A breathwork exercise can help slow your nervous system within 90 seconds.',
-    };
-  }
-  if (mood === 'sad') {
-    return {
-      heading: 'Your body is carrying something heavy today',
-      body: 'Sadness has a weight and texture we can learn to hold gently. Gentle movement and gut-awareness exercises can support your mood.',
+      state: 'Low arousal state',
+      heading: 'Your body is carrying something heavy',
+      body: 'Sadness reduces body activation and dampens interoception. Your enteric nervous system (your gut\'s own brain, containing 500 million neurons) produces 95% of the body\'s serotonin. Gut awareness exercises create a direct bottom-up pathway to mood that bypasses the thinking mind entirely.',
+      recommendedExerciseId: ex?.id ?? '',
+      exerciseReason: 'This exercise directly engages your enteric nervous system (gut\'s own brain), activating serotonin pathways that support mood from the bottom up.',
     };
   }
   if (awareness >= 7 && energy >= 6) {
+    const ex = EXERCISES.find(e => e.category === 'heartbeat' && e.difficulty !== 'beginner') ?? EXERCISES.find(e => e.category === 'heartbeat');
     return {
-      heading: 'You\'re in a strong state of body awareness today',
-      body: 'This is an excellent time for a more advanced interoceptive practice. Your body is open and ready.',
+      state: 'Optimal interoceptive window',
+      heading: 'Your body is open and receptive today',
+      body: 'High awareness and good energy create an ideal window for deeper interoceptive practice. Your insular cortex (the brain region that maps body signals and connects them to emotion) is primed and receptive. This is the time for more demanding exercises that build lasting neural change.',
+      recommendedExerciseId: ex?.id ?? '',
+      exerciseReason: 'In your current state, heartbeat detection training delivers maximum insular cortex activation: you have the attention and energy to access subtle cardiac signals.',
     };
   }
+  const ex = EXERCISES.find(e => e.category === 'bodyScanning');
   return {
+    state: 'Baseline balance',
     heading: 'Thank you for checking in with yourself',
-    body: 'Regular body check-ins build the neural pathways of self-awareness over time. Even on ordinary days, you are growing.',
+    body: 'Even on ordinary days, this practice is building something real. Every check-in trains your insular cortex (the brain region that builds your internal body map). The science is clear: consistency of practice matters more than intensity. You are accumulating interoceptive vocabulary over time.',
+    recommendedExerciseId: ex?.id ?? '',
+    exerciseReason: 'Body scanning on a balanced day builds baseline interoceptive precision, making you more sensitive to subtle signals over weeks of practice.',
   };
 }
 
@@ -290,7 +329,8 @@ export default function CheckinScreen() {
     return icons[step] || 'check';
   };
 
-  const completion = useMemo(() => getPersonalisedCompletion(awareness, energy, stress, selectedMood), [awareness, energy, stress, selectedMood]);
+  const diagnosis = useMemo(() => getNervousSystemDiagnosis(awareness, energy, stress, selectedMood, sleep), [awareness, energy, stress, selectedMood, sleep]);
+  const diagnosisExercise = useMemo(() => EXERCISES.find(e => e.id === diagnosis.recommendedExerciseId) ?? null, [diagnosis.recommendedExerciseId]);
 
   if (todayCheckedIn && showAlreadyCheckedIn && phase !== 'submitted') {
     return (
@@ -341,6 +381,7 @@ export default function CheckinScreen() {
   }
 
   if (phase === 'submitted') {
+    const exCatInfo = diagnosisExercise ? CATEGORY_INFO[diagnosisExercise.category as keyof typeof CATEGORY_INFO] : null;
     return (
       <View style={[styles.container, { paddingTop: topPad }]}>
         <Animated.ScrollView entering={FadeIn.duration(400)} contentContainerStyle={styles.successScrollContent} showsVerticalScrollIndicator={false}>
@@ -352,13 +393,41 @@ export default function CheckinScreen() {
               <Feather name="check" size={36} color="#FFFFFF" />
             </View>
             <Text style={styles.successTitle}>Check-in Complete</Text>
-            <Text style={styles.successSubtitleGradient}>{completion.heading}</Text>
+            <View style={styles.nsStatePill}>
+              <Text style={styles.nsStatePillText}>{diagnosis.state.toUpperCase()}</Text>
+            </View>
+            <Text style={styles.successSubtitleGradient}>{diagnosis.heading}</Text>
           </LinearGradient>
           <View style={styles.successBody}>
             <View style={styles.successInsightCard}>
-              <Feather name="info" size={16} color={Colors.primary} style={{ marginTop: 2 }} />
-              <Text style={styles.successInsightText}>{completion.body}</Text>
+              <Feather name="activity" size={16} color={Colors.primary} style={{ marginTop: 2 }} />
+              <Text style={styles.successInsightText}>{diagnosis.body}</Text>
             </View>
+
+            {diagnosisExercise && (
+              <View style={styles.diagnosisExCard}>
+                <Text style={styles.diagnosisExLabel}>START HERE</Text>
+                <View style={styles.diagnosisExTop}>
+                  <View style={[styles.diagnosisExIcon, { backgroundColor: (exCatInfo?.color ?? Colors.primary) + '20' }]}>
+                    <Feather name={diagnosisExercise.iconName as any} size={18} color={exCatInfo?.color ?? Colors.primary} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.diagnosisExTitle}>{diagnosisExercise.title}</Text>
+                    <Text style={styles.diagnosisExMeta}>{diagnosisExercise.durationMinutes} min · {diagnosisExercise.difficulty.charAt(0).toUpperCase() + diagnosisExercise.difficulty.slice(1)}</Text>
+                  </View>
+                </View>
+                <Text style={styles.diagnosisExReason}>{diagnosis.exerciseReason}</Text>
+                <TouchableOpacity
+                  style={styles.diagnosisExBtn}
+                  onPress={() => router.push(`/exercise/${diagnosisExercise.id}` as any)}
+                  activeOpacity={0.85}
+                >
+                  <Feather name="play" size={14} color="#fff" />
+                  <Text style={styles.diagnosisExBtnText}>Begin This Exercise</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             <View style={styles.summaryCard}>
               <SummaryRow label="Awareness" value={`${awareness}/10`} />
               <SummaryRow label="Energy" value={`${energy}/10`} />
@@ -369,14 +438,7 @@ export default function CheckinScreen() {
               {selectedBodyAreas.length > 0 && <SummaryRow label="Body Areas" value={selectedBodyAreas.join(', ')} />}
               {notes ? <SummaryRow label="Notes" value={notes} /> : null}
             </View>
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={() => router.push('/(tabs)/exercises')}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.primaryButtonText}>See My Recommended Exercise →</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.checkInAgainButton, { marginTop: 12 }]} onPress={resetForm} activeOpacity={0.8}>
+            <TouchableOpacity style={[styles.checkInAgainButton, { marginTop: 4 }]} onPress={resetForm} activeOpacity={0.8}>
               <Text style={styles.checkInAgainText}>Done</Text>
             </TouchableOpacity>
           </View>
@@ -702,11 +764,22 @@ const styles = StyleSheet.create({
   successScrollContent: { flexGrow: 1 },
   successGradient: { paddingHorizontal: 28, paddingTop: 40, paddingBottom: 36, alignItems: 'center' },
   successIconWrap: { marginBottom: 20, width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  successTitle: { fontSize: 28, fontFamily: 'Nunito_800ExtraBold', color: '#FFFFFF', marginBottom: 8, textAlign: 'center', letterSpacing: -0.5 },
+  successTitle: { fontSize: 28, fontFamily: 'Nunito_800ExtraBold', color: '#FFFFFF', marginBottom: 10, textAlign: 'center', letterSpacing: -0.5 },
   successSubtitleGradient: { fontSize: 16, fontFamily: 'Nunito_500Medium', color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 24, paddingHorizontal: 8 },
+  nsStatePill: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 5, marginBottom: 10 },
+  nsStatePillText: { fontFamily: 'Nunito_700Bold', fontSize: 11, color: '#fff', letterSpacing: 1.2 },
   successBody: { padding: 24 },
   successInsightCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: Colors.primary + '10', borderRadius: 14, padding: 16, marginBottom: 20 },
-  successInsightText: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: Colors.text, flex: 1, lineHeight: 21 },
+  successInsightText: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: Colors.text, flex: 1, lineHeight: 22 },
+  diagnosisExCard: { backgroundColor: Colors.surface, borderRadius: 16, padding: 18, marginBottom: 20, borderWidth: 1, borderColor: Colors.borderLight, gap: 12 },
+  diagnosisExLabel: { fontFamily: 'Nunito_700Bold', fontSize: 11, color: Colors.primary, letterSpacing: 1.2, marginBottom: -4 },
+  diagnosisExTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  diagnosisExIcon: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  diagnosisExTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: Colors.text },
+  diagnosisExMeta: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  diagnosisExReason: { fontFamily: 'Nunito_400Regular', fontSize: 13, color: Colors.textSecondary, lineHeight: 20, paddingHorizontal: 2 },
+  diagnosisExBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: Colors.primary, borderRadius: 24, paddingVertical: 12 },
+  diagnosisExBtnText: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: '#fff' },
 
   summaryCard: {
     width: '100%', backgroundColor: Colors.surface, borderRadius: 16, padding: 20, marginBottom: 24,
