@@ -80,11 +80,15 @@ export default function RegisterScreen() {
   };
 
   const handleGoogleSignIn = async () => {
-    if (!GOOGLE_CLIENT_ID) {
-      setError('Google sign-in is not configured yet.');
+    setError('');
+    if (Platform.OS === 'web') {
+      window.location.href = '/api/auth/google';
       return;
     }
-    setError('');
+    if (!GOOGLE_CLIENT_ID) {
+      setError('Google sign-in is not available on this device.');
+      return;
+    }
     await promptGoogleAsync();
   };
 
@@ -178,7 +182,7 @@ export default function RegisterScreen() {
               </View>
             ) : null}
 
-            {GOOGLE_CLIENT_ID ? (
+            {(Platform.OS === 'web' || GOOGLE_CLIENT_ID) ? (
               <View style={styles.socialRow}>
                 <Pressable
                   style={styles.socialButton}

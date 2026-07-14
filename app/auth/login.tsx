@@ -26,7 +26,7 @@ const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { from, banner } = useLocalSearchParams<{ from?: string; banner?: string }>();
+  const { from, banner, error: errorParam } = useLocalSearchParams<{ from?: string; banner?: string; error?: string }>();
   const { login, loginWithSocial } = useAuth();
   const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
@@ -34,7 +34,18 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+
+  const googleErrorMessages: Record<string, string> = {
+    google_not_configured: 'Google sign-in is not set up yet.',
+    google_cancelled: 'Google sign-in was cancelled.',
+    google_state_mismatch: 'Security check failed. Please try again.',
+    google_token_failed: 'Google sign-in failed. Please try again.',
+    google_userinfo_failed: 'Could not retrieve your Google account info.',
+    google_no_email: 'Your Google account did not provide an email address.',
+    google_session_failed: 'Session error after Google sign-in. Please try again.',
+    google_failed: 'Google sign-in failed. Please try again.',
+  };
+  const [error, setError] = useState(errorParam ? (googleErrorMessages[errorParam] ?? 'Google sign-in failed. Please try again.') : '');
 
   const [appleAvailable, setAppleAvailable] = useState(false);
 
@@ -72,11 +83,16 @@ export default function LoginScreen() {
   };
 
   const handleGoogleSignIn = async () => {
-    if (!GOOGLE_CLIENT_ID) {
-      setError('Google sign-in is not configured yet.');
+    setError('');
+    if (Platform.OS === 'web') {
+      // Server-side OAuth flow — no client credentials needed
+      window.location.href = '/api/auth/google';
       return;
     }
-    setError('');
+    if (!GOOGLE_CLIENT_ID) {
+      setError('Google sign-in is not available on this device.');
+      return;
+    }
     await promptGoogleAsync();
   };
 
@@ -176,7 +192,7 @@ export default function LoginScreen() {
             ) : null}
 
             <View style={styles.socialRow}>
-              {GOOGLE_CLIENT_ID ? (
+              {(Platform.OS === 'web' || GOOGLE_CLIENT_ID) ? (
                 <Pressable
                   style={styles.socialButton}
                   onPress={handleGoogleSignIn}

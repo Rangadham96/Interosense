@@ -590,6 +590,98 @@ router.post("/api/auth/social", async (req, res) => {
     return res.status(500).json({ message: "Something went wrong. Please try again." });
   }
 });
+router.get("/api/auth/google", (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    return res.redirect("/app/auth/login?error=google_not_configured");
+  }
+  const state = crypto.randomBytes(16).toString("hex");
+  req.session.oauthState = state;
+  const proto = req.header("x-forwarded-proto") || req.protocol || "https";
+  const host = req.header("x-forwarded-host") || req.get("host") || "";
+  const redirectUri = `${proto}://${host}/api/auth/google/callback`;
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: "openid email profile",
+    state,
+    access_type: "offline",
+    prompt: "select_account"
+  });
+  req.session.save(() => {
+    res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+  });
+});
+router.get("/api/auth/google/callback", async (req, res) => {
+  const { code, state, error } = req.query;
+  if (error || !code) {
+    return res.redirect("/app/auth/login?error=google_cancelled");
+  }
+  if (state !== req.session.oauthState) {
+    return res.redirect("/app/auth/login?error=google_state_mismatch");
+  }
+  delete req.session.oauthState;
+  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const proto = req.header("x-forwarded-proto") || req.protocol || "https";
+  const host = req.header("x-forwarded-host") || req.get("host") || "";
+  const redirectUri = `${proto}://${host}/api/auth/google/callback`;
+  try {
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: "authorization_code"
+      })
+    });
+    if (!tokenRes.ok) {
+      console.error("Google token exchange failed:", await tokenRes.text());
+      return res.redirect("/app/auth/login?error=google_token_failed");
+    }
+    const tokens = await tokenRes.json();
+    const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${tokens.access_token}` }
+    });
+    if (!userInfoRes.ok) {
+      return res.redirect("/app/auth/login?error=google_userinfo_failed");
+    }
+    const userInfo = await userInfoRes.json();
+    if (!userInfo.email) {
+      return res.redirect("/app/auth/login?error=google_no_email");
+    }
+    let user = await storage.getUserByEmail(userInfo.email.toLowerCase());
+    if (user) {
+      if (user.provider === "email" || !user.provider) {
+        user = await storage.updateUser(user.id, { provider: "google", providerId: userInfo.sub }) ?? user;
+      }
+    } else {
+      user = await storage.createUser({
+        email: userInfo.email.toLowerCase(),
+        password: null,
+        name: userInfo.name || null,
+        provider: "google",
+        providerId: userInfo.sub || null
+      });
+    }
+    req.session.userId = user.id;
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error after Google OAuth:", err);
+        return res.redirect("/app/auth/login?error=google_session_failed");
+      }
+      res.redirect("/app");
+    });
+  } catch (err) {
+    console.error("Google OAuth callback error:", err);
+    res.redirect("/app/auth/login?error=google_failed");
+  }
+});
 var auth_default = router;
 
 // server/razorpayRoutes.ts
