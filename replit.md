@@ -137,3 +137,4 @@ scripts/
 - "Interosense" with lowercase 's' in product copy
 - NativeTabs for liquid glass on iOS 26+
 - Logo: assets/images/logo.png (abstract flowing figure) — use everywhere, no borderRadius clipping
+- NEVER use em dashes (—) anywhere in user-facing text, strings, or copy. Use a period, comma, colon, or rewrite the sentence instead. This applies to every file including legal pages, completion screens, tooltips, banners, and comments that render to users.

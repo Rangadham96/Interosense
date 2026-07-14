@@ -1,0 +1,1 @@
+- [Em dash ban](em-dash-ban.md) — NEVER use — in any user-facing string; use period/comma/colon instead. Owner confirmed this is permanent.
