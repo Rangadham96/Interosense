@@ -2,14 +2,11 @@ import { Platform } from 'react-native';
 
 function getApiBase(): string {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    const origin = window.location.origin;
-    if (origin.includes('replit.app') || origin.includes('replit.dev') || window.location.port === '5000') {
-      return '';
-    }
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:5000';
-    }
+    // On web the Expo app is always served from the same Express server,
+    // so use same-origin (relative) URLs regardless of the domain.
+    return '';
   }
+  // Native: point at the configured domain or local dev server.
   return process.env.EXPO_PUBLIC_DOMAIN ? `https://${process.env.EXPO_PUBLIC_DOMAIN}` : 'http://localhost:5000';
 }
 

@@ -176,15 +176,17 @@ export default function LoginScreen() {
             ) : null}
 
             <View style={styles.socialRow}>
-              <Pressable
-                style={styles.socialButton}
-                onPress={handleGoogleSignIn}
-                disabled={loading}
-                testID="login-google"
-              >
-                <GoogleIcon />
-                <Text style={styles.socialButtonText}>Google</Text>
-              </Pressable>
+              {GOOGLE_CLIENT_ID ? (
+                <Pressable
+                  style={styles.socialButton}
+                  onPress={handleGoogleSignIn}
+                  disabled={loading}
+                  testID="login-google"
+                >
+                  <GoogleIcon />
+                  <Text style={styles.socialButtonText}>Google</Text>
+                </Pressable>
+              ) : null}
 
               {appleAvailable && (
                 <Pressable

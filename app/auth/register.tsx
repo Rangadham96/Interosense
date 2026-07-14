@@ -178,17 +178,19 @@ export default function RegisterScreen() {
               </View>
             ) : null}
 
-            <View style={styles.socialRow}>
-              <Pressable
-                style={styles.socialButton}
-                onPress={handleGoogleSignIn}
-                disabled={loading}
-                testID="register-google"
-              >
-                <GoogleIcon />
-                <Text style={styles.socialButtonText}>Continue with Google</Text>
-              </Pressable>
-            </View>
+            {GOOGLE_CLIENT_ID ? (
+              <View style={styles.socialRow}>
+                <Pressable
+                  style={styles.socialButton}
+                  onPress={handleGoogleSignIn}
+                  disabled={loading}
+                  testID="register-google"
+                >
+                  <GoogleIcon />
+                  <Text style={styles.socialButtonText}>Continue with Google</Text>
+                </Pressable>
+              </View>
+            ) : null}
 
             {appleAvailable && (
               <Pressable
