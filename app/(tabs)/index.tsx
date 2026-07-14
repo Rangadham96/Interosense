@@ -39,24 +39,24 @@ function getTimeOfDayGreeting(name: string): { greeting: string; subtext: string
   if (hour >= 5 && hour < 12) {
     return {
       greeting: `Good morning, ${name}`,
-      subtext: `${name}, how is your body this morning?`,
+      subtext: 'How is your body feeling this morning?',
     };
   }
   if (hour >= 12 && hour < 17) {
     return {
       greeting: `Good afternoon, ${name}`,
-      subtext: `${name}, how are you feeling right now?`,
+      subtext: 'How are you holding up right now?',
     };
   }
   if (hour >= 17 && hour < 21) {
     return {
       greeting: `Good evening, ${name}`,
-      subtext: `${name}, how has your body carried you today?`,
+      subtext: 'How has your body carried you today?',
     };
   }
   return {
     greeting: `Good night, ${name}`,
-    subtext: `${name}, how is your body winding down?`,
+    subtext: 'How is your body winding down?',
   };
 }
 
@@ -70,7 +70,7 @@ const EVIDENCE_LABELS: Record<string, string> = {
 
 function InsightCardView({ insight }: { insight: InsightCard }) {
   return (
-    <View style={[styles.insightCard, { borderLeftColor: insight.color }]}>
+    <View style={styles.insightCard}>
       <View style={styles.insightHeader}>
         <Feather name={insight.iconName as any} size={16} color={insight.color} />
         <Text style={styles.insightTitle}>{insight.title}</Text>
@@ -109,7 +109,6 @@ function ContextualExerciseSection({ title, subtitle, accentColor, iconName, exe
   if (exercises.length === 0) return null;
   return (
     <View style={[styles.contextualSection, { borderColor: accentColor + '40', backgroundColor: accentColor + '0C' }]}>
-      <View style={[styles.contextualAccentBar, { backgroundColor: accentColor }]} />
       <View style={styles.contextualInner}>
         <View style={styles.contextualHeader}>
           <View style={[styles.contextualIconWrap, { backgroundColor: accentColor + '20' }]}>
@@ -373,24 +372,23 @@ export default function HomeScreen() {
       </LinearGradient>
 
       <View style={styles.content}>
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Feather name="activity" size={18} color={Colors.secondary} />
+        <View style={styles.statsBar}>
+          <View style={styles.statItem}>
             <Text style={styles.statNumber}>{todaySessionCount}</Text>
             <Text style={styles.statLabel}>Today</Text>
           </View>
-          <View style={styles.statCard}>
-            <Feather name="zap" size={18} color={Colors.warning} />
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
             <Text style={styles.statNumber}>{currentStreak}</Text>
             <Text style={styles.statLabel}>Streak</Text>
           </View>
-          <View style={styles.statCard}>
-            <Feather name="clock" size={18} color={Colors.primary} />
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
             <Text style={styles.statNumber}>{totalMinutes}</Text>
             <Text style={styles.statLabel}>Minutes</Text>
           </View>
-          <View style={styles.statCard}>
-            <Feather name="eye" size={18} color={Colors.accent} />
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
             <Text style={styles.statNumber}>{averageAwareness.toFixed(1)}</Text>
             <Text style={styles.statLabel}>Aware</Text>
           </View>
@@ -525,33 +523,42 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Today's Science</Text>
           {aiInsightText ? (
-            <View style={styles.aiInsightCard}>
-              <View style={styles.aiInsightAccent} />
-              <View style={styles.aiInsightContent}>
-                <View style={styles.aiInsightIconRow}>
-                  <Feather name="sun" size={16} color={Colors.primary} />
+            <LinearGradient
+              colors={[Colors.primaryDark, Colors.primary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.aiInsightCard}
+            >
+              <View style={styles.aiInsightHeader}>
+                <View style={styles.aiInsightBadge}>
+                  <Feather name="sun" size={11} color="rgba(255,255,255,0.9)" />
+                  <Text style={styles.aiInsightBadgeText}>SENSE AI</Text>
                 </View>
-                <Text style={styles.aiInsightBody}>{aiInsightText}</Text>
-                <Text style={styles.aiPoweredLabel}>Powered by AI</Text>
               </View>
-            </View>
+              <Text style={styles.aiInsightBody}>{aiInsightText}</Text>
+              <Text style={styles.aiPoweredLabel}>Personalized for you</Text>
+            </LinearGradient>
           ) : aiInsightLoading ? (
-            <View style={styles.aiInsightCard}>
-              <View style={styles.aiInsightAccent} />
-              <View style={[styles.aiInsightContent, { alignItems: 'center', paddingVertical: 24 }]}>
-                <ActivityIndicator size="small" color={Colors.primary} />
-                <Text style={{ fontFamily: 'Nunito_500Medium', fontSize: 13, color: Colors.textSecondary, marginTop: 10 }}>Analyzing your patterns...</Text>
-              </View>
-            </View>
+            <LinearGradient
+              colors={[Colors.primaryDark, Colors.primary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.aiInsightCard, { alignItems: 'center', paddingVertical: 28 }]}
+            >
+              <ActivityIndicator size="small" color="rgba(255,255,255,0.8)" />
+              <Text style={{ fontFamily: 'Nunito_500Medium', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 10 }}>Sensing your patterns...</Text>
+            </LinearGradient>
           ) : (
-            <View style={styles.dailyInsightCard}>
-              <View style={styles.scienceCardAccent} />
-              <View style={styles.scienceCardContent}>
-                <Text style={styles.scienceLabel}>TODAY'S SCIENCE</Text>
-                <Text style={styles.scienceHeading}>{todayScience.label}</Text>
-                <Text style={styles.scienceBody}>{todayScience.text}</Text>
-              </View>
-            </View>
+            <LinearGradient
+              colors={['#3D2E6B', Colors.primaryDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.dailyInsightCard}
+            >
+              <Text style={styles.scienceLabel}>TODAY'S SCIENCE</Text>
+              <Text style={styles.scienceHeading}>{todayScience.label}</Text>
+              <Text style={styles.scienceBody}>{todayScience.text}</Text>
+            </LinearGradient>
           )}
           {topInsights.length > 0 && <View style={{ height: 12 }} />}
           {topInsights.map(insight => (
@@ -629,13 +636,13 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFE' },
-  hero: { paddingHorizontal: 24, paddingBottom: 40 },
+  hero: { paddingHorizontal: 24, paddingBottom: 44 },
   heroTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   heroLeft: { flex: 1 },
-  greeting: { fontFamily: 'Nunito_700Bold', fontSize: 22, color: '#FFFFFF' },
-  greetingSubtext: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 4, lineHeight: 20 },
-  conditionLabel: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 },
-  getHelpLink: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, color: 'rgba(255,255,255,0.85)' },
+  greeting: { fontFamily: 'Nunito_800ExtraBold', fontSize: 28, color: '#FFFFFF', letterSpacing: -0.5, lineHeight: 34 },
+  greetingSubtext: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: 'rgba(255,255,255,0.72)', marginTop: 6, lineHeight: 20 },
+  conditionLabel: { fontFamily: 'Nunito_500Medium', fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4, letterSpacing: 0.3 },
+  getHelpLink: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: 'rgba(255,255,255,0.75)' },
   streakRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14 },
   streakText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: 'rgba(255,255,255,0.85)' },
   milestoneBadge: {
@@ -652,15 +659,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, padding: 14,
   },
   focusText: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: '#FFFFFF', flex: 1, lineHeight: 19 },
-  content: { paddingHorizontal: 20, marginTop: -20 },
-  statsRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  statCard: {
-    flex: 1, backgroundColor: Colors.surface, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 8,
-    alignItems: 'center', gap: 4,
-    shadowColor: Colors.cardShadow, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 1, shadowRadius: 10, elevation: 3,
+  content: { paddingHorizontal: 20, marginTop: -24 },
+  statsBar: {
+    backgroundColor: Colors.surface, borderRadius: 20, flexDirection: 'row',
+    paddingVertical: 18, marginBottom: 20,
+    shadowColor: Colors.cardShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 1, shadowRadius: 14, elevation: 4,
   },
-  statNumber: { fontFamily: 'Nunito_800ExtraBold', fontSize: 20, color: Colors.text },
-  statLabel: { fontFamily: 'Nunito_500Medium', fontSize: 10, color: Colors.textSecondary },
+  statItem: { flex: 1, alignItems: 'center' },
+  statDivider: { width: 1, backgroundColor: Colors.borderLight, marginVertical: 6 },
+  statNumber: { fontFamily: 'Nunito_800ExtraBold', fontSize: 28, color: Colors.text, lineHeight: 32 },
+  statLabel: { fontFamily: 'Nunito_500Medium', fontSize: 11, color: Colors.textSecondary, marginTop: 3, letterSpacing: 0.2 },
 
   checkinPromptCard: { borderRadius: 20, overflow: 'hidden', marginBottom: 24 },
   checkinGradient: { borderRadius: 20 },
@@ -685,9 +693,9 @@ const styles = StyleSheet.create({
   checkinDoneSubtitle: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
   checkinDoneLink: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, color: Colors.success },
 
-  section: { marginBottom: 24 },
+  section: { marginBottom: 26 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionTitle: { fontFamily: 'Nunito_700Bold', fontSize: 17, color: Colors.text, marginBottom: 12 },
+  sectionTitle: { fontFamily: 'Nunito_700Bold', fontSize: 12, color: Colors.textSecondary, marginBottom: 12, letterSpacing: 1.4, textTransform: 'uppercase' as const },
   nextExerciseCard: { borderRadius: 20, overflow: 'hidden' },
   nextExerciseGradient: { padding: 22, borderRadius: 20 },
   nextExerciseHeader: { flexDirection: 'row', gap: 8, marginBottom: 12 },
@@ -706,20 +714,19 @@ const styles = StyleSheet.create({
   startButtonText: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: Colors.primary },
   actionsGrid: { flexDirection: 'row', flexWrap: 'nowrap', gap: 10 },
   actionCard: {
-    flex: 1, minWidth: 60, backgroundColor: Colors.surface, borderRadius: 16,
-    paddingVertical: 14, alignItems: 'center', gap: 8,
-    shadowColor: Colors.cardShadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 6, elevation: 2,
+    flex: 1, minWidth: 60, backgroundColor: Colors.surface, borderRadius: 18,
+    paddingVertical: 18, alignItems: 'center', gap: 10,
+    shadowColor: Colors.cardShadow, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 1, shadowRadius: 10, elevation: 3,
   },
-  actionIcon: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  actionLabel: { fontFamily: 'Nunito_600SemiBold', fontSize: 10, color: Colors.text, textAlign: 'center' },
+  actionIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  actionLabel: { fontFamily: 'Nunito_600SemiBold', fontSize: 11, color: Colors.text, textAlign: 'center' },
   insightCard: {
-    backgroundColor: Colors.surface, borderRadius: 16, padding: 16, marginBottom: 10,
-    borderWidth: 1, borderColor: Colors.borderLight,
-    shadowColor: Colors.cardShadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 6, elevation: 2,
+    backgroundColor: Colors.surface, borderRadius: 18, padding: 18, marginBottom: 10,
+    shadowColor: Colors.cardShadow, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 1, shadowRadius: 12, elevation: 3,
   },
-  insightHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  insightHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   insightTitle: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: Colors.text, flex: 1 },
-  insightBody: { fontFamily: 'Nunito_400Regular', fontSize: 13, color: Colors.textSecondary, lineHeight: 19 },
+  insightBody: { fontFamily: 'Nunito_400Regular', fontSize: 13, color: Colors.textSecondary, lineHeight: 20 },
   recCard: {
     backgroundColor: Colors.surface, borderRadius: 16, padding: 14, marginBottom: 8,
     flexDirection: 'row', alignItems: 'center', gap: 12,
@@ -749,96 +756,81 @@ const styles = StyleSheet.create({
   maia2BannerTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: '#2D4A7A', marginBottom: 2 },
   maia2BannerSubtitle: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: '#4A6FA5', lineHeight: 15 },
   dailyInsightCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 18,
-    flexDirection: 'row',
-    overflow: 'hidden',
-    shadowColor: Colors.cardShadow,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  scienceCardAccent: {
-    width: 4,
-    backgroundColor: Colors.primary,
-  },
-  scienceCardContent: {
-    flex: 1,
-    padding: 18,
+    borderRadius: 20,
+    padding: 22,
+    marginBottom: 0,
   },
   scienceLabel: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 10,
-    color: Colors.primary,
-    letterSpacing: 1.2,
-    marginBottom: 4,
+    color: 'rgba(255,255,255,0.65)',
+    letterSpacing: 1.6,
+    marginBottom: 10,
+    textTransform: 'uppercase' as const,
   },
   scienceHeading: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 15,
-    color: Colors.text,
-    marginBottom: 6,
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 20,
+    color: '#FFFFFF',
+    marginBottom: 10,
+    letterSpacing: -0.3,
+    lineHeight: 26,
   },
   scienceBody: {
     fontFamily: 'Nunito_400Regular',
-    fontSize: 13,
-    color: Colors.textSecondary,
-    lineHeight: 20,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.82)',
+    lineHeight: 22,
   },
   aiInsightCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 18,
+    borderRadius: 20,
+    padding: 22,
+    marginBottom: 0,
+  },
+  aiInsightHeader: {
+    marginBottom: 14,
+  },
+  aiInsightBadge: {
     flexDirection: 'row' as const,
-    overflow: 'hidden' as const,
-    shadowColor: Colors.cardShadow,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 3,
+    alignItems: 'center' as const,
+    gap: 5,
+    alignSelf: 'flex-start' as const,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
   },
-  aiInsightAccent: {
-    width: 4,
-    backgroundColor: Colors.primary,
-  },
-  aiInsightContent: {
-    flex: 1,
-    padding: 18,
-  },
-  aiInsightIconRow: {
-    marginBottom: 10,
+  aiInsightBadgeText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.9)',
+    letterSpacing: 1.2,
   },
   aiInsightBody: {
     fontFamily: 'Nunito_400Regular',
-    fontSize: 14,
-    color: Colors.text,
-    lineHeight: 22,
-    marginBottom: 10,
+    fontSize: 15,
+    color: '#FFFFFF',
+    lineHeight: 24,
+    marginBottom: 14,
   },
   aiPoweredLabel: {
     fontFamily: 'Nunito_500Medium',
-    fontSize: 10,
-    color: Colors.textTertiary,
-    opacity: 0.7,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.5)',
   },
 
   contextualSection: {
     borderRadius: 18,
     borderWidth: 1,
     overflow: 'hidden',
-    flexDirection: 'row',
     shadowColor: Colors.cardShadow,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 1,
     shadowRadius: 10,
     elevation: 3,
   },
-  contextualAccentBar: {
-    width: 4,
-  },
   contextualInner: {
-    flex: 1,
-    padding: 16,
+    padding: 18,
   },
   contextualHeader: {
     flexDirection: 'row',

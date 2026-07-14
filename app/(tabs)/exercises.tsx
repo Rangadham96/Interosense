@@ -122,8 +122,8 @@ export default function ExercisesScreen() {
       >
         <View style={styles.cardContent}>
           <View style={styles.cardTop}>
-            <View style={[styles.iconCircle, { backgroundColor: catColor + '1A' }]}>
-              <Feather name={catInfo.icon as any} size={20} color={catColor} />
+            <View style={[styles.iconCircle, { backgroundColor: catColor + '22' }]}>
+              <Feather name={catInfo.icon as any} size={22} color={catColor} />
             </View>
             <View style={styles.cardTextWrap}>
               <Text style={styles.cardTitle} numberOfLines={1}>
@@ -133,17 +133,22 @@ export default function ExercisesScreen() {
                 {item.subtitle}
               </Text>
             </View>
-            {hasContraindications && (
-              <TouchableOpacity
-                onPress={(e) => {
-                  e.stopPropagation();
-                  setTooltipExercise(item);
-                }}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Feather name="alert-triangle" size={16} color="#B8860B" />
-              </TouchableOpacity>
-            )}
+            <View style={styles.durationBubble}>
+              {hasContraindications && (
+                <TouchableOpacity
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    setTooltipExercise(item);
+                  }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  style={{ marginBottom: 4 }}
+                >
+                  <Feather name="alert-triangle" size={14} color="#B8860B" />
+                </TouchableOpacity>
+              )}
+              <Text style={styles.durationNum}>{item.durationMinutes}</Text>
+              <Text style={styles.durationMin}>MIN</Text>
+            </View>
           </View>
           <View style={styles.cardBottom}>
             <View style={[styles.diffBadge, { backgroundColor: diffStyle.bg }]}>
@@ -154,10 +159,6 @@ export default function ExercisesScreen() {
             <View style={[styles.evidencePill, { backgroundColor: evidence.color + '15' }]}>
               <View style={[styles.evidenceDot, { backgroundColor: evidence.color }]} />
               <Text style={[styles.evidenceText, { color: evidence.color }]}>{evidence.label}</Text>
-            </View>
-            <View style={styles.metaItem}>
-              <Feather name="clock" size={13} color={Colors.textTertiary} />
-              <Text style={styles.metaText}>{item.durationMinutes} min</Text>
             </View>
           </View>
         </View>
@@ -457,9 +458,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   iconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -468,14 +469,32 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'Nunito_700Bold',
     color: Colors.text,
     marginBottom: 2,
+    letterSpacing: -0.1,
   },
   cardSubtitle: {
     fontSize: 13,
     fontFamily: 'Nunito_400Regular',
     color: Colors.textSecondary,
+  },
+  durationBubble: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 32,
+  },
+  durationNum: {
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 20,
+    color: Colors.text,
+    lineHeight: 22,
+  },
+  durationMin: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 9,
+    color: Colors.textTertiary,
+    letterSpacing: 0.8,
   },
   cardBottom: {
     flexDirection: 'row',
