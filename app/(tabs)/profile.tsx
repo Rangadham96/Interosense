@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
     width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center', justifyContent: 'center',
   },
-  heroName: { fontFamily: 'Nunito_800ExtraBold', fontSize: 24, color: '#FFFFFF', marginBottom: 4 },
+  heroName: { fontFamily: 'Nunito_800ExtraBold', fontSize: 28, color: '#FFFFFF', marginBottom: 4, letterSpacing: -0.5 },
   heroDays: { fontFamily: 'Nunito_400Regular', fontSize: 14, color: 'rgba(255,255,255,0.8)', marginBottom: 18 },
   heroPills: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   heroPill: {
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
   premiumUpsellSub: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
 
   section: { marginBottom: 24 },
-  sectionTitle: { fontFamily: 'Nunito_700Bold', fontSize: 17, color: Colors.text, marginBottom: 12 },
+  sectionTitle: { fontFamily: 'Nunito_700Bold', fontSize: 12, color: Colors.textSecondary, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 12 },
   card: { backgroundColor: Colors.surface, borderRadius: 16, overflow: 'hidden' },
   conditionsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   conditionPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
 
   menuRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
   menuRowDisabled: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
-  menuIconWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  menuIconWrap: { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   menuLabel: { flex: 1, fontFamily: 'Nunito_600SemiBold', fontSize: 15, color: Colors.text },
   menuLabelDisabled: { flex: 1, fontFamily: 'Nunito_600SemiBold', fontSize: 15, color: Colors.textTertiary },
   menuDivider: { height: 1, backgroundColor: Colors.borderLight, marginLeft: 64 },

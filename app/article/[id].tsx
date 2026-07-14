@@ -239,11 +239,12 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   title: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 24,
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 26,
     color: Colors.text,
     paddingHorizontal: 24,
-    lineHeight: 32,
+    lineHeight: 34,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontFamily: 'Nunito_400Regular',

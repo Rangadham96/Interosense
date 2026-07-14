@@ -465,9 +465,10 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   headerTitle: {
-    fontSize: 20,
-    fontFamily: 'Nunito_700Bold',
+    fontSize: 22,
+    fontFamily: 'Nunito_800ExtraBold',
     color: Colors.text,
+    letterSpacing: -0.3,
   },
   scrollView: {
     flex: 1,

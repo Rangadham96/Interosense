@@ -863,7 +863,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20 },
   header: { marginTop: 16, marginBottom: 24 },
   headerTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  title: { fontSize: 28, fontFamily: 'Nunito_700Bold', color: Colors.text },
+  title: { fontSize: 28, fontFamily: 'Nunito_800ExtraBold', color: Colors.text, letterSpacing: -0.5 },
   subtitle: { fontSize: 15, fontFamily: 'Nunito_400Regular', color: Colors.textSecondary, marginTop: 4 },
   statsGrid: { gap: 12, marginBottom: 24 },
   statsRow: { flexDirection: 'row', gap: 12 },
@@ -874,8 +874,8 @@ const styles = StyleSheet.create({
   section: { marginBottom: 24 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionHeaderActions: { flexDirection: 'row', alignItems: 'center' },
-  sectionTitle: { fontSize: 18, fontFamily: 'Nunito_700Bold', color: Colors.text, marginBottom: 12 },
-  seeAll: { fontSize: 14, fontFamily: 'Nunito_600SemiBold', color: Colors.primary, marginBottom: 12 },
+  sectionTitle: { fontSize: 12, fontFamily: 'Nunito_700Bold', color: Colors.textSecondary, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 12 },
+  seeAll: { fontSize: 13, fontFamily: 'Nunito_600SemiBold', color: Colors.primary, marginBottom: 12 },
   card: { backgroundColor: Colors.surface, borderRadius: 16, padding: 20 },
   chartContextLabel: { fontSize: 12, fontFamily: 'Nunito_400Regular', color: Colors.textTertiary, marginBottom: 14, lineHeight: 17 },
 
@@ -949,7 +949,7 @@ const styles = StyleSheet.create({
   heatmapLabel: { fontSize: 12, fontFamily: 'Nunito_500Medium', color: Colors.textSecondary },
   badgesRow: { flexDirection: 'row', justifyContent: 'space-around' },
   badgeContainer: { alignItems: 'center', width: 70 },
-  badge: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  badge: { width: 52, height: 52, borderRadius: 14, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   badgeLabel: { fontSize: 11, fontFamily: 'Nunito_500Medium', color: Colors.textSecondary, textAlign: 'center' },
   quickLinks: { marginBottom: 8 },
   linkButton: {

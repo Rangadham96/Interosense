@@ -247,10 +247,11 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   pageTitle: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 24,
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 28,
     color: Colors.text,
     marginBottom: 4,
+    letterSpacing: -0.5,
   },
   pageSubtitle: {
     fontFamily: 'Nunito_400Regular',
@@ -275,13 +276,14 @@ const styles = StyleSheet.create({
   },
   statsLabel: {
     fontFamily: 'Nunito_600SemiBold',
-    fontSize: 15,
-    color: Colors.text,
+    fontSize: 14,
+    color: Colors.textSecondary,
   },
   statsPercent: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 15,
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 24,
     color: Colors.primary,
+    letterSpacing: -0.5,
   },
   statsProgressBg: {
     height: 8,

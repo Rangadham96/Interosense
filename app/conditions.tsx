@@ -109,8 +109,9 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 11,
-    color: Colors.textTertiary,
-    letterSpacing: 0.8,
+    color: Colors.textSecondary,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
     marginHorizontal: 20,
     marginBottom: 10,
     marginTop: 8,

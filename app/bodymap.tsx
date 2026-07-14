@@ -403,9 +403,10 @@ const styles = StyleSheet.create({
     color: Colors.primary,
   },
   headerTitle: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 20,
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 22,
     color: Colors.text,
+    letterSpacing: -0.3,
   },
   clearText: {
     fontFamily: 'Nunito_600SemiBold',
@@ -584,12 +585,11 @@ const styles = StyleSheet.create({
   },
   dateGroupTitle: {
     fontFamily: 'Nunito_700Bold',
-    fontSize: 14,
-    color: Colors.primary,
-    marginBottom: 8,
-    paddingBottom: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    fontSize: 11,
+    color: Colors.textSecondary,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    marginBottom: 10,
   },
   regionStatsSection: {
     marginTop: 16,
@@ -672,10 +672,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 20,
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 22,
     color: Colors.text,
     marginBottom: 20,
+    letterSpacing: -0.3,
   },
   modalLabel: {
     fontFamily: 'Nunito_600SemiBold',

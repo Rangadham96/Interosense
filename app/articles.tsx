@@ -288,15 +288,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   headerTitle: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 20,
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 22,
     color: '#FFFFFF',
+    letterSpacing: -0.3,
   },
   headerSub: {
-    fontFamily: 'Nunito_500Medium',
+    fontFamily: 'Nunito_400Regular',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.75)',
-    marginTop: 6,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 8,
+    lineHeight: 19,
   },
   premiumBanner: {
     flexDirection: 'row',
@@ -386,9 +388,10 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontFamily: 'Nunito_700Bold',
     fontSize: 11,
-    color: Colors.textTertiary,
-    letterSpacing: 0.8,
-    marginBottom: 10,
+    color: Colors.textSecondary,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    marginBottom: 12,
     marginTop: 4,
   },
   featuredCard: {
@@ -438,10 +441,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   featuredTitle: {
-    fontFamily: 'Nunito_700Bold',
-    fontSize: 20,
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 22,
     color: '#FFFFFF',
     marginBottom: 6,
+    letterSpacing: -0.3,
   },
   featuredSubtitle: {
     fontFamily: 'Nunito_400Regular',
