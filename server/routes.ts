@@ -24,6 +24,10 @@ import { storage } from "./storage";
 import { generateInsight } from "./advisor";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Trust Cloud Run / Replit's load balancer so req.secure is correct
+  // and the secure:true session cookie is set over HTTPS in production.
+  app.set('trust proxy', 1);
+
   const PgStore = connectPgSimple(session);
 
   app.use(

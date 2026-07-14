@@ -1087,6 +1087,7 @@ function buildUserMessage(context) {
 
 // server/routes.ts
 async function registerRoutes(app2) {
+  app2.set("trust proxy", 1);
   const PgStore = connectPgSimple(session);
   app2.use(
     session({
