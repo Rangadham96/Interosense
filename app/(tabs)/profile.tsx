@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   scrollContent: { paddingHorizontal: 20 },
 
-  heroCard: { borderRadius: 24, padding: 24, marginBottom: 16, marginTop: 8 },
+  heroCard: { borderRadius: 24, padding: 24, marginBottom: 16, marginTop: 0 },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
   heroTopRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatarCircle: {

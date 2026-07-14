@@ -416,9 +416,7 @@ export default function Maia2Screen() {
           <View style={styles.clinicalFlagsCard}>
             <Text style={styles.clinicalFlagsTitle}>Clinical Interpretation</Text>
             {clinicalFlags.map(flag => (
-              <View key={flag.key} style={[styles.clinicalFlagItem, {
-                borderLeftColor: flag.type === 'professional' ? '#88D5E0' : flag.type === 'distress' ? '#E8A48B' : '#7FB069',
-              }]}>
+              <View key={flag.key} style={styles.clinicalFlagItem}>
                 <View style={styles.clinicalFlagHeader}>
                   <Feather
                     name={flag.type === 'professional' ? 'user' : flag.type === 'distress' ? 'alert-circle' : 'trending-up'}
@@ -612,7 +610,7 @@ const styles = StyleSheet.create({
   },
   clinicalFlagsTitle: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: '#FFF', marginBottom: 12 },
   clinicalFlagItem: {
-    borderLeftWidth: 3, paddingLeft: 12, marginBottom: 14,
+    paddingLeft: 0, marginBottom: 14,
   },
   clinicalFlagHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 5 },
   clinicalFlagTitle: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: '#FFF', flex: 1 },

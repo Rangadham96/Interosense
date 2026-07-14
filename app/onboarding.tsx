@@ -924,7 +924,7 @@ export default function OnboardingScreen() {
 
           {cards.map((card, idx) => (
             ahaCardsVisible[idx] ? (
-              <Animated.View key={idx} entering={FadeIn.duration(600)} style={[styles.ahaCard, { borderLeftColor: card.color }]}>
+              <Animated.View key={idx} entering={FadeIn.duration(600)} style={styles.ahaCard}>
                 <View style={[styles.ahaCardIcon, { backgroundColor: card.color + '20' }]}>
                   <Feather name={card.icon} size={18} color={card.color} />
                 </View>
@@ -934,7 +934,7 @@ export default function OnboardingScreen() {
                 </View>
               </Animated.View>
             ) : (
-              <View key={idx} style={[styles.ahaCard, { borderLeftColor: Colors.borderLight, opacity: 0 }]} />
+              <View key={idx} style={[styles.ahaCard, { opacity: 0 }]} />
             )
           ))}
 
@@ -1199,7 +1199,7 @@ const styles = StyleSheet.create({
   ahaCard: {
     flexDirection: 'row', gap: 14, backgroundColor: Colors.surface,
     borderRadius: 16, padding: 16, marginBottom: 12,
-    borderLeftWidth: 4, borderWidth: 1, borderColor: Colors.borderLight,
+    borderWidth: 1, borderColor: Colors.borderLight,
   },
   ahaCardIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   ahaCardLabel: { fontFamily: 'Nunito_700Bold', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },

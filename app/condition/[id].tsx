@@ -216,8 +216,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.warning + '14',
     borderRadius: 14,
     padding: 14,
-    borderLeftWidth: 3,
-    borderLeftColor: Colors.warning,
   },
   disclaimerIconWrap: {
     marginTop: 1,

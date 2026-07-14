@@ -714,7 +714,7 @@ const styles = StyleSheet.create({
   actionLabel: { fontFamily: 'Nunito_600SemiBold', fontSize: 10, color: Colors.text, textAlign: 'center' },
   insightCard: {
     backgroundColor: Colors.surface, borderRadius: 16, padding: 16, marginBottom: 10,
-    borderLeftWidth: 4,
+    borderWidth: 1, borderColor: Colors.borderLight,
     shadowColor: Colors.cardShadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 6, elevation: 2,
   },
   insightHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },

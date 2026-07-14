@@ -91,8 +91,7 @@ export default function ExercisesScreen() {
           activeOpacity={0.7}
           onPress={() => router.push('/premium' as any)}
         >
-          <View style={[styles.accentBar, { backgroundColor: catColor + '60' }]} />
-          <View style={styles.cardContent}>
+            <View style={styles.cardContent}>
             <View style={styles.cardTop}>
               <View style={[styles.iconCircle, { backgroundColor: catColor + '0D' }]}>
                 <Feather name="lock" size={20} color={Colors.textTertiary} />
@@ -121,7 +120,6 @@ export default function ExercisesScreen() {
         activeOpacity={0.7}
         onPress={() => router.push(`/exercise/${item.id}`)}
       >
-        <View style={[styles.accentBar, { backgroundColor: catColor }]} />
         <View style={styles.cardContent}>
           <View style={styles.cardTop}>
             <View style={[styles.iconCircle, { backgroundColor: catColor + '1A' }]}>
@@ -174,7 +172,6 @@ export default function ExercisesScreen() {
           <Text style={styles.title}>Exercises</Text>
           <GetHelpLink />
         </View>
-        <Text style={styles.subtitle}>30+ interoceptive exercises across 8 body-awareness categories</Text>
         <View style={styles.searchBar}>
           <Feather name="search" size={18} color={Colors.textTertiary} />
           <TextInput
@@ -209,12 +206,10 @@ export default function ExercisesScreen() {
         </TouchableOpacity>
       )}
 
-      {(selectedCategory === 'traumaInformed' || selectedCategory === 'all') && (
+      {selectedCategory === 'traumaInformed' && (
         <View style={styles.clinicianNote}>
-          <Feather name="anchor" size={14} color="#5A7A58" />
-          <Text style={styles.clinicianNoteText}>
-            Trauma-Informed practices are based on Somatic Experiencing (Peter Levine), Polyvagal Theory (Stephen Porges), and MABT. Best used alongside professional support for significant trauma histories.
-          </Text>
+          <Feather name="info" size={12} color={Colors.textTertiary} />
+          <Text style={styles.clinicianNoteText}>Best used alongside professional support for significant trauma histories.</Text>
         </View>
       )}
 
@@ -279,12 +274,6 @@ export default function ExercisesScreen() {
         </ScrollView>
       </View>
 
-      <View style={styles.resultCount}>
-        <Text style={styles.resultText}>
-          {filteredExercises.length} exercise{filteredExercises.length !== 1 ? 's' : ''} found
-        </Text>
-      </View>
-
       {filteredExercises.length > 0 ? (
         <FlatList
           data={filteredExercises}
@@ -340,27 +329,19 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 12,
     paddingBottom: 8,
   },
   headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 10,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: 'Nunito_700Bold',
     color: Colors.text,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
-    color: Colors.textSecondary,
-    marginBottom: 16,
-    lineHeight: 20,
   },
   searchBar: {
     flexDirection: 'row',
@@ -419,41 +400,31 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   filterSection: {
-    paddingTop: 12,
+    paddingTop: 8,
     paddingBottom: 4,
   },
   filterScroll: {
     paddingHorizontal: 20,
-    gap: 8,
+    gap: 6,
   },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 20,
     backgroundColor: Colors.surface,
-    gap: 6,
+    gap: 5,
     borderWidth: 1,
     borderColor: Colors.borderLight,
   },
   pillText: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: 'Nunito_600SemiBold',
     color: Colors.textSecondary,
   },
   pillTextActive: {
     color: '#FFF',
-  },
-  resultCount: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 4,
-  },
-  resultText: {
-    fontSize: 13,
-    fontFamily: 'Nunito_500Medium',
-    color: Colors.textTertiary,
   },
   listContent: {
     paddingHorizontal: 20,
@@ -474,9 +445,6 @@ const styles = StyleSheet.create({
   },
   cardLocked: {
     opacity: 0.75,
-  },
-  accentBar: {
-    width: 4,
   },
   cardContent: {
     flex: 1,
@@ -567,22 +535,16 @@ const styles = StyleSheet.create({
   },
   clinicianNote: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
+    alignItems: 'center',
+    gap: 6,
     marginHorizontal: 20,
     marginTop: 4,
     marginBottom: 4,
-    backgroundColor: '#EAF2EA',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#C2DAC0',
   },
   clinicianNoteText: {
-    fontFamily: 'Nunito_500Medium',
-    fontSize: 12,
-    color: '#3A5E38',
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 11,
+    color: Colors.textTertiary,
     flex: 1,
     lineHeight: 17,
   },

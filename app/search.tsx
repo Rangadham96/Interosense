@@ -167,7 +167,6 @@ export default function SearchScreen() {
             activeOpacity={0.7}
             onPress={() => router.push(`/exercise/${exercise.id}`)}
           >
-            <View style={[styles.accentBar, { backgroundColor: catColor }]} />
             <View style={styles.cardContent}>
               <View style={styles.cardTop}>
                 <View style={[styles.iconCircle, { backgroundColor: catColor + '1A' }]}>
@@ -425,9 +424,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 10,
     elevation: 2,
-  },
-  accentBar: {
-    width: 4,
   },
   cardContent: {
     flex: 1,
