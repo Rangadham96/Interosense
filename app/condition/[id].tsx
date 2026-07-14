@@ -12,7 +12,7 @@ export default function ConditionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const condition = getConditionById(id || '');
-  const webTopPadding = Platform.OS === 'web' ? 67 : 0;
+  const webTopPadding = 0;
 
   if (!condition) {
     return (

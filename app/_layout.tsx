@@ -124,6 +124,17 @@ function AuthGate() {
       <Stack.Screen name="session-history" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="search" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="premium" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom', gestureDirection: 'vertical' }} />
+      <Stack.Screen name="terms" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="privacy-policy" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="about" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="articles" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="subscription-success" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="assessment/maia2" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'slide_from_bottom', gestureDirection: 'vertical' }} />
+      <Stack.Screen name="auth/forgot-password" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="auth/reset-password" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="wearable" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="bookmarks" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="maia2-history" options={{ headerShown: false, animation: 'slide_from_right' }} />
     </Stack>
   );
 }

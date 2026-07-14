@@ -23,7 +23,7 @@ export default function AssessmentScreen() {
   const { user } = useAuth();
   const scale = getScaleById(id || '');
 
-  const topInset = Platform.OS === 'web' ? 67 : insets.top;
+  const topInset = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
   const isPremium = user?.isPremium ?? false;

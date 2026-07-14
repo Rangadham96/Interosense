@@ -31,7 +31,7 @@ function BulletItem({ children }: { children: React.ReactNode }) {
 
 export default function TermsScreen() {
   const insets = useSafeAreaInsets();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
   return (
     <View style={[styles.container, { paddingTop: topPadding }]}>

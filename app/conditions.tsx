@@ -10,7 +10,7 @@ import { useApp } from '@/contexts/AppContext';
 export default function ConditionsScreen() {
   const insets = useSafeAreaInsets();
   const { profile } = useApp();
-  const webTopPadding = Platform.OS === 'web' ? 67 : 0;
+  const webTopPadding = 0;
 
   const userConditionIds: string[] = profile?.conditions ?? [];
   const userConditions = CONDITIONS.filter(c => userConditionIds.includes(c.id));

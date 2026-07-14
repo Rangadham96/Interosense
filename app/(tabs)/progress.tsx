@@ -31,7 +31,7 @@ const GAUGE_CIRCUMFERENCE = 2 * Math.PI * GAUGE_RADIUS;
 export default function ProgressScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
   const {
     sessions,

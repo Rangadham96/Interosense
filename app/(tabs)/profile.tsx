@@ -30,7 +30,7 @@ const FOUR_WEEK_PROGRAMME = [
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const bottomPadding = Platform.OS === 'web' ? 34 : insets.bottom;
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);

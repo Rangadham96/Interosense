@@ -117,7 +117,7 @@ export default function ExerciseSessionScreen() {
     return unlockedAchievements.slice(prevAchievementCount);
   }, [saved, unlockedAchievements, prevAchievementCount]);
 
-  const topInset = Platform.OS === 'web' ? 67 : insets.top;
+  const topInset = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
   useEffect(() => {

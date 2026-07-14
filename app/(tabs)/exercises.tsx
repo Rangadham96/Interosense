@@ -49,7 +49,7 @@ const ALL_CATEGORIES: ExerciseCategory[] = [
 
 export default function ExercisesScreen() {
   const insets = useSafeAreaInsets();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const [searchText, setSearchText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ExerciseCategory | 'all'>('all');
   const [tooltipExercise, setTooltipExercise] = useState<Exercise | null>(null);

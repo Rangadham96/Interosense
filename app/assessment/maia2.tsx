@@ -35,7 +35,7 @@ const SUBSCALE_ORDER = [
 export default function Maia2Screen() {
   const insets = useSafeAreaInsets();
   const { addAssessment, assessments } = useApp();
-  const topInset = Platform.OS === 'web' ? 67 : insets.top;
+  const topInset = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
 
   const [phase, setPhase] = useState<Phase>('intro');

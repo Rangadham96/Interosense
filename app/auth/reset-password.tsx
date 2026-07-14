@@ -22,7 +22,7 @@ export default function ResetPasswordScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { token } = useLocalSearchParams<{ token: string }>();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

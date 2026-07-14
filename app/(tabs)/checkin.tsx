@@ -198,7 +198,7 @@ function getPersonalisedCompletion(awareness: number, energy: number, stress: nu
 
 export default function CheckinScreen() {
   const insets = useSafeAreaInsets();
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const topPad = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const { addCheckin, todayCheckedIn, checkins } = useApp();
 
   const [phase, setPhase] = useState<'intro' | 'steps' | 'submitted'>('intro');

@@ -209,7 +209,7 @@ export default function HomeScreen() {
     return false;
   }, [assessments, totalSessions]);
 
-  const webTopPadding = Platform.OS === 'web' ? 67 : 0;
+  const webTopPadding = 0;
 
   const userName = profile?.name ? profile.name.split(' ')[0] : 'there';
   const { greeting, subtext } = useMemo(() => getTimeOfDayGreeting(userName), [userName]);

@@ -28,7 +28,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const { from, banner } = useLocalSearchParams<{ from?: string; banner?: string }>();
   const { login, loginWithSocial } = useAuth();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

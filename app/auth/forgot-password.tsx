@@ -20,7 +20,7 @@ import { apiRequest } from '@/lib/query-client';
 export default function ForgotPasswordScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);

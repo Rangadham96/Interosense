@@ -7,7 +7,6 @@ import {
   ScrollView,
   Platform,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -97,10 +96,11 @@ export default function PremiumScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, refreshUser } = useAuth();
-  const topPadding = Platform.OS === 'web' ? 67 : insets.top;
+  const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
   const [selectedPlan, setSelectedPlan] = useState('annual');
   const [loading, setLoading] = useState(false);
+  const [subscribeError, setSubscribeError] = useState('');
   const [checkoutParams, setCheckoutParams] = useState<CheckoutParams | null>(null);
   const [checkoutVisible, setCheckoutVisible] = useState(false);
 
@@ -161,6 +161,7 @@ export default function PremiumScreen() {
 
   const handleSubscribe = async () => {
     setLoading(true);
+    setSubscribeError('');
     try {
       const data = await apiPostJson<CheckoutParams>('/api/razorpay/create-subscription', {
         planId: selectedPlan,
@@ -183,11 +184,7 @@ export default function PremiumScreen() {
         try {
           await verifyAndActivate(result);
         } catch (verifyErr: any) {
-          Alert.alert(
-            'Verification Failed',
-            'Payment was received but we could not verify it. Please contact support or try again.',
-            [{ text: 'OK' }]
-          );
+          setSubscribeError('Payment received but verification failed. Please contact support@interosense.com.');
         }
       } catch (nativeErr: any) {
         const code: string = nativeErr?.code || '';
@@ -205,19 +202,11 @@ export default function PremiumScreen() {
           setCheckoutParams(data);
           setCheckoutVisible(true);
         } else {
-          Alert.alert(
-            'Payment Failed',
-            nativeErr?.description || nativeErr?.message || 'Payment could not be completed. Please try again.',
-            [{ text: 'OK' }]
-          );
+          setSubscribeError(nativeErr?.description || nativeErr?.message || 'Payment could not be completed. Please try again.');
         }
       }
     } catch (error: any) {
-      Alert.alert(
-        'Checkout Unavailable',
-        error.message || 'Unable to start checkout. Please try again.',
-        [{ text: 'OK' }]
-      );
+      setSubscribeError(error.message || 'Unable to start checkout. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -249,11 +238,7 @@ export default function PremiumScreen() {
 
   const handleWebViewError = (description: string) => {
     setCheckoutVisible(false);
-    Alert.alert(
-      'Payment Failed',
-      description || 'Payment could not be completed. Please try again.',
-      [{ text: 'OK' }]
-    );
+    setSubscribeError(description || 'Payment could not be completed. Please try again.');
   };
 
   return (
@@ -350,6 +335,12 @@ export default function PremiumScreen() {
       </ScrollView>
 
       <View style={[styles.bottomBar, { paddingBottom: Platform.OS === 'web' ? 34 : Math.max(insets.bottom, 16) }]}>
+        {subscribeError ? (
+          <View style={styles.errorBanner}>
+            <Feather name="alert-circle" size={15} color="#C62828" />
+            <Text style={styles.errorBannerText}>{subscribeError}</Text>
+          </View>
+        ) : null}
         <Pressable
           style={[styles.subscribeButton, loading && styles.subscribeButtonDisabled]}
           onPress={handleSubscribe}
@@ -548,5 +539,23 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     textAlign: 'center',
     marginTop: 10,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FFEBEE',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#FFCDD2',
+  },
+  errorBannerText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: 'Nunito_500Medium',
+    color: '#C62828',
+    lineHeight: 18,
   },
 });

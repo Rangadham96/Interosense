@@ -39,7 +39,7 @@ export async function apiPostJson<T = unknown>(path: string, body: unknown): Pro
     let message = res.statusText;
     try {
       const data = await res.json();
-      message = data.message || message;
+      message = data.message || data.error || message;
     } catch {}
     throw new Error(message);
   }
