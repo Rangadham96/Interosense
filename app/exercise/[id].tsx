@@ -54,6 +54,19 @@ const CATEGORY_SCIENCE_REFLECTIONS: Record<string, string> = {
   movement: 'Mindful movement engages proprioceptive receptors throughout your body, feeding rich sensory information to your cerebellum and insula simultaneously.',
 };
 
+const NEXT_EXERCISE_BODY_PROMISE: Record<string, string> = {
+  heartbeat: 'Builds the brain-heart pathway underlying emotional clarity. Each session measurably strengthens your insular cortex.',
+  breathing: 'Stimulates your vagus nerve, dropping cortisol and raising heart rate variability within minutes of starting.',
+  bodyScanning: 'Expands your internal body map through systematic insula training. MRI studies show cortical thickening after 8 weeks.',
+  tension: 'Releases nervous system tension stored in your muscles and restores autonomic balance through somatic integration.',
+  temperature: 'Develops thermal interoceptive sensitivity by activating your trigeminal nerve, calming sympathetic arousal.',
+  exposure: 'Grows your distress tolerance by teaching your amygdala, through direct experience, that body signals are safe.',
+  gut: 'Strengthens the gut-brain axis: 500 million enteric neurons firing information directly into your mood regulation system.',
+  movement: 'Combines proprioceptive and interoceptive processing simultaneously, feeding the cerebellum and insula at once.',
+  nervousSystem: 'Trains vagal regulation and autonomic balance through evidence-based parasympathetic activation techniques.',
+  traumaInformed: 'Builds somatic safety within your window of tolerance, using titrated exposure to neutral body areas first.',
+};
+
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
@@ -445,21 +458,29 @@ export default function ExerciseSessionScreen() {
 
             {nextExercise && (
               <View style={styles.nextUpSection}>
-                <Text style={styles.nextUpLabel}>Up Next</Text>
-                <TouchableOpacity
-                  style={styles.nextExerciseCard}
-                  onPress={() => router.replace(`/exercise/${nextExercise.id}`)}
-                  activeOpacity={0.8}
-                >
-                  <View style={[styles.nextExerciseIcon, { backgroundColor: (CATEGORY_INFO[nextExercise.category as keyof typeof CATEGORY_INFO]?.color || Colors.primary) + '30' }]}>
-                    <Feather name={nextExercise.iconName as any} size={18} color={CATEGORY_INFO[nextExercise.category as keyof typeof CATEGORY_INFO]?.color || Colors.primary} />
+                <Text style={styles.nextUpLabel}>Train This Next</Text>
+                <View style={styles.nextExerciseCard}>
+                  <View style={styles.nextExerciseCardTop}>
+                    <View style={[styles.nextExerciseIcon, { backgroundColor: (CATEGORY_INFO[nextExercise.category as keyof typeof CATEGORY_INFO]?.color || Colors.primary) + '30' }]}>
+                      <Feather name={nextExercise.iconName as any} size={18} color={CATEGORY_INFO[nextExercise.category as keyof typeof CATEGORY_INFO]?.color || Colors.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.nextExerciseTitle}>{nextExercise.title}</Text>
+                      <Text style={styles.nextExerciseMeta}>{nextExercise.durationMinutes} min · {nextExercise.difficulty.charAt(0).toUpperCase() + nextExercise.difficulty.slice(1)}</Text>
+                    </View>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.nextExerciseTitle}>{nextExercise.title}</Text>
-                    <Text style={styles.nextExerciseMeta}>{nextExercise.durationMinutes} min  {nextExercise.difficulty}</Text>
-                  </View>
-                  <Feather name="chevron-right" size={18} color="rgba(255,255,255,0.5)" />
-                </TouchableOpacity>
+                  <Text style={styles.nextExercisePromise}>
+                    {NEXT_EXERCISE_BODY_PROMISE[nextExercise.category] || 'Continues building your interoceptive awareness through targeted nervous system training.'}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.nextExerciseStartBtn}
+                    onPress={() => router.replace(`/exercise/${nextExercise.id}`)}
+                    activeOpacity={0.85}
+                  >
+                    <Feather name="play" size={14} color={Colors.primary} />
+                    <Text style={styles.nextExerciseStartText}>Begin</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
 
@@ -1162,32 +1183,57 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   nextExerciseCard: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    gap: 12,
+  },
+  nextExerciseCardTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 14,
-    padding: 14,
     gap: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   nextExerciseIcon: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   nextExerciseTitle: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 15,
     color: '#fff',
   },
   nextExerciseMeta: {
     fontFamily: 'Nunito_400Regular',
     fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.55)',
     marginTop: 2,
+  },
+  nextExercisePromise: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.75)',
+    lineHeight: 19,
+    paddingHorizontal: 2,
+  },
+  nextExerciseStartBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    paddingVertical: 11,
+    marginTop: 2,
+  },
+  nextExerciseStartText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 14,
+    color: Colors.primary,
   },
   doneButton: {
     backgroundColor: '#fff',
