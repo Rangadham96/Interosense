@@ -44,27 +44,57 @@ const EVIDENCE_LABELS: Record<string, { label: string; bg: string }> = {
 };
 
 const CATEGORY_SCIENCE_REFLECTIONS: Record<string, string> = {
-  heartbeat: 'Your insular cortex has been actively processing cardiac signals during this session. Research shows this strengthens the brain-heart connection that underlies emotional awareness.',
-  breathing: 'Your vagus nerve has been stimulated through this practice. Each slow exhale activated your parasympathetic system, reducing cortisol and increasing heart rate variability.',
-  bodyScanning: 'You have just completed a systematic interoceptive map of your body. The insular cortex processes each region you attended to, building a more precise internal body model.',
-  tension: 'By noticing and releasing tension, you have engaged your proprioceptive and interoceptive systems together. This integration is what makes somatic practices so powerful for stress.',
-  temperature: 'Thermal interoception engages your trigeminal nerve and insular cortex simultaneously. Developing this sensitivity improves all forms of body awareness.',
-  exposure: 'Controlled exposure to uncomfortable sensations builds distress tolerance. Your amygdala has learned, just slightly, that these signals are safe to feel.',
-  gut: 'The enteric nervous system you just connected with contains 500 million neurons. You have strengthened the gut-brain axis, a direct pathway to mood regulation.',
-  movement: 'Mindful movement engages proprioceptive receptors throughout your body, feeding rich sensory information to your cerebellum and insula simultaneously.',
+  heartbeat: 'Your insular cortex (the brain region that bridges body signals and conscious emotion) has been actively processing your cardiac rhythm. Research shows this strengthens the brain-heart connection underlying emotional awareness and decision-making.',
+  breathing: 'Your vagus nerve (the nerve connecting brain, heart, lungs, and gut) has been stimulated through this practice. Each slow exhale activated your parasympathetic system (your rest-and-recover mode), reducing cortisol and increasing heart rate variability (HRV), a measure of nervous system flexibility.',
+  bodyScanning: 'You have just completed a systematic interoceptive sweep of your body. Your insular cortex (the brain region that builds your internal body map) processed each region you attended to, creating a more precise model of your body from the inside.',
+  tension: 'By noticing and releasing tension, you engaged your proprioceptive system (sense of body position) and your interoceptive system (sense of internal signals) together. This integration is what gives somatic (body-based) practices their power over stress.',
+  temperature: 'Thermal sensing activates your trigeminal nerve (the nerve serving your face and sinuses) alongside your insular cortex (your internal body-mapping region). Developing this sensitivity sharpens all other forms of body awareness.',
+  exposure: 'Controlled exposure to uncomfortable sensations builds distress tolerance. Your amygdala (the brain\'s threat-detection center) has learned, just slightly, that these sensations are safe to feel rather than signals to escape from.',
+  gut: 'The enteric nervous system (your gut\'s own brain, containing 500 million neurons) that you just connected with produces 95% of the body\'s serotonin. You have strengthened the gut-brain axis, a direct two-way pathway to mood regulation.',
+  movement: 'Mindful movement engages proprioceptive receptors (sensors in your muscles, joints, and tendons) throughout your body, feeding rich positional data to your cerebellum (your movement coordinator) and insular cortex (your internal body mapper) at the same time.',
 };
 
-const NEXT_EXERCISE_BODY_PROMISE: Record<string, string> = {
-  heartbeat: 'Builds the brain-heart pathway underlying emotional clarity. Each session measurably strengthens your insular cortex.',
-  breathing: 'Stimulates your vagus nerve, dropping cortisol and raising heart rate variability within minutes of starting.',
-  bodyScanning: 'Expands your internal body map through systematic insula training. MRI studies show cortical thickening after 8 weeks.',
-  tension: 'Releases nervous system tension stored in your muscles and restores autonomic balance through somatic integration.',
-  temperature: 'Develops thermal interoceptive sensitivity by activating your trigeminal nerve, calming sympathetic arousal.',
-  exposure: 'Grows your distress tolerance by teaching your amygdala, through direct experience, that body signals are safe.',
-  gut: 'Strengthens the gut-brain axis: 500 million enteric neurons firing information directly into your mood regulation system.',
-  movement: 'Combines proprioceptive and interoceptive processing simultaneously, feeding the cerebellum and insula at once.',
-  nervousSystem: 'Trains vagal regulation and autonomic balance through evidence-based parasympathetic activation techniques.',
-  traumaInformed: 'Builds somatic safety within your window of tolerance, using titrated exposure to neutral body areas first.',
+const SCIENCE_PROGRESSION: Record<string, { category: string; bridge: string }> = {
+  heartbeat: {
+    category: 'bodyScanning',
+    bridge: 'Cardiac sensing activates your insular cortex (the brain region that processes body signals and emotion). Body scanning extends that same activation to every region of your body, building a full internal map.',
+  },
+  breathing: {
+    category: 'heartbeat',
+    bridge: 'You just trained your breath to regulate your nervous system. Now sense your heartbeat directly: the signal your breath was calming. This completes the loop between breath and heart.',
+  },
+  bodyScanning: {
+    category: 'tension',
+    bridge: 'You have mapped your body systematically. The next step is to locate the tension patterns within that map and learn to release them, turning awareness into active self-regulation.',
+  },
+  tension: {
+    category: 'movement',
+    bridge: 'You released stored tension from your nervous system. Movement practice integrates that release through proprioception (your sense of body position in space), making the effect more lasting.',
+  },
+  temperature: {
+    category: 'bodyScanning',
+    bridge: 'Thermal sensing is one interoceptive channel. Body scanning trains all channels together, deepening your interoceptive vocabulary well beyond temperature.',
+  },
+  exposure: {
+    category: 'breathing',
+    bridge: 'Exposure exercises safely activate your amygdala (the brain\'s threat-detection center). Breathwork is the clinical next step: it stimulates your vagus nerve (the calming nerve), bringing arousal back down.',
+  },
+  gut: {
+    category: 'breathing',
+    bridge: 'Your vagus nerve (the communication highway between brain, heart, and gut) carries 80% of its signals upward from gut to brain. Breathwork directly stimulates it, strengthening that gut-brain connection.',
+  },
+  movement: {
+    category: 'bodyScanning',
+    bridge: 'Movement engages your proprioceptive system (your sense of where your body is in space). Body scanning captures the rich interoceptive signals generated by that activation.',
+  },
+  nervousSystem: {
+    category: 'breathing',
+    bridge: 'Vagal tone (the strength of your calming nerve signal) is built primarily through breath. This next practice deepens the parasympathetic (rest-and-recover) state you began training just now.',
+  },
+  traumaInformed: {
+    category: 'temperature',
+    bridge: 'Trauma-informed work builds safety through neutral body contact. Temperature awareness continues that approach through a gentle, non-threatening interoceptive channel.',
+  },
 };
 
 function formatTime(seconds: number): string {
@@ -120,9 +150,19 @@ export default function ExerciseSessionScreen() {
 
   const nextExercise = useMemo(() => {
     if (!exercise) return null;
+    const progression = SCIENCE_PROGRESSION[exercise.category];
+    if (progression) {
+      const candidates = EXERCISES.filter(e => e.category === progression.category && e.id !== exercise.id);
+      if (candidates.length > 0) return candidates[0];
+    }
     const sameCategory = EXERCISES.filter(e => e.category === exercise.category && e.id !== exercise.id);
-    if (sameCategory.length > 0) return sameCategory[Math.floor(Math.random() * sameCategory.length)];
-    return EXERCISES[Math.floor(Math.random() * EXERCISES.length)];
+    if (sameCategory.length > 0) return sameCategory[0];
+    return EXERCISES.find(e => e.id !== exercise.id) ?? null;
+  }, [exercise]);
+
+  const nextExerciseBridge = useMemo(() => {
+    if (!exercise) return null;
+    return SCIENCE_PROGRESSION[exercise.category]?.bridge ?? null;
   }, [exercise]);
 
   const newAchievements = useMemo(() => {
@@ -470,7 +510,7 @@ export default function ExerciseSessionScreen() {
                     </View>
                   </View>
                   <Text style={styles.nextExercisePromise}>
-                    {NEXT_EXERCISE_BODY_PROMISE[nextExercise.category] || 'Continues building your interoceptive awareness through targeted nervous system training.'}
+                    {nextExerciseBridge || 'Continues building your interoceptive awareness through targeted nervous system training.'}
                   </Text>
                   <TouchableOpacity
                     style={styles.nextExerciseStartBtn}

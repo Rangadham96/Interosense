@@ -1,1 +1,2 @@
 - [Em dash ban](em-dash-ban.md) — NEVER use — in any user-facing string; use period/comma/colon instead. Owner confirmed this is permanent.
+- [Science progression engine](science-progression.md) — next exercise is deterministic, not random; each category has a science-based next step with a bridge explanation.
