@@ -73,3 +73,9 @@ ensurePreviewReachable = "/status"
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 120000
+
+[userenv]
+
+[userenv.shared]
+GOOGLE_CLIENT_ID = "786999856192-s1f4bdvldapk2ekocuucl4lactch70nh.apps.googleusercontent.com"
+EXPO_PUBLIC_GOOGLE_CLIENT_ID = "786999856192-s1f4bdvldapk2ekocuucl4lactch70nh.apps.googleusercontent.com"

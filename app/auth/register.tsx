@@ -34,7 +34,7 @@ const TRUST_ITEMS = [
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { register, loginWithSocial } = useAuth();
+  const { register, loginWithSocial, refreshUser } = useAuth();
   const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
 
   const [name, setName] = useState('');
@@ -54,7 +54,8 @@ export default function RegisterScreen() {
     }
   }, []);
 
-  const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
+  // ── Native Google (expo-auth-session) ──
+  const [, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
     webClientId: GOOGLE_CLIENT_ID || 'not-configured',
     iosClientId: GOOGLE_CLIENT_ID,
     androidClientId: GOOGLE_CLIENT_ID,
@@ -64,12 +65,12 @@ export default function RegisterScreen() {
     if (googleResponse?.type === 'success') {
       const auth = googleResponse.authentication;
       if (auth?.accessToken) {
-        handleGoogleToken(auth.accessToken, auth.idToken ?? undefined);
+        handleNativeGoogleToken(auth.accessToken, auth.idToken ?? undefined);
       }
     }
   }, [googleResponse]);
 
-  const handleGoogleToken = async (accessToken: string, idToken?: string) => {
+  const handleNativeGoogleToken = async (accessToken: string, idToken?: string) => {
     setLoading(true);
     setError('');
     const result = await loginWithSocial({ provider: 'google', accessToken, idToken });
@@ -79,10 +80,78 @@ export default function RegisterScreen() {
     }
   };
 
+  // ── Web Google (Identity Services, no client secret needed) ──
+  const gsiReady = React.useRef(false);
+
+  const initGSI = React.useCallback(() => {
+    if (typeof window === 'undefined' || !(window as any).google?.accounts?.id) return;
+    if (gsiReady.current) return;
+    gsiReady.current = true;
+    (window as any).google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID!,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+      callback: async (resp: { credential: string }) => {
+        setLoading(true);
+        setError('');
+        try {
+          const res = await fetch('/api/auth/google/verify', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ credential: resp.credential }),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            await refreshUser();
+            router.replace('/');
+          } else {
+            setError(data.message || 'Google sign-in failed.');
+          }
+        } catch {
+          setError('Google sign-in failed. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+    const container = document.getElementById('__gsi_register');
+    if (container) {
+      (window as any).google.accounts.id.renderButton(container, {
+        type: 'icon', size: 'large', theme: 'outline',
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !GOOGLE_CLIENT_ID) return;
+    if ((window as any).google?.accounts?.id) {
+      initGSI();
+    } else {
+      const existing = document.getElementById('__gsi_script');
+      if (!existing) {
+        const s = document.createElement('script');
+        s.id = '__gsi_script';
+        s.src = 'https://accounts.google.com/gsi/client';
+        s.async = true;
+        s.onload = initGSI;
+        document.head.appendChild(s);
+      } else {
+        existing.addEventListener('load', initGSI);
+      }
+    }
+  }, [initGSI]);
+
   const handleGoogleSignIn = async () => {
     setError('');
     if (Platform.OS === 'web') {
-      window.location.href = '/api/auth/google';
+      const btn = document.querySelector('#__gsi_register [role="button"], #__gsi_register button') as HTMLElement | null;
+      if (btn) { btn.click(); return; }
+      if ((window as any).google?.accounts?.id) {
+        (window as any).google.accounts.id.prompt();
+      } else {
+        setError('Google sign-in is loading. Please try again in a moment.');
+      }
       return;
     }
     if (!GOOGLE_CLIENT_ID) {
@@ -180,6 +249,11 @@ export default function RegisterScreen() {
                 <Feather name="alert-circle" size={16} color="#C62828" />
                 <Text style={styles.errorText}>{error}</Text>
               </View>
+            ) : null}
+
+            {/* Hidden GSI button container — rendered off-screen, clicked programmatically on web */}
+            {Platform.OS === 'web' && GOOGLE_CLIENT_ID ? (
+              <View nativeID="__gsi_register" style={{ position: 'absolute', top: -1000, left: -1000, width: 50, height: 50 }} />
             ) : null}
 
             {(Platform.OS === 'web' || GOOGLE_CLIENT_ID) ? (
