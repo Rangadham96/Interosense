@@ -169,6 +169,9 @@ export const Storage = {
   async clearBodyMarks(): Promise<void> {
     await setJSON(KEYS.BODY_MARKS, []);
   },
+  async setBodyMarks(marks: BodyMark[]): Promise<void> {
+    await setJSON(KEYS.BODY_MARKS, marks);
+  },
 
   async getGoals(): Promise<Goal[]> {
     return getJSON<Goal[]>(KEYS.GOALS, []);
@@ -199,6 +202,10 @@ export const Storage = {
     }
   },
 
+  async setBookmarks(bookmarks: string[]): Promise<void> {
+    await setJSON(KEYS.BOOKMARKS, bookmarks);
+  },
+
   async getArticlesRead(): Promise<string[]> {
     return getJSON<string[]>(KEYS.ARTICLES_READ, []);
   },
@@ -208,6 +215,10 @@ export const Storage = {
       read.push(articleId);
       await setJSON(KEYS.ARTICLES_READ, read);
     }
+  },
+
+  async setArticlesRead(ids: string[]): Promise<void> {
+    await setJSON(KEYS.ARTICLES_READ, ids);
   },
 
   async getSettings(): Promise<AppSettings> {
@@ -245,6 +256,10 @@ export const Storage = {
   },
   async setWearableData(data: WearableDataPoint[]): Promise<void> {
     await setJSON(KEYS.WEARABLE_DATA, data);
+  },
+
+  async setExerciseBookmarks(ids: string[]): Promise<void> {
+    await setJSON(KEYS.EXERCISE_BOOKMARKS, ids);
   },
 
   async getExerciseBookmarks(): Promise<string[]> {

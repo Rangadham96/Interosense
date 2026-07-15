@@ -49,6 +49,7 @@ export interface ServerSyncData {
   sessions: any[];
   checkins: any[];
   assessments: any[];
+  preferences: Record<string, unknown>;
 }
 
 interface AuthContextValue {
@@ -102,24 +103,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchServerData = useCallback(async (): Promise<ServerSyncData | null> => {
     try {
-      const [sessRes, checkRes, assessRes] = await Promise.all([
+      const [sessRes, checkRes, assessRes, prefsRes] = await Promise.all([
         apiCall('/api/sessions'),
         apiCall('/api/checkins'),
         apiCall('/api/assessments'),
+        apiCall('/api/user/preferences'),
       ]);
 
       if (!sessRes.ok || !checkRes.ok || !assessRes.ok) return null;
 
-      const [sessData, checkData, assessData] = await Promise.all([
+      const [sessData, checkData, assessData, prefsData] = await Promise.all([
         sessRes.json(),
         checkRes.json(),
         assessRes.json(),
+        prefsRes.ok ? prefsRes.json() : Promise.resolve({ preferences: {} }),
       ]);
 
       return {
         sessions: sessData.sessions ?? [],
         checkins: checkData.checkins ?? [],
         assessments: assessData.assessments ?? [],
+        preferences: prefsData.preferences ?? {},
       };
     } catch {
       return null;

@@ -19,6 +19,8 @@ import {
   getTodayInsight,
   saveInsight,
   getExercisePracticeCounts,
+  getUserPreferences,
+  setUserPreferences,
 } from "./storage";
 import { storage } from "./storage";
 import { generateInsight } from "./advisor";
@@ -197,6 +199,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get assessments error:", error);
       return res.status(500).json({ message: "Failed to load assessments" });
+    }
+  });
+
+  app.get("/api/user/preferences", async (req: Request, res: Response) => {
+    if (!req.session.userId) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const preferences = await getUserPreferences(req.session.userId);
+      return res.status(200).json({ preferences: preferences ?? {} });
+    } catch (error) {
+      console.error("Get preferences error:", error);
+      return res.status(500).json({ message: "Failed to load preferences" });
+    }
+  });
+
+  app.put("/api/user/preferences", async (req: Request, res: Response) => {
+    if (!req.session.userId) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      await setUserPreferences(req.session.userId, req.body);
+      return res.status(200).json({ ok: true });
+    } catch (error) {
+      console.error("Set preferences error:", error);
+      return res.status(500).json({ message: "Failed to save preferences" });
     }
   });
 

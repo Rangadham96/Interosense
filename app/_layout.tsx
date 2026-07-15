@@ -65,6 +65,7 @@ function AuthGate() {
             sessions: data.sessions,
             checkins: data.checkins,
             assessments,
+            preferences: data.preferences,
           });
         }
       });

@@ -60,6 +60,15 @@ export class DatabaseStorage implements IStorage {
 
 export const storage = new DatabaseStorage();
 
+export async function getUserPreferences(userId: string): Promise<Record<string, unknown> | null> {
+  const [row] = await db.select({ preferences: users.preferences }).from(users).where(eq(users.id, userId));
+  return row?.preferences ?? null;
+}
+
+export async function setUserPreferences(userId: string, preferences: Record<string, unknown>): Promise<void> {
+  await db.update(users).set({ preferences, updatedAt: new Date() }).where(eq(users.id, userId));
+}
+
 export async function createSession(data: Omit<ExerciseSession, "createdAt">): Promise<ExerciseSession> {
   const [session] = await db.insert(exerciseSessions).values(data).returning();
   return session;

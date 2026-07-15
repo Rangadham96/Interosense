@@ -25,6 +25,7 @@ export const users = pgTable("users", {
   razorpaySubscriptionId: text("razorpay_subscription_id"),
   interoceptiveBaseline: jsonb("interoceptive_baseline").$type<Record<string, string>>().default({}),
   onboardingPlan: jsonb("onboarding_plan").$type<Record<string, unknown>[]>().default([]),
+  preferences: jsonb("preferences").$type<Record<string, unknown>>(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

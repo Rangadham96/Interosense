@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react';
 import { Storage, UserProfile, SessionRecord, CheckinRecord, BodyMark, Goal, AppSettings, AssessmentRecord, WearableDataPoint } from '@/lib/storage';
+import { apiPut } from '@/lib/api';
 import { getUnlockedAchievements } from '@/constants/achievements';
 import { generateAdvisorState, AdvisorState } from '@/lib/personalization-engine';
 import { format, isToday, isYesterday, differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
@@ -47,7 +48,7 @@ interface AppActions {
   updateProfile: (profile: UserProfile) => Promise<void>;
   toggleExerciseBookmark: (exerciseId: string) => Promise<void>;
   refresh: () => Promise<void>;
-  hydrateFromServer: (data: { sessions?: SessionRecord[]; checkins?: CheckinRecord[]; assessments?: AssessmentRecord[] }) => void;
+  hydrateFromServer: (data: { sessions?: SessionRecord[]; checkins?: CheckinRecord[]; assessments?: AssessmentRecord[]; preferences?: Record<string, unknown> }) => void;
   clearActivityData: () => Promise<void>;
   markOnboardingComplete: () => Promise<void>;
 }
@@ -223,6 +224,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setOnboardingComplete(true);
   }, []);
 
+  const defaultSettings: AppSettings = { darkMode: false, notifications: true, reminderTime: '09:00', reducedMotion: false, fontSize: 'medium' };
+
+  const prefsRef = useRef<{
+    goals: Goal[];
+    bodyMarks: BodyMark[];
+    bookmarks: string[];
+    exerciseBookmarks: string[];
+    articlesRead: string[];
+    settings: AppSettings;
+  }>({ goals: [], bodyMarks: [], bookmarks: [], exerciseBookmarks: [], articlesRead: [], settings: defaultSettings });
+
+  useEffect(() => {
+    prefsRef.current = { goals, bodyMarks, bookmarks, exerciseBookmarks, articlesRead, settings };
+  }, [goals, bodyMarks, bookmarks, exerciseBookmarks, articlesRead, settings]);
+
+  const syncPrefsToServer = useCallback(() => {
+    const { goals: g, bodyMarks: bm, bookmarks: ab, exerciseBookmarks: eb, articlesRead: ar, settings: st } = prefsRef.current;
+    apiPut('/api/user/preferences', { goals: g, bodyMarks: bm, articleBookmarks: ab, exerciseBookmarks: eb, articlesRead: ar, settings: st }).catch(() => {});
+  }, []);
+
   const addSession = useCallback(async (session: SessionRecord) => {
     await Storage.addSession(session);
     setSessions(prev => [...prev, session]);
@@ -234,41 +255,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addBodyMark = useCallback(async (mark: BodyMark) => {
+    const newMarks = [...prefsRef.current.bodyMarks, mark];
+    prefsRef.current = { ...prefsRef.current, bodyMarks: newMarks };
+    setBodyMarks(newMarks);
     await Storage.addBodyMark(mark);
-    setBodyMarks(prev => [...prev, mark]);
-  }, []);
+    syncPrefsToServer();
+  }, [syncPrefsToServer]);
 
   const clearBodyMarks = useCallback(async () => {
-    await Storage.clearBodyMarks();
+    prefsRef.current = { ...prefsRef.current, bodyMarks: [] };
     setBodyMarks([]);
-  }, []);
+    await Storage.clearBodyMarks();
+    syncPrefsToServer();
+  }, [syncPrefsToServer]);
 
   const addGoal = useCallback(async (goal: Goal) => {
+    const newGoals = [...prefsRef.current.goals, goal];
+    prefsRef.current = { ...prefsRef.current, goals: newGoals };
+    setGoals(newGoals);
     await Storage.addGoal(goal);
-    setGoals(prev => [...prev, goal]);
-  }, []);
+    syncPrefsToServer();
+  }, [syncPrefsToServer]);
 
   const updateGoals = useCallback(async (newGoals: Goal[]) => {
-    await Storage.setGoals(newGoals);
+    prefsRef.current = { ...prefsRef.current, goals: newGoals };
     setGoals(newGoals);
-  }, []);
+    await Storage.setGoals(newGoals);
+    syncPrefsToServer();
+  }, [syncPrefsToServer]);
 
   const toggleBookmark = useCallback(async (articleId: string) => {
+    const cur = prefsRef.current.bookmarks;
+    const newBookmarks = cur.includes(articleId) ? cur.filter(id => id !== articleId) : [...cur, articleId];
+    prefsRef.current = { ...prefsRef.current, bookmarks: newBookmarks };
+    setBookmarks(newBookmarks);
     await Storage.toggleBookmark(articleId);
-    setBookmarks(prev =>
-      prev.includes(articleId) ? prev.filter(id => id !== articleId) : [...prev, articleId]
-    );
-  }, []);
+    syncPrefsToServer();
+  }, [syncPrefsToServer]);
 
   const markArticleRead = useCallback(async (articleId: string) => {
+    if (prefsRef.current.articlesRead.includes(articleId)) return;
+    const newRead = [...prefsRef.current.articlesRead, articleId];
+    prefsRef.current = { ...prefsRef.current, articlesRead: newRead };
+    setArticlesRead(newRead);
     await Storage.markArticleRead(articleId);
-    setArticlesRead(prev => prev.includes(articleId) ? prev : [...prev, articleId]);
-  }, []);
+    syncPrefsToServer();
+  }, [syncPrefsToServer]);
 
   const updateSettings = useCallback(async (newSettings: AppSettings) => {
-    await Storage.setSettings(newSettings);
+    prefsRef.current = { ...prefsRef.current, settings: newSettings };
     setSettings(newSettings);
-  }, []);
+    await Storage.setSettings(newSettings);
+    syncPrefsToServer();
+  }, [syncPrefsToServer]);
 
   const addAssessment = useCallback(async (assessment: AssessmentRecord) => {
     await Storage.addAssessment(assessment);
@@ -286,13 +325,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleExerciseBookmarkCb = useCallback(async (exerciseId: string) => {
+    const cur = prefsRef.current.exerciseBookmarks;
+    const newBookmarks = cur.includes(exerciseId) ? cur.filter(id => id !== exerciseId) : [...cur, exerciseId];
+    prefsRef.current = { ...prefsRef.current, exerciseBookmarks: newBookmarks };
+    setExerciseBookmarks(newBookmarks);
     await Storage.toggleExerciseBookmark(exerciseId);
-    setExerciseBookmarks(prev =>
-      prev.includes(exerciseId) ? prev.filter(id => id !== exerciseId) : [...prev, exerciseId]
-    );
-  }, []);
+    syncPrefsToServer();
+  }, [syncPrefsToServer]);
 
-  const hydrateFromServer = useCallback((data: { sessions?: SessionRecord[]; checkins?: CheckinRecord[]; assessments?: AssessmentRecord[] }) => {
+  const hydrateFromServer = useCallback((data: { sessions?: SessionRecord[]; checkins?: CheckinRecord[]; assessments?: AssessmentRecord[]; preferences?: Record<string, unknown> }) => {
     if (data.sessions !== undefined) {
       setSessions(data.sessions);
       Storage.setSessions(data.sessions).catch(() => {});
@@ -305,13 +346,60 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setAssessments(data.assessments);
       Storage.setAssessments(data.assessments).catch(() => {});
     }
+    if (data.preferences) {
+      const p = data.preferences;
+      if (Array.isArray(p.goals)) {
+        const vals = p.goals as Goal[];
+        setGoals(vals);
+        prefsRef.current = { ...prefsRef.current, goals: vals };
+        Storage.setGoals(vals).catch(() => {});
+      }
+      if (Array.isArray(p.bodyMarks)) {
+        const vals = p.bodyMarks as BodyMark[];
+        setBodyMarks(vals);
+        prefsRef.current = { ...prefsRef.current, bodyMarks: vals };
+        Storage.setBodyMarks(vals).catch(() => {});
+      }
+      if (Array.isArray(p.articleBookmarks)) {
+        const vals = p.articleBookmarks as string[];
+        setBookmarks(vals);
+        prefsRef.current = { ...prefsRef.current, bookmarks: vals };
+        Storage.setBookmarks(vals).catch(() => {});
+      }
+      if (Array.isArray(p.exerciseBookmarks)) {
+        const vals = p.exerciseBookmarks as string[];
+        setExerciseBookmarks(vals);
+        prefsRef.current = { ...prefsRef.current, exerciseBookmarks: vals };
+        Storage.setExerciseBookmarks(vals).catch(() => {});
+      }
+      if (Array.isArray(p.articlesRead)) {
+        const vals = p.articlesRead as string[];
+        setArticlesRead(vals);
+        prefsRef.current = { ...prefsRef.current, articlesRead: vals };
+        Storage.setArticlesRead(vals).catch(() => {});
+      }
+      if (p.settings && typeof p.settings === 'object') {
+        const vals = p.settings as AppSettings;
+        setSettings(vals);
+        prefsRef.current = { ...prefsRef.current, settings: vals };
+        Storage.setSettings(vals).catch(() => {});
+      }
+    }
   }, []);
 
   const clearActivityData = useCallback(async () => {
     await Storage.clearActivityData();
+    const emptySettings: AppSettings = { darkMode: false, notifications: true, reminderTime: '09:00', reducedMotion: false, fontSize: 'medium' };
     setSessions([]);
     setCheckins([]);
     setAssessments([]);
+    setGoals([]);
+    setBodyMarks([]);
+    setBookmarks([]);
+    setExerciseBookmarks([]);
+    setArticlesRead([]);
+    setSettings(emptySettings);
+    prefsRef.current = { goals: [], bodyMarks: [], bookmarks: [], exerciseBookmarks: [], articlesRead: [], settings: emptySettings };
   }, []);
 
   const value = useMemo<AppContextValue>(() => ({

@@ -43,6 +43,16 @@ export async function apiPostJson<T = unknown>(path: string, body: unknown): Pro
   return res.json() as Promise<T>;
 }
 
+export async function apiGetJson<T = unknown>(path: string): Promise<T> {
+  const base = getApiBase();
+  const res = await fetch(`${base}${path}`, { credentials: 'include' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`GET ${path} failed (${res.status}): ${text}`);
+  }
+  return res.json() as Promise<T>;
+}
+
 export async function apiPut(path: string, body: unknown): Promise<void> {
   const base = getApiBase();
   const res = await fetch(`${base}${path}`, {
