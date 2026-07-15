@@ -25,8 +25,8 @@ import {
 SplashScreen.preventAutoHideAsync();
 
 function AuthGate() {
-  const { isAuthenticated, isLoading, fetchServerData } = useAuth();
-  const { hydrateFromServer, clearActivityData } = useApp();
+  const { isAuthenticated, isLoading, fetchServerData, user } = useAuth();
+  const { hydrateFromServer, clearActivityData, markOnboardingComplete } = useApp();
   const segments = useSegments();
   const router = useRouter();
   const prevAuthRef = useRef<boolean | null>(null);
@@ -68,6 +68,11 @@ function AuthGate() {
           });
         }
       });
+      // If the server user has already completed onboarding (experienceLevel is set),
+      // mark it complete locally so we never redirect them to onboarding again.
+      if (user?.experienceLevel) {
+        markOnboardingComplete();
+      }
     }
 
     if (!isNowAuthenticated && wasAuthenticated === true) {

@@ -49,6 +49,7 @@ interface AppActions {
   refresh: () => Promise<void>;
   hydrateFromServer: (data: { sessions?: SessionRecord[]; checkins?: CheckinRecord[]; assessments?: AssessmentRecord[] }) => void;
   clearActivityData: () => Promise<void>;
+  markOnboardingComplete: () => Promise<void>;
 }
 
 type AppContextValue = AppState & AppActions;
@@ -217,6 +218,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setProfile(prof);
   }, []);
 
+  const markOnboardingComplete = useCallback(async () => {
+    await Storage.setOnboardingComplete();
+    setOnboardingComplete(true);
+  }, []);
+
   const addSession = useCallback(async (session: SessionRecord) => {
     await Storage.addSession(session);
     setSessions(prev => [...prev, session]);
@@ -350,6 +356,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     refresh: loadData,
     hydrateFromServer,
     clearActivityData,
+    markOnboardingComplete,
   }), [
     isLoading, onboardingComplete, profile, sessions, checkins, bodyMarks, goals,
     bookmarks, exerciseBookmarks, articlesRead, settings, assessments, wearableData, unlockedAchievements,
@@ -358,7 +365,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     completeOnboarding, addSession, addCheckin, addBodyMark, clearBodyMarks,
     addGoal, updateGoals, toggleBookmark, markArticleRead, updateSettings,
     addAssessment, addWearableDataCb, updateProfile, toggleExerciseBookmarkCb, loadData,
-    hydrateFromServer, clearActivityData,
+    hydrateFromServer, clearActivityData, markOnboardingComplete,
   ]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
