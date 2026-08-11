@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { storage, createResetToken, getResetToken, markTokenUsed } from "./storage";
+import { z } from "zod";
 import { loginSchema, registerSchema } from "../shared/schema";
 
 // ── Apple JWT verification ─────────────────────────────────────────────────
@@ -253,6 +254,109 @@ router.put("/api/auth/profile", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Profile update error:", error);
     return res.status(500).json({ message: "Something went wrong" });
+  }
+});
+
+// ── Change email (authenticated) ────────────────────────────────────────────
+router.post("/api/auth/change-email", async (req: Request, res: Response) => {
+  try {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const { newEmail, currentPassword } = req.body as { newEmail?: string; currentPassword?: string };
+
+    const emailCheck = z.string().email().safeParse((newEmail || "").trim());
+    if (!emailCheck.success) {
+      return res.status(400).json({ message: "Please enter a valid email address." });
+    }
+    const normalizedEmail = emailCheck.data.toLowerCase();
+
+    const user = await storage.getUser(req.session.userId);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    if (!user.password) {
+      const providerName = user.provider === "google" ? "Google" : user.provider === "apple" ? "Apple" : "your sign-in provider";
+      return res.status(400).json({ message: `Your email is managed by ${providerName} and cannot be changed here.` });
+    }
+
+    if (!currentPassword || typeof currentPassword !== "string") {
+      return res.status(400).json({ message: "Please enter your current password." });
+    }
+
+    const validPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ message: "Incorrect password. Please try again." });
+    }
+
+    if (normalizedEmail === user.email.toLowerCase()) {
+      return res.status(400).json({ message: "This is already your email address." });
+    }
+
+    const existing = await storage.getUserByEmail(normalizedEmail);
+    if (existing && existing.id !== user.id) {
+      return res.status(409).json({ message: "An account with this email already exists." });
+    }
+
+    const updated = await storage.updateUser(user.id, { email: normalizedEmail });
+    if (!updated) {
+      return res.status(500).json({ message: "Something went wrong. Please try again." });
+    }
+
+    const { password: _, ...safeUser } = updated;
+    return res.status(200).json({ user: safeUser });
+  } catch (error) {
+    console.error("Change email error:", error);
+    return res.status(500).json({ message: "Something went wrong. Please try again." });
+  }
+});
+
+// ── Change password (authenticated) ─────────────────────────────────────────
+router.post("/api/auth/change-password", async (req: Request, res: Response) => {
+  try {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const { currentPassword, newPassword } = req.body as { currentPassword?: string; newPassword?: string };
+
+    const user = await storage.getUser(req.session.userId);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    if (!user.password) {
+      const providerName = user.provider === "google" ? "Google" : user.provider === "apple" ? "Apple" : "your sign-in provider";
+      return res.status(400).json({ message: `Your account is managed by ${providerName} and has no password to change.` });
+    }
+
+    if (!currentPassword || typeof currentPassword !== "string") {
+      return res.status(400).json({ message: "Please enter your current password." });
+    }
+
+    // Same strength rule as registration (registerSchema: min 6)
+    if (!newPassword || typeof newPassword !== "string" || newPassword.length < 6) {
+      return res.status(400).json({ message: "New password must be at least 6 characters." });
+    }
+
+    const validPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ message: "Incorrect current password. Please try again." });
+    }
+
+    if (newPassword === currentPassword) {
+      return res.status(400).json({ message: "New password must be different from your current password." });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await storage.updateUser(user.id, { password: hashedPassword });
+
+    return res.status(200).json({ message: "Password updated successfully." });
+  } catch (error) {
+    console.error("Change password error:", error);
+    return res.status(500).json({ message: "Something went wrong. Please try again." });
   }
 });
 

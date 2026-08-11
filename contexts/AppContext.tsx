@@ -322,6 +322,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const updateProfile = useCallback(async (prof: UserProfile) => {
     await Storage.setUserProfile(prof);
     setProfile(prof);
+    // Persist profile fields to the server so they survive reinstall / other devices.
+    // Errors surface in console but do not block the local update.
+    apiPut('/api/auth/profile', {
+      name: prof.name,
+      conditions: prof.conditions,
+      experienceLevel: prof.experienceLevel,
+      goals: prof.goals,
+      dailyMinutes: String(prof.dailyMinutes),
+      gender: prof.gender ?? null,
+      dateOfBirth: prof.dateOfBirth ?? null,
+      bio: prof.bio ?? null,
+      profileImage: prof.profileImage ?? null,
+    }).catch((e) => console.error('Profile server sync failed:', e));
   }, []);
 
   const toggleExerciseBookmarkCb = useCallback(async (exerciseId: string) => {

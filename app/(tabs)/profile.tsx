@@ -217,6 +217,7 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>Profile Details</Text>
           <View style={styles.card}>
             <ProfileInfoRow label="Name" value={profile?.name || ''} />
+            <ProfileInfoRow label="Email" value={user?.email || ''} />
             <ProfileInfoRow label="Experience" value={profile?.experienceLevel ? profile.experienceLevel.charAt(0).toUpperCase() + profile.experienceLevel.slice(1) : ''} />
             <ProfileInfoRow label="Member Since" value={sessions.length > 0 ? format(new Date(sessions.reduce((earliest, s) => s.completedAt < earliest ? s.completedAt : earliest, sessions[0].completedAt)), 'MMMM yyyy') : 'Today'} />
             <ProfileInfoRow label="Total Practice Time" value={`${totalMinutes} min`} />

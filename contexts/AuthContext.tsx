@@ -61,6 +61,8 @@ interface AuthContextValue {
   loginWithSocial: (payload: { provider: string; idToken?: string; accessToken?: string; name?: string; email?: string }) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   updateAuthProfile: (data: Partial<AuthUser>) => Promise<{ success: boolean; message?: string }>;
+  changeEmail: (newEmail: string, currentPassword: string) => Promise<{ success: boolean; message?: string }>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message?: string }>;
   refreshUser: () => Promise<void>;
   fetchServerData: () => Promise<ServerSyncData | null>;
 }
@@ -206,6 +208,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const changeEmail = useCallback(async (newEmail: string, currentPassword: string) => {
+    try {
+      const response = await apiCall('/api/auth/change-email', {
+        method: 'POST',
+        body: JSON.stringify({ newEmail, currentPassword }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUser(data.user);
+        return { success: true };
+      }
+      return { success: false, message: data.message || 'Could not change email' };
+    } catch {
+      return { success: false, message: 'Network error. Please check your connection.' };
+    }
+  }, []);
+
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    try {
+      const response = await apiCall('/api/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        return { success: true };
+      }
+      return { success: false, message: data.message || 'Could not change password' };
+    } catch {
+      return { success: false, message: 'Network error. Please check your connection.' };
+    }
+  }, []);
+
   const value = useMemo<AuthContextValue>(() => ({
     user,
     isLoading,
@@ -215,9 +250,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loginWithSocial,
     logout,
     updateAuthProfile,
+    changeEmail,
+    changePassword,
     refreshUser,
     fetchServerData,
-  }), [user, isLoading, login, register, loginWithSocial, logout, updateAuthProfile, refreshUser, fetchServerData]);
+  }), [user, isLoading, login, register, loginWithSocial, logout, updateAuthProfile, changeEmail, changePassword, refreshUser, fetchServerData]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

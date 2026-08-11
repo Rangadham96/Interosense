@@ -18,6 +18,7 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Colors from '@/constants/colors';
 
 type GenderOption = 'male' | 'female' | 'non-binary' | 'prefer-not-to-say' | '';
@@ -44,7 +45,28 @@ function getDaysInMonth(month: number, year: number) {
 export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
   const { profile, updateProfile } = useApp();
+  const { user, changeEmail, changePassword } = useAuth();
   const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
+
+  // Social-login accounts have no password; email/password are provider-managed
+  const isSocialAccount = !!user && user.provider !== 'email' && user.provider !== null;
+  const providerLabel = user?.provider === 'google' ? 'Google' : user?.provider === 'apple' ? 'Apple' : 'your sign-in provider';
+
+  // Change email modal state
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [emailPassword, setEmailPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [emailSaving, setEmailSaving] = useState(false);
+
+  // Change password modal state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [successBanner, setSuccessBanner] = useState('');
 
   const [name, setName] = useState(profile?.name || '');
   const [gender, setGender] = useState<GenderOption>(profile?.gender || '');
@@ -123,6 +145,70 @@ export default function EditProfileScreen() {
     setShowDatePicker(false);
   };
 
+  const openEmailModal = () => {
+    setNewEmail('');
+    setEmailPassword('');
+    setEmailError('');
+    setShowEmailModal(true);
+  };
+
+  const handleChangeEmail = async () => {
+    setEmailError('');
+    const trimmed = newEmail.trim();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
+    if (!emailPassword) {
+      setEmailError('Please enter your current password.');
+      return;
+    }
+    setEmailSaving(true);
+    const result = await changeEmail(trimmed, emailPassword);
+    setEmailSaving(false);
+    if (result.success) {
+      setShowEmailModal(false);
+      setSuccessBanner('Email updated successfully.');
+      setTimeout(() => setSuccessBanner(''), 4000);
+    } else {
+      setEmailError(result.message || 'Could not change email.');
+    }
+  };
+
+  const openPasswordModal = () => {
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordError('');
+    setShowPasswordModal(true);
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError('');
+    if (!currentPassword) {
+      setPasswordError('Please enter your current password.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match.');
+      return;
+    }
+    setPasswordSaving(true);
+    const result = await changePassword(currentPassword, newPassword);
+    setPasswordSaving(false);
+    if (result.success) {
+      setShowPasswordModal(false);
+      setSuccessBanner('Password updated successfully.');
+      setTimeout(() => setSuccessBanner(''), 4000);
+    } else {
+      setPasswordError(result.message || 'Could not change password.');
+    }
+  };
+
   const handleSave = async () => {
     if (!profile) return;
     if (!name.trim()) {
@@ -184,6 +270,55 @@ export default function EditProfileScreen() {
           </View>
           <Text style={styles.avatarHint}>Tap to change photo</Text>
         </TouchableOpacity>
+
+        {successBanner ? (
+          <View style={styles.successBanner} testID="success-banner">
+            <Feather name="check-circle" size={16} color={Colors.success} />
+            <Text style={styles.successBannerText}>{successBanner}</Text>
+          </View>
+        ) : null}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <View style={styles.card}>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Email</Text>
+              <Text style={styles.textInput} testID="account-email">{user?.email || ''}</Text>
+            </View>
+            <View style={styles.fieldDivider} />
+            {isSocialAccount ? (
+              <View style={styles.fieldGroup}>
+                <Text style={styles.providerManagedText}>
+                  Your email and password are managed by {providerLabel}. To change them, update your {providerLabel} account.
+                </Text>
+              </View>
+            ) : (
+              <>
+                <TouchableOpacity
+                  style={styles.accountActionRow}
+                  onPress={openEmailModal}
+                  activeOpacity={0.6}
+                  testID="change-email-row"
+                >
+                  <Feather name="mail" size={18} color={Colors.primary} />
+                  <Text style={styles.accountActionLabel}>Change Email</Text>
+                  <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
+                </TouchableOpacity>
+                <View style={styles.fieldDivider} />
+                <TouchableOpacity
+                  style={styles.accountActionRow}
+                  onPress={openPasswordModal}
+                  activeOpacity={0.6}
+                  testID="change-password-row"
+                >
+                  <Feather name="lock" size={18} color={Colors.primary} />
+                  <Text style={styles.accountActionLabel}>Change Password</Text>
+                  <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Personal Information</Text>
@@ -279,6 +414,135 @@ export default function EditProfileScreen() {
 
         <View style={{ height: 60 }} />
       </ScrollView>
+
+      <Modal
+        visible={showEmailModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowEmailModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setShowEmailModal(false)}>
+                <Feather name="x" size={22} color={Colors.text} />
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Change Email</Text>
+              <View style={{ width: 22 }} />
+            </View>
+            <View style={styles.formContent}>
+              <Text style={styles.formHint}>
+                Current email: {user?.email}
+              </Text>
+              <Text style={styles.formLabel}>New email</Text>
+              <TextInput
+                style={styles.formInput}
+                value={newEmail}
+                onChangeText={setNewEmail}
+                placeholder="you@example.com"
+                placeholderTextColor={Colors.textTertiary}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoCorrect={false}
+                testID="new-email-input"
+              />
+              <Text style={styles.formLabel}>Current password</Text>
+              <TextInput
+                style={styles.formInput}
+                value={emailPassword}
+                onChangeText={setEmailPassword}
+                placeholder="Enter your password"
+                placeholderTextColor={Colors.textTertiary}
+                secureTextEntry
+                autoCapitalize="none"
+                testID="email-password-input"
+              />
+              {emailError ? (
+                <Text style={styles.formError} testID="email-error">{emailError}</Text>
+              ) : null}
+              <TouchableOpacity
+                style={[styles.formButton, emailSaving && styles.formButtonDisabled]}
+                onPress={handleChangeEmail}
+                disabled={emailSaving}
+                activeOpacity={0.8}
+                testID="submit-change-email"
+              >
+                <Text style={styles.formButtonText}>
+                  {emailSaving ? 'Updating...' : 'Update Email'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showPasswordModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPasswordModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setShowPasswordModal(false)}>
+                <Feather name="x" size={22} color={Colors.text} />
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Change Password</Text>
+              <View style={{ width: 22 }} />
+            </View>
+            <View style={styles.formContent}>
+              <Text style={styles.formLabel}>Current password</Text>
+              <TextInput
+                style={styles.formInput}
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                placeholder="Enter your current password"
+                placeholderTextColor={Colors.textTertiary}
+                secureTextEntry
+                autoCapitalize="none"
+                testID="current-password-input"
+              />
+              <Text style={styles.formLabel}>New password</Text>
+              <TextInput
+                style={styles.formInput}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="At least 6 characters"
+                placeholderTextColor={Colors.textTertiary}
+                secureTextEntry
+                autoCapitalize="none"
+                testID="new-password-input"
+              />
+              <Text style={styles.formLabel}>Confirm new password</Text>
+              <TextInput
+                style={styles.formInput}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Repeat new password"
+                placeholderTextColor={Colors.textTertiary}
+                secureTextEntry
+                autoCapitalize="none"
+                testID="confirm-password-input"
+              />
+              {passwordError ? (
+                <Text style={styles.formError} testID="password-error">{passwordError}</Text>
+              ) : null}
+              <TouchableOpacity
+                style={[styles.formButton, passwordSaving && styles.formButtonDisabled]}
+                onPress={handleChangePassword}
+                disabled={passwordSaving}
+                activeOpacity={0.8}
+                testID="submit-change-password"
+              >
+                <Text style={styles.formButtonText}>
+                  {passwordSaving ? 'Updating...' : 'Update Password'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={showDatePicker}
@@ -652,6 +916,90 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   gridItemTextSelected: {
+    color: '#FFFFFF',
+  },
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.success + '15',
+  },
+  successBannerText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 14,
+    color: Colors.success,
+    flex: 1,
+  },
+  accountActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  accountActionLabel: {
+    flex: 1,
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 15,
+    color: Colors.text,
+  },
+  providerManagedText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
+  },
+  formContent: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  formHint: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 14,
+  },
+  formLabel: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 6,
+    marginTop: 8,
+  },
+  formInput: {
+    fontFamily: 'Nunito_500Medium',
+    fontSize: 16,
+    color: Colors.text,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 6,
+  },
+  formError: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 13,
+    color: Colors.error,
+    marginTop: 8,
+  },
+  formButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 18,
+  },
+  formButtonDisabled: {
+    opacity: 0.6,
+  },
+  formButtonText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 16,
     color: '#FFFFFF',
   },
 });
