@@ -26,6 +26,7 @@ import { getExerciseById, EXERCISES, CATEGORY_INFO } from '@/constants/exercises
 import { useApp } from '@/contexts/AppContext';
 import { apiPost } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
+import { queryClient } from '@/lib/query-client';
 
 type SessionPhase = 'prestart' | 'active' | 'complete';
 
@@ -271,6 +272,7 @@ export default function ExerciseSessionScreen() {
     }
     try {
       await apiPost('/api/sessions', sessionData);
+      queryClient.invalidateQueries({ queryKey: ['/api/exercises/counts'] });
     } catch (e) {
       console.error('Failed to sync session to server:', e);
     }

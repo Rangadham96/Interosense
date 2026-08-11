@@ -19,6 +19,7 @@ import {
   getTodayInsight,
   saveInsight,
   getExercisePracticeCounts,
+  invalidateExercisePracticeCountsCache,
   getUserPreferences,
   setUserPreferences,
 } from "./storage";
@@ -92,6 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rating: rating ?? 0,
         notes: notes ?? "",
       });
+      invalidateExercisePracticeCountsCache();
       return res.status(201).json({ session });
     } catch (error) {
       console.error("Create session error:", error);

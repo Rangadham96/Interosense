@@ -178,6 +178,10 @@ export async function saveInsight(
 const PRACTICE_COUNTS_TTL_MS = 5 * 60 * 1000;
 let practiceCountsCache: { counts: Record<string, number>; expiresAt: number } | null = null;
 
+export function invalidateExercisePracticeCountsCache(): void {
+  practiceCountsCache = null;
+}
+
 export async function getExercisePracticeCounts(): Promise<Record<string, number>> {
   const now = Date.now();
   if (practiceCountsCache && now < practiceCountsCache.expiresAt) {
