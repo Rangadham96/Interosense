@@ -5,9 +5,11 @@ import {
   StyleSheet,
   FlatList,
   Pressable,
-  Dimensions,
   Platform,
   Image,
+  useWindowDimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,8 +17,6 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Colors from '@/constants/colors';
-
-const { width } = Dimensions.get('window');
 
 const SLIDES = [
   {
@@ -42,6 +42,8 @@ const SLIDES = [
 export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  // Live width so rotation/resize keeps slide sizes and offsets correct.
+  const { width } = useWindowDimensions();
   const flatRef = useRef<FlatList>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const topPadding = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
@@ -63,17 +65,34 @@ export default function WelcomeScreen() {
 
   const handleNext = () => {
     if (activeIndex < SLIDES.length - 1) {
-      flatRef.current?.scrollToIndex({ index: activeIndex + 1, animated: true });
+      const next = activeIndex + 1;
+      // Update state directly: on react-native-web viewability callbacks can
+      // silently not fire, which previously left the button doing nothing.
+      setActiveIndex(next);
+      // scrollToOffset is reliable on web where scrollToIndex can no-op.
+      flatRef.current?.scrollToOffset({ offset: next * width, animated: true });
     } else {
       handleGetStarted();
     }
   };
 
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
-    if (viewableItems.length > 0) {
-      setActiveIndex(viewableItems[0].index ?? 0);
+    if (viewableItems.length > 0 && viewableItems[0].index != null) {
+      setActiveIndex(viewableItems[0].index);
     }
   }).current;
+
+  // Fallback for web/manual swipes: derive the page from the scroll offset so
+  // the dots and button label always stay in sync even when viewability
+  // callbacks don't fire.
+  const onScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (width <= 0) return;
+    const idx = Math.min(
+      SLIDES.length - 1,
+      Math.max(0, Math.round(e.nativeEvent.contentOffset.x / width)),
+    );
+    setActiveIndex(idx);
+  };
 
   const isLast = activeIndex === SLIDES.length - 1;
 
@@ -104,6 +123,10 @@ export default function WelcomeScreen() {
         keyExtractor={(_, i) => String(i)}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
+        getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+        onMomentumScrollEnd={onScrollEnd}
+        onScrollEndDrag={onScrollEnd}
+        extraData={width}
         renderItem={({ item }) => (
           <View style={[styles.slide, { width }]}>
             <View style={styles.iconCircle}>
@@ -131,6 +154,7 @@ export default function WelcomeScreen() {
         <Pressable
           style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.88 }]}
           onPress={handleNext}
+          testID="welcome-next"
         >
           <Text style={styles.primaryBtnText}>
             {isLast ? 'Get Started' : 'Next'}
@@ -138,7 +162,7 @@ export default function WelcomeScreen() {
           <Feather name="arrow-right" size={18} color="#fff" />
         </Pressable>
 
-        <Pressable style={styles.signInLink} onPress={handleSignIn}>
+        <Pressable style={styles.signInLink} onPress={handleSignIn} testID="welcome-signin">
           <Text style={styles.signInText}>
             Already have an account?{' '}
             <Text style={styles.signInBold}>Sign in</Text>

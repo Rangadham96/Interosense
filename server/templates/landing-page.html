@@ -306,18 +306,10 @@
       }
       .condition-card {
         background: var(--white); padding: 24px 20px; border-radius: var(--radius-sm);
-        box-shadow: var(--shadow-sm); border-left: 4px solid var(--primary-light);
+        box-shadow: var(--shadow-sm); border: 1px solid rgba(107,91,149,0.12);
         transition: all 0.3s ease;
       }
-      .condition-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-left-color: var(--primary); }
-      .condition-card:nth-child(2) { border-left-color: var(--secondary); }
-      .condition-card:nth-child(2):hover { border-left-color: #6A9B9D; }
-      .condition-card:nth-child(3) { border-left-color: var(--accent); }
-      .condition-card:nth-child(3):hover { border-left-color: #D4949A; }
-      .condition-card:nth-child(5) { border-left-color: var(--secondary); }
-      .condition-card:nth-child(5):hover { border-left-color: #6A9B9D; }
-      .condition-card:nth-child(6) { border-left-color: var(--accent); }
-      .condition-card:nth-child(6):hover { border-left-color: #D4949A; }
+      .condition-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: rgba(107,91,149,0.3); }
       .condition-card h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
       .condition-card p { font-size: 13px; color: var(--text-light); line-height: 1.5; }
 

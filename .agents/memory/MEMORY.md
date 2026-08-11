@@ -2,3 +2,4 @@
 - [Science progression engine](science-progression.md) — next exercise is deterministic, not random; each category has a science-based next step with a bridge explanation.
 - [Onboarding AsyncStorage flag](onboarding-asyncstorage.md) — onboardingComplete is device-local; check user.experienceLevel server-side on login to skip re-onboarding.
 - [Stale web build at /app](web-build-staleness.md) — server serves static Expo export from dist/ under /app; re-run `npx expo export` after frontend changes or tests hit the old bundle.
+- [Server HTML template caching](server-template-caching.md) — landing/pitch HTML templates load once at startup; restart the backend after editing them.

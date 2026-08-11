@@ -172,48 +172,52 @@ export default function AchievementsScreen() {
         <View style={{ flex: 1 }} />
       </View>
 
-      <View style={styles.titleSection}>
-        <Text style={styles.pageTitle}>Milestones</Text>
-        <Text style={styles.pageSubtitle}>Every milestone reflects a real skill you have built</Text>
-      </View>
-
-      <View style={styles.statsBar}>
-        <View style={styles.statsTextRow}>
-          <Text style={styles.statsLabel}>{totalUnlocked} of {totalAchievements} earned</Text>
-          <Text style={styles.statsPercent}>{progressPercent}%</Text>
-        </View>
-        <View style={styles.statsProgressBg}>
-          <View style={[styles.statsProgressFill, { width: `${progressPercent}%` as any }]} />
-        </View>
-      </View>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryRow}
-        style={styles.categoryScroll}
-      >
-        {CATEGORIES.map((cat) => (
-          <Pressable
-            key={cat}
-            style={[styles.categoryPill, selectedCategory === cat && styles.categoryPillActive]}
-            onPress={() => setSelectedCategory(cat)}
-          >
-            <Text style={[styles.categoryText, selectedCategory === cat && styles.categoryTextActive]}>
-              {CATEGORY_LABELS[cat]}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-
       <FlatList
         data={filteredAchievements}
         keyExtractor={(item) => item.id}
         renderItem={renderAchievement}
         numColumns={2}
+        style={styles.list}
         contentContainerStyle={[styles.gridContent, { paddingBottom: bottomInset + 20 }]}
         showsVerticalScrollIndicator={false}
         columnWrapperStyle={styles.columnWrapper}
+        ListHeaderComponent={
+          <View style={styles.listHeader} testID="achievements-header">
+            <View style={styles.titleSection}>
+              <Text style={styles.pageTitle}>Milestones</Text>
+              <Text style={styles.pageSubtitle}>Every milestone reflects a real skill you have built</Text>
+            </View>
+
+            <View style={styles.statsBar} testID="achievements-progress">
+              <View style={styles.statsTextRow}>
+                <Text style={styles.statsLabel}>{totalUnlocked} of {totalAchievements} earned</Text>
+                <Text style={styles.statsPercent}>{progressPercent}%</Text>
+              </View>
+              <View style={styles.statsProgressBg}>
+                <View style={[styles.statsProgressFill, { width: `${progressPercent}%` as any }]} />
+              </View>
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoryRow}
+              style={styles.categoryScroll}
+            >
+              {CATEGORIES.map((cat) => (
+                <Pressable
+                  key={cat}
+                  style={[styles.categoryPill, selectedCategory === cat && styles.categoryPillActive]}
+                  onPress={() => setSelectedCategory(cat)}
+                >
+                  <Text style={[styles.categoryText, selectedCategory === cat && styles.categoryTextActive]}>
+                    {CATEGORY_LABELS[cat]}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        }
       />
     </View>
   );
@@ -241,8 +245,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.primary,
   },
+  list: {
+    flex: 1,
+  },
+  listHeader: {
+    // The grid content already applies horizontal padding.
+  },
   titleSection: {
-    paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 12,
   },
@@ -260,7 +269,6 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   statsBar: {
-    marginHorizontal: 20,
     backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: 16,
@@ -301,7 +309,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   categoryRow: {
-    paddingHorizontal: 20,
     gap: 8,
   },
   categoryPill: {
