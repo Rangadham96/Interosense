@@ -16,6 +16,7 @@ import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiPostJson } from '@/lib/api';
 import RazorpayCheckoutModal from '@/components/RazorpayCheckoutModal';
+import { ARTICLES } from '@/constants/articles';
 
 export { FREE_LIMITS } from '@/constants/free-limits';
 
@@ -48,7 +49,7 @@ const PREMIUM_FEATURES = [
   {
     icon: 'book-open' as const,
     title: 'Full Article Library',
-    description: 'All 15 evidence-based educational articles',
+    description: `All ${ARTICLES.length} evidence-based educational articles`,
   },
   {
     icon: 'heart' as const,
