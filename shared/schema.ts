@@ -23,6 +23,8 @@ export const users = pgTable("users", {
   isPremium: boolean("is_premium").default(false),
   razorpayCustomerId: text("razorpay_customer_id"),
   razorpaySubscriptionId: text("razorpay_subscription_id"),
+  razorpayCancelAtCycleEnd: boolean("razorpay_cancel_at_cycle_end").default(false),
+  razorpayCurrentEnd: text("razorpay_current_end"),
   interoceptiveBaseline: jsonb("interoceptive_baseline").$type<Record<string, string>>().default({}),
   onboardingPlan: jsonb("onboarding_plan").$type<Record<string, unknown>[]>().default([]),
   preferences: jsonb("preferences").$type<Record<string, unknown>>(),

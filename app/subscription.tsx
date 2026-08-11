@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   View,
   Text,
@@ -23,12 +24,13 @@ interface SubscriptionData {
   id: string;
   status: string;
   plan: string;
-  amount: string;
-  currentStart: string | null;
+  amount?: string;
+  currentStart?: string | null;
   currentEnd: string | null;
-  chargeAt: string | null;
-  trialEndAt: string | null;
+  chargeAt?: string | null;
+  trialEndAt?: string | null;
   cancelAtCycleEnd: boolean;
+  stale?: boolean;
 }
 
 function formatDate(iso: string | null | undefined): string {
@@ -79,6 +81,13 @@ export default function SubscriptionScreen() {
     queryKey: ['/api/razorpay/subscription-status'],
   });
 
+  // Refresh status every time this screen gains focus (not only pull-to-refresh)
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
+
   const sub = data?.subscription;
 
   const cancelMutation = useMutation({
@@ -88,11 +97,26 @@ export default function SubscriptionScreen() {
       setCancelError('');
       setConfirmCancel(false);
       qc.invalidateQueries({ queryKey: ['/api/razorpay/subscription-status'] });
+      refetch();
       refreshUser();
     },
     onError: (err: any) => {
       setCancelError(err.message || 'Could not cancel subscription. Please try again.');
       setConfirmCancel(false);
+    },
+  });
+
+  const resumeMutation = useMutation({
+    mutationFn: () => apiPostJson<{ success: boolean; message: string }>('/api/razorpay/resume', {}),
+    onSuccess: () => {
+      setCancelSuccess(false);
+      setCancelError('');
+      qc.invalidateQueries({ queryKey: ['/api/razorpay/subscription-status'] });
+      refetch();
+      refreshUser();
+    },
+    onError: (err: any) => {
+      setCancelError(err.message || 'Could not resume subscription. Please try again.');
     },
   });
 
@@ -159,14 +183,14 @@ export default function SubscriptionScreen() {
             </LinearGradient>
             <View style={styles.heroText}>
               <Text style={styles.heroTitle}>
-                {isLoading ? 'Loading...' : `${sub?.plan ?? 'Premium'} Plan`}
+                {isLoading ? 'Loading...' : `${sub?.plan && sub.plan !== 'unknown' ? sub.plan : 'Premium'} Plan`}
               </Text>
               {!isLoading && sub && <StatusBadge status={sub.status} />}
             </View>
           </View>
-          {!isLoading && sub && (
+          {!isLoading && sub?.amount ? (
             <Text style={styles.heroAmount}>{sub.amount}</Text>
-          )}
+          ) : null}
         </LinearGradient>
 
         {isLoading && (
@@ -190,10 +214,30 @@ export default function SubscriptionScreen() {
 
             {/* Pending cancellation banner — subscription active but will not renew */}
             {isPendingCancel && !isCancelled && (
-              <View style={styles.pendingBanner}>
-                <Feather name="clock" size={16} color="#E65100" />
-                <Text style={styles.pendingText}>
-                  Cancellation scheduled. You keep full access until {formatDate(sub.currentEnd)}. No further charges.
+              <View style={styles.pendingCard}>
+                <View style={styles.pendingBanner}>
+                  <Feather name="clock" size={16} color="#E65100" />
+                  <Text style={styles.pendingText}>
+                    Premium until {formatDate(sub.currentEnd)}. Your subscription will not renew and you will not be charged again.
+                  </Text>
+                </View>
+                <Pressable
+                  style={styles.resumeButton}
+                  onPress={() => resumeMutation.mutate()}
+                  disabled={resumeMutation.isPending}
+                  testID="resume-subscription"
+                >
+                  {resumeMutation.isPending
+                    ? <ActivityIndicator size="small" color="#fff" />
+                    : (
+                      <>
+                        <Feather name="rotate-ccw" size={16} color="#fff" />
+                        <Text style={styles.resumeButtonText}>Resume Subscription</Text>
+                      </>
+                    )}
+                </Pressable>
+                <Text style={styles.resumeHint}>
+                  Changed your mind? Resume to keep your Premium benefits renewing as normal.
                 </Text>
               </View>
             )}
@@ -210,8 +254,8 @@ export default function SubscriptionScreen() {
               </View>
             )}
 
-            {/* Renew CTA — shown when cancelled or pending cancellation */}
-            {(isCancelled || isPendingCancel) && (
+            {/* Renew CTA — shown when subscription has fully ended */}
+            {isCancelled && (
               <View style={styles.renewCard}>
                 <View style={styles.renewTop}>
                   <LinearGradient colors={['#F0C05A', '#E8A830']} style={styles.renewIcon}>
@@ -253,7 +297,7 @@ export default function SubscriptionScreen() {
               {sub.currentStart && (
                 <InfoRow label="Current period started" value={formatDate(sub.currentStart)} />
               )}
-              <InfoRow label="Amount" value={sub.amount} />
+              {sub.amount ? <InfoRow label="Amount" value={sub.amount} /> : null}
               <InfoRow label="Subscription ID" value={sub.id} />
             </View>
 
@@ -351,11 +395,24 @@ const styles = StyleSheet.create({
   },
   trialText: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: '#1565C0', flex: 1, lineHeight: 20 },
 
+  pendingCard: {
+    backgroundColor: '#fff', borderRadius: 16, padding: 16, gap: 12,
+    borderWidth: 1, borderColor: '#FFE0B2',
+  },
   pendingBanner: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
     backgroundColor: '#FFF3E0', borderRadius: 12, padding: 14,
   },
   pendingText: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: '#E65100', flex: 1, lineHeight: 20 },
+  resumeButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    padding: 14, borderRadius: 14, backgroundColor: Colors.primary,
+  },
+  resumeButtonText: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: '#fff' },
+  resumeHint: {
+    fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.textSecondary,
+    textAlign: 'center', lineHeight: 18,
+  },
 
   cancelledBanner: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,

@@ -111,10 +111,23 @@ router.post('/api/razorpay/verify-payment', async (req: Request, res: Response) 
   }
 
   try {
+    // Fetch the subscription to store the real Razorpay customer ID (not the subscription ID)
+    let customerId: string | null = null;
+    try {
+      const client = getRazorpayClient();
+      const sub: any = await (client.subscriptions as any).fetch(razorpay_subscription_id);
+      customerId = sub?.customer_id || null;
+    } catch {
+      // non-fatal: customer ID enrichment failed, activation still proceeds
+    }
+
     await storage.updateUser(String(verifyUserId), {
       isPremium: true,
-      razorpayCustomerId: razorpay_subscription_id,
       razorpaySubscriptionId: razorpay_subscription_id,
+      ...(customerId ? { razorpayCustomerId: customerId } : {}),
+      // A fresh purchase clears any previous cancellation intent
+      razorpayCancelAtCycleEnd: false,
+      razorpayCurrentEnd: null,
     });
     return res.json({ success: true });
   } catch (err: any) {
@@ -153,6 +166,9 @@ router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
         await storage.updateUser(String(userId), {
           isPremium: true,
           razorpaySubscriptionId: subscriptionId,
+          // Keep local cancellation intent in sync with Razorpay's state
+          razorpayCancelAtCycleEnd: sub?.cancel_at_cycle_end === 1 || sub?.cancel_at_cycle_end === true,
+          razorpayCurrentEnd: sub?.current_end ? new Date(sub.current_end * 1000).toISOString() : null,
         });
       }
     } else if (
@@ -164,6 +180,8 @@ router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
         // Preserve razorpaySubscriptionId so returning subscribers never get a free trial again
         await storage.updateUser(String(userId), {
           isPremium: false,
+          razorpayCancelAtCycleEnd: false,
+          razorpayCurrentEnd: sub?.current_end ? new Date(sub.current_end * 1000).toISOString() : null,
         });
       }
     } else if (event.event === 'subscription.halted') {
@@ -200,31 +218,68 @@ router.get('/api/razorpay/subscription-status', async (req: Request, res: Respon
       return res.json({ subscription: null });
     }
 
+    // Locally persisted cancellation intent — used to enrich or as fallback
+    const localCancelAtCycleEnd = user?.razorpayCancelAtCycleEnd === true;
+    const localCurrentEnd = user?.razorpayCurrentEnd ?? null;
+
     if (!isRazorpayConfigured()) {
-      return res.json({ subscription: { id: subscriptionId, status: 'unknown', plan: 'unknown' } });
+      return res.json({
+        subscription: {
+          id: subscriptionId,
+          status: 'unknown',
+          plan: 'unknown',
+          cancelAtCycleEnd: localCancelAtCycleEnd,
+          currentEnd: localCurrentEnd,
+        },
+      });
     }
 
-    const client = getRazorpayClient();
-    const sub: any = await (client.subscriptions as any).fetch(subscriptionId);
+    try {
+      const client = getRazorpayClient();
+      const sub: any = await (client.subscriptions as any).fetch(subscriptionId);
 
-    const planNote = sub?.notes?.plan || 'monthly';
-    const planLabel = planNote === 'annual' ? 'Annual' : 'Monthly';
-    const amount = planNote === 'annual' ? '₹3,990/year' : '₹399/month';
+      const planNote = sub?.notes?.plan || 'monthly';
+      const planLabel = planNote === 'annual' ? 'Annual' : 'Monthly';
+      const amount = planNote === 'annual' ? '₹3,990/year' : '₹399/month';
 
-    return res.json({
-      subscription: {
-        id: sub.id,
-        status: sub.status,
-        plan: planLabel,
-        amount,
-        currentStart: sub.current_start ? new Date(sub.current_start * 1000).toISOString() : null,
-        currentEnd: sub.current_end ? new Date(sub.current_end * 1000).toISOString() : null,
-        chargeAt: sub.charge_at ? new Date(sub.charge_at * 1000).toISOString() : null,
-        trialEndAt: sub.trial_end_at ? new Date(sub.trial_end_at * 1000).toISOString() : null,
-        // true when user cancelled with cancel_at_cycle_end — status stays "active" until period ends
-        cancelAtCycleEnd: sub.cancel_at_cycle_end === true || sub.cancel_at_cycle_end === 1,
-      },
-    });
+      const liveCancelAtCycleEnd = sub.cancel_at_cycle_end === true || sub.cancel_at_cycle_end === 1;
+
+      // Keep the locally persisted intent in sync with Razorpay's live state
+      if (liveCancelAtCycleEnd !== localCancelAtCycleEnd) {
+        storage.updateUser(String(statusUserId), {
+          razorpayCancelAtCycleEnd: liveCancelAtCycleEnd,
+        }).catch(() => {});
+      }
+
+      return res.json({
+        subscription: {
+          id: sub.id,
+          status: sub.status,
+          plan: planLabel,
+          amount,
+          currentStart: sub.current_start ? new Date(sub.current_start * 1000).toISOString() : null,
+          currentEnd: sub.current_end ? new Date(sub.current_end * 1000).toISOString() : localCurrentEnd,
+          chargeAt: sub.charge_at ? new Date(sub.charge_at * 1000).toISOString() : null,
+          trialEndAt: sub.trial_end_at ? new Date(sub.trial_end_at * 1000).toISOString() : null,
+          // true when user cancelled with cancel_at_cycle_end — status stays "active" until period ends
+          cancelAtCycleEnd: liveCancelAtCycleEnd,
+        },
+      });
+    } catch (fetchErr: any) {
+      // Live fetch failed — fall back to locally persisted state so the app still shows something useful
+      console.error('Razorpay subscription-status live fetch failed, using local state:', fetchErr?.message || fetchErr);
+      return res.json({
+        subscription: {
+          id: subscriptionId,
+          // A stored subscription with isPremium=false means it ended (cancelled/expired/halted)
+          status: user?.isPremium ? 'active' : 'cancelled',
+          plan: 'unknown',
+          cancelAtCycleEnd: localCancelAtCycleEnd,
+          currentEnd: localCurrentEnd,
+          stale: true,
+        },
+      });
+    }
   } catch (err: any) {
     console.error('Razorpay subscription-status error:', err);
     return res.status(500).json({ error: err.message || 'Failed to fetch subscription details' });
@@ -239,18 +294,53 @@ router.post('/api/razorpay/cancel', async (req: Request, res: Response) => {
     const user = await storage.getUser(String(cancelUserId));
     const subscriptionId = user?.razorpaySubscriptionId;
 
-    if (subscriptionId && isRazorpayConfigured()) {
-      const client = getRazorpayClient();
-      // cancel_at_cycle_end: 1 → user keeps access until billing period ends
-      await (client.subscriptions as any).cancel(subscriptionId, { cancel_at_cycle_end: 1 });
+    if (!subscriptionId || !isRazorpayConfigured()) {
+      return res.status(400).json({ error: 'No active subscription to cancel' });
     }
 
-    // Keep isPremium true — webhook will set it false when period expires
-    // But record that cancellation was requested by clearing stripeCustomerId as a flag
+    const client = getRazorpayClient();
+    // cancel_at_cycle_end: 1 → user keeps access until billing period ends
+    const sub: any = await (client.subscriptions as any).cancel(subscriptionId, { cancel_at_cycle_end: 1 });
+
+    // Keep isPremium true — webhook will set it false when period expires.
+    // Persist the cancellation intent locally so the app can show it without a live fetch.
+    await storage.updateUser(String(cancelUserId), {
+      razorpayCancelAtCycleEnd: true,
+      razorpayCurrentEnd: sub?.current_end ? new Date(sub.current_end * 1000).toISOString() : (user?.razorpayCurrentEnd ?? null),
+    });
+
     return res.json({ success: true, message: 'Subscription will be cancelled at the end of the current billing period.' });
   } catch (err: any) {
     console.error('Razorpay cancel error:', err);
     return res.status(500).json({ error: err.message || 'Failed to cancel subscription' });
+  }
+});
+
+router.post('/api/razorpay/resume', async (req: Request, res: Response) => {
+  const resumeUserId = (req.session as any)?.userId;
+  if (!resumeUserId) return res.status(401).json({ error: 'Not authenticated' });
+
+  try {
+    const user = await storage.getUser(String(resumeUserId));
+    const subscriptionId = user?.razorpaySubscriptionId;
+
+    if (!subscriptionId || !isRazorpayConfigured()) {
+      return res.status(400).json({ error: 'No subscription to resume' });
+    }
+
+    const client = getRazorpayClient();
+    // Removes the scheduled cancel_at_cycle_end so the subscription keeps renewing
+    await (client.subscriptions as any).cancelScheduledChanges(subscriptionId);
+
+    await storage.updateUser(String(resumeUserId), {
+      razorpayCancelAtCycleEnd: false,
+    });
+
+    return res.json({ success: true, message: 'Your subscription will continue to renew as normal.' });
+  } catch (err: any) {
+    const detail = err?.error?.description || err?.message || 'Failed to resume subscription';
+    console.error('Razorpay resume error:', detail);
+    return res.status(500).json({ error: detail });
   }
 });
 

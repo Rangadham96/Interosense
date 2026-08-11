@@ -7,7 +7,9 @@ import {
   ScrollView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -108,7 +110,27 @@ export default function PremiumScreen() {
   const [checkoutParams, setCheckoutParams] = useState<CheckoutParams | null>(null);
   const [checkoutVisible, setCheckoutVisible] = useState(false);
 
-  if (user?.isPremium) {
+  // Live subscription state: a premium user with a scheduled cancellation or an
+  // ended subscription should see the purchase/renew flow, not a dead end.
+  const { data: statusData, isLoading: statusLoading } = useQuery<{
+    subscription: { status: string; cancelAtCycleEnd: boolean; currentEnd: string | null } | null;
+  }>({
+    queryKey: ['/api/razorpay/subscription-status'],
+    enabled: !!user?.isPremium,
+    staleTime: 30_000,
+  });
+
+  const liveSub = statusData?.subscription;
+  const subEnded = liveSub
+    ? ['cancelled', 'completed', 'expired', 'halted'].includes(liveSub.status)
+    : false;
+  const pendingCancel = !!liveSub?.cancelAtCycleEnd && !subEnded;
+  // Only show the "You're Premium" dead-end when the subscription is genuinely
+  // active with no scheduled cancellation (or while we're still checking).
+  const showPremiumActive =
+    user?.isPremium && (statusLoading || (!subEnded && !pendingCancel));
+
+  if (showPremiumActive) {
     return (
       <View style={[styles.container, { paddingTop: topPadding }]}>
         <LinearGradient
@@ -142,6 +164,55 @@ export default function PremiumScreen() {
           >
             <LinearGradient colors={['#6B5B95', '#524578']} style={styles.subscribeGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <Text style={styles.subscribeText}>Back to App</Text>
+            </LinearGradient>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  // Scheduled cancellation: still premium until period end. Buying a second
+  // subscription now would double-charge, so guide the user to resume instead.
+  if (user?.isPremium && pendingCancel) {
+    return (
+      <View style={[styles.container, { paddingTop: topPadding }]}>
+        <LinearGradient
+          colors={['#6B5B95', '#524578', '#3D3260']}
+          style={styles.headerGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <Pressable style={styles.closeBtn} onPress={() => router.back()}>
+            <Feather name="x" size={24} color="rgba(255,255,255,0.8)" />
+          </Pressable>
+          <View style={styles.crownContainer}>
+            <LinearGradient colors={['#F0C05A', '#E8A830']} style={styles.crownCircle}>
+              <Feather name="clock" size={32} color="#fff" />
+            </LinearGradient>
+          </View>
+          <Text style={styles.headerTitle}>Cancellation Scheduled</Text>
+          <Text style={styles.headerSubtitle}>
+            {liveSub?.currentEnd
+              ? `You keep Premium access until ${new Date(liveSub.currentEnd).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
+              : 'You keep Premium access until the end of your billing period'}
+          </Text>
+        </LinearGradient>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <Feather name="info" size={56} color={Colors.primary} />
+          <Text style={[styles.headerTitle, { color: Colors.text, marginTop: 20, marginBottom: 10, fontSize: 22 }]}>
+            Want to stay Premium?
+          </Text>
+          <Text style={{ fontFamily: 'Nunito_400Regular', fontSize: 15, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22 }}>
+            Your subscription will not renew. You can resume it anytime before it ends, and you will not be charged twice.
+          </Text>
+          <Pressable
+            style={[styles.subscribeButton, { marginTop: 32, width: '100%' }]}
+            onPress={() => router.push('/subscription' as any)}
+            testID="go-resume-subscription"
+          >
+            <LinearGradient colors={['#6B5B95', '#524578']} style={styles.subscribeGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+              <Feather name="rotate-ccw" size={18} color="#fff" />
+              <Text style={styles.subscribeText}>Resume Subscription</Text>
             </LinearGradient>
           </Pressable>
         </View>
