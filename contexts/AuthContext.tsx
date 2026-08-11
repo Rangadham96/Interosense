@@ -49,7 +49,8 @@ export interface ServerSyncData {
   sessions: any[];
   checkins: any[];
   assessments: any[];
-  preferences: Record<string, unknown>;
+  /** null when the preferences fetch itself failed (unlike {} which means the user has none). */
+  preferences: Record<string, unknown> | null;
 }
 
 interface AuthContextValue {
@@ -118,14 +119,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sessRes.json(),
         checkRes.json(),
         assessRes.json(),
-        prefsRes.ok ? prefsRes.json() : Promise.resolve({ preferences: {} }),
+        prefsRes.ok ? prefsRes.json() : Promise.resolve({ preferences: null }),
       ]);
 
       return {
         sessions: sessData.sessions ?? [],
         checkins: checkData.checkins ?? [],
         assessments: assessData.assessments ?? [],
-        preferences: prefsData.preferences ?? {},
+        preferences: prefsData.preferences ?? null,
       };
     } catch {
       return null;

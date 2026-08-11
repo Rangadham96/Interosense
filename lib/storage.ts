@@ -13,6 +13,7 @@ const KEYS = {
   ASSESSMENTS: '@interosense:assessments',
   WEARABLE_DATA: '@interosense:wearable_data',
   EXERCISE_BOOKMARKS: '@interosense:exercise_bookmarks',
+  DISMISSED_PRESETS: '@interosense:dismissed_presets',
 };
 
 export interface UserProfile {
@@ -73,6 +74,10 @@ export interface Goal {
   createdAt: string;
   deadline?: string;
   completed: boolean;
+  /** Set when the goal came from a preset (default set or next-level suggestion). */
+  presetId?: string;
+  /** True once the completion celebration has been shown. */
+  celebrated?: boolean;
 }
 
 export interface AppSettings {
@@ -175,6 +180,12 @@ export const Storage = {
 
   async getGoals(): Promise<Goal[]> {
     return getJSON<Goal[]>(KEYS.GOALS, []);
+  },
+  async getDismissedPresets(): Promise<string[]> {
+    return getJSON<string[]>(KEYS.DISMISSED_PRESETS, []);
+  },
+  async setDismissedPresets(ids: string[]): Promise<void> {
+    await setJSON(KEYS.DISMISSED_PRESETS, ids);
   },
   async setGoals(goals: Goal[]): Promise<void> {
     await setJSON(KEYS.GOALS, goals);
@@ -280,6 +291,18 @@ export const Storage = {
   },
 
   async clearActivityData(): Promise<void> {
-    await AsyncStorage.multiRemove([KEYS.SESSIONS, KEYS.CHECKINS, KEYS.ASSESSMENTS]);
+    // Clear everything scoped to the signed-out account so the next user
+    // never inherits goals, dismissed defaults, or other preferences.
+    await AsyncStorage.multiRemove([
+      KEYS.SESSIONS,
+      KEYS.CHECKINS,
+      KEYS.ASSESSMENTS,
+      KEYS.GOALS,
+      KEYS.DISMISSED_PRESETS,
+      KEYS.BODY_MARKS,
+      KEYS.BOOKMARKS,
+      KEYS.EXERCISE_BOOKMARKS,
+      KEYS.ARTICLES_READ,
+    ]);
   },
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { Feather } from '@expo/vector-icons';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { Goal } from '@/lib/storage';
+import { getNextLevelPreset } from '@/constants/default-goals';
 
 const GOAL_TYPES = ['sessions', 'streak', 'minutes', 'checkins', 'awareness'] as const;
 
@@ -36,29 +37,12 @@ const TYPE_LABELS: Record<string, string> = {
   awareness: 'Awareness',
 };
 
-function getProgressForType(
-  type: string,
-  totalSessions: number,
-  currentStreak: number,
-  totalMinutes: number,
-  checkinsLength: number,
-  averageAwareness: number,
-): number {
-  switch (type) {
-    case 'sessions': return totalSessions;
-    case 'streak': return currentStreak;
-    case 'minutes': return totalMinutes;
-    case 'checkins': return checkinsLength;
-    case 'awareness': return averageAwareness;
-    default: return 0;
-  }
-}
-
 export default function GoalsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const {
-    goals, addGoal, updateGoals,
+    liveGoals, addGoal, removeGoal, ensureDefaultGoals,
+    pendingCelebration, acknowledgeGoalCompletion,
     totalSessions, currentStreak, totalMinutes, checkins, averageAwareness,
   } = useApp();
   const topInset = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
@@ -69,32 +53,18 @@ export default function GoalsScreen() {
   const [selectedType, setSelectedType] = useState<typeof GOAL_TYPES[number]>('sessions');
   const [targetValue, setTargetValue] = useState('');
 
-  const updatedGoals = useMemo(() => {
-    return goals.map((goal) => {
-      const current = getProgressForType(
-        goal.type, totalSessions, currentStreak, totalMinutes, checkins.length, averageAwareness,
-      );
-      return {
-        ...goal,
-        currentValue: current,
-        completed: current >= goal.targetValue,
-      };
-    });
-  }, [goals, totalSessions, currentStreak, totalMinutes, checkins.length, averageAwareness]);
-
+  // Safety net: seed defaults if this screen is reached with no goals
+  // (e.g. server hydration finished with an empty set).
   useEffect(() => {
-    const needsUpdate = goals.some((goal, i) => {
-      const updated = updatedGoals[i];
-      return goal.currentValue !== updated.currentValue || goal.completed !== updated.completed;
-    });
-    if (needsUpdate && updatedGoals.length > 0) {
-      updateGoals(updatedGoals);
-    }
-  }, [updatedGoals]);
+    ensureDefaultGoals();
+  }, [ensureDefaultGoals]);
+
+  const nextPreset = pendingCelebration
+    ? getNextLevelPreset(pendingCelebration.type, pendingCelebration.targetValue)
+    : null;
 
   const handleDeleteGoal = (id: string) => {
-    const filtered = goals.filter(g => g.id !== id);
-    updateGoals(filtered);
+    removeGoal(id);
   };
 
   const handleCreate = async () => {
@@ -102,9 +72,15 @@ export default function GoalsScreen() {
     const target = parseInt(targetValue, 10);
     if (isNaN(target) || target <= 0) return;
 
-    const current = getProgressForType(
-      selectedType, totalSessions, currentStreak, totalMinutes, checkins.length, averageAwareness,
-    );
+    const current = (() => {
+      switch (selectedType) {
+        case 'sessions': return totalSessions;
+        case 'streak': return currentStreak;
+        case 'minutes': return totalMinutes;
+        case 'checkins': return checkins.length;
+        case 'awareness': return averageAwareness;
+      }
+    })();
 
     const newGoal: Goal = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -114,6 +90,7 @@ export default function GoalsScreen() {
       currentValue: current,
       createdAt: new Date().toISOString(),
       completed: current >= target,
+      celebrated: current >= target,
     };
 
     await addGoal(newGoal);
@@ -123,7 +100,7 @@ export default function GoalsScreen() {
     setModalVisible(false);
   };
 
-  const renderGoalCard = ({ item }: { item: Goal & { currentValue: number; completed: boolean } }) => {
+  const renderGoalCard = ({ item }: { item: Goal }) => {
     const progress = Math.min(item.currentValue / item.targetValue, 1);
     const percentage = Math.round(progress * 100);
 
@@ -140,7 +117,7 @@ export default function GoalsScreen() {
           {item.completed ? (
             <Feather name="check-circle" size={22} color={Colors.success} />
           ) : (
-            <Pressable onPress={() => handleDeleteGoal(item.id)} hitSlop={12} style={styles.deleteBtn}>
+            <Pressable onPress={() => handleDeleteGoal(item.id)} hitSlop={12} style={styles.deleteBtn} testID={`delete-goal-${item.id}`}>
               <Feather name="trash-2" size={16} color={Colors.textTertiary} />
             </Pressable>
           )}
@@ -181,7 +158,7 @@ export default function GoalsScreen() {
         <Text style={styles.pageSubtitle}>Research shows specific practice intentions increase follow-through by 2 to 3 times</Text>
       </View>
 
-      {updatedGoals.length === 0 ? (
+      {liveGoals.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={styles.emptyIconCircle}>
             <Feather name="target" size={36} color={Colors.primary} />
@@ -195,13 +172,62 @@ export default function GoalsScreen() {
         </View>
       ) : (
         <FlatList
-          data={updatedGoals}
+          data={liveGoals}
           keyExtractor={(item) => item.id}
           renderItem={renderGoalCard}
           contentContainerStyle={[styles.listContent, { paddingBottom: bottomInset + 20 }]}
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      <Modal
+        visible={!!pendingCelebration}
+        animationType="fade"
+        transparent
+        onRequestClose={() => pendingCelebration && acknowledgeGoalCompletion(pendingCelebration.id, false)}
+      >
+        <View style={styles.celebrationOverlay}>
+          <View style={styles.celebrationCard} testID="goal-celebration">
+            <View style={styles.celebrationIconCircle}>
+              <Feather name="award" size={40} color={Colors.success} />
+            </View>
+            <Text style={styles.celebrationTitle}>Goal complete!</Text>
+            <Text style={styles.celebrationGoalName}>{pendingCelebration?.title}</Text>
+            <Text style={styles.celebrationBody}>
+              {nextPreset
+                ? 'Well done. Ready for the next step?'
+                : 'Well done. Keep the momentum going.'}
+            </Text>
+            {nextPreset ? (
+              <>
+                <Pressable
+                  style={styles.celebrationPrimaryBtn}
+                  onPress={() => pendingCelebration && acknowledgeGoalCompletion(pendingCelebration.id, true)}
+                  testID="accept-next-goal"
+                >
+                  <Feather name="arrow-up-circle" size={16} color={Colors.textInverse} />
+                  <Text style={styles.celebrationPrimaryText}>{nextPreset.title}</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.celebrationSecondaryBtn}
+                  onPress={() => pendingCelebration && acknowledgeGoalCompletion(pendingCelebration.id, false)}
+                  testID="dismiss-celebration"
+                >
+                  <Text style={styles.celebrationSecondaryText}>Not now</Text>
+                </Pressable>
+              </>
+            ) : (
+              <Pressable
+                style={styles.celebrationPrimaryBtn}
+                onPress={() => pendingCelebration && acknowledgeGoalCompletion(pendingCelebration.id, false)}
+                testID="dismiss-celebration"
+              >
+                <Text style={styles.celebrationPrimaryText}>Nice!</Text>
+              </Pressable>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={modalVisible}
@@ -524,5 +550,76 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
     fontSize: 16,
     color: Colors.textInverse,
+  },
+  celebrationOverlay: {
+    flex: 1,
+    backgroundColor: Colors.overlay,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  celebrationCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 24,
+    padding: 28,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 400,
+  },
+  celebrationIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.success + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  celebrationTitle: {
+    fontFamily: 'Nunito_800ExtraBold',
+    fontSize: 24,
+    color: Colors.text,
+    marginBottom: 6,
+  },
+  celebrationGoalName: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 16,
+    color: Colors.primary,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  celebrationBody: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  celebrationPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.primary,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignSelf: 'stretch',
+  },
+  celebrationPrimaryText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 15,
+    color: Colors.textInverse,
+    textAlign: 'center',
+  },
+  celebrationSecondaryBtn: {
+    paddingVertical: 12,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+  },
+  celebrationSecondaryText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 14,
+    color: Colors.textSecondary,
   },
 });

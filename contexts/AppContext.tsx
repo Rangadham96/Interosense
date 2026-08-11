@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { Storage, UserProfile, SessionRecord, CheckinRecord, BodyMark, Goal, AppSettings, AssessmentRecord, WearableDataPoint } from '@/lib/storage';
 import { apiPut } from '@/lib/api';
 import { getUnlockedAchievements } from '@/constants/achievements';
+import { buildDefaultGoals, createGoalFromPreset, getGoalProgress, getNextLevelPreset, normalizeGoals, resolveServerGoalState, GoalStats } from '@/constants/default-goals';
 import { generateAdvisorState, AdvisorState } from '@/lib/personalization-engine';
 import { format, isToday, isYesterday, differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
 
@@ -13,6 +14,8 @@ interface AppState {
   checkins: CheckinRecord[];
   bodyMarks: BodyMark[];
   goals: Goal[];
+  liveGoals: Goal[];
+  pendingCelebration: Goal | null;
   bookmarks: string[];
   exerciseBookmarks: string[];
   articlesRead: string[];
@@ -40,6 +43,9 @@ interface AppActions {
   clearBodyMarks: () => Promise<void>;
   addGoal: (goal: Goal) => Promise<void>;
   updateGoals: (goals: Goal[]) => Promise<void>;
+  removeGoal: (goalId: string) => Promise<void>;
+  acknowledgeGoalCompletion: (goalId: string, addNextLevel: boolean) => Promise<void>;
+  ensureDefaultGoals: () => Promise<void>;
   toggleBookmark: (articleId: string) => Promise<void>;
   markArticleRead: (articleId: string) => Promise<void>;
   updateSettings: (settings: AppSettings) => Promise<void>;
@@ -48,7 +54,7 @@ interface AppActions {
   updateProfile: (profile: UserProfile) => Promise<void>;
   toggleExerciseBookmark: (exerciseId: string) => Promise<void>;
   refresh: () => Promise<void>;
-  hydrateFromServer: (data: { sessions?: SessionRecord[]; checkins?: CheckinRecord[]; assessments?: AssessmentRecord[]; preferences?: Record<string, unknown> }) => void;
+  hydrateFromServer: (data: { sessions?: SessionRecord[]; checkins?: CheckinRecord[]; assessments?: AssessmentRecord[]; preferences?: Record<string, unknown> | null }) => void;
   clearActivityData: () => Promise<void>;
   markOnboardingComplete: () => Promise<void>;
 }
@@ -56,6 +62,7 @@ interface AppActions {
 type AppContextValue = AppState & AppActions;
 
 const AppContext = createContext<AppContextValue | null>(null);
+
 
 function calculateStreak(sessions: SessionRecord[]): { current: number; longest: number } {
   if (sessions.length === 0) return { current: 0, longest: 0 };
@@ -130,10 +137,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
   const [wearableData, setWearableData] = useState<WearableDataPoint[]>([]);
   const [exerciseBookmarks, setExerciseBookmarks] = useState<string[]>([]);
+  const [dismissedPresets, setDismissedPresets] = useState<string[]>([]);
+  const [pendingCelebration, setPendingCelebration] = useState<Goal | null>(null);
 
   const loadData = useCallback(async () => {
     try {
-      const [ob, prof, sess, chk, bm, gl, bk, ar, st, assess, wear, exBk] = await Promise.all([
+      const [ob, prof, sess, chk, bm, gl, bk, ar, st, assess, wear, exBk, dismissed] = await Promise.all([
         Storage.isOnboardingComplete(),
         Storage.getUserProfile(),
         Storage.getSessions(),
@@ -146,13 +155,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         Storage.getAssessments(),
         Storage.getWearableData(),
         Storage.getExerciseBookmarks(),
+        Storage.getDismissedPresets(),
       ]);
       setOnboardingComplete(ob);
       setProfile(prof);
       setSessions(sess);
       setCheckins(chk);
       setBodyMarks(bm);
-      setGoals(gl);
+      setGoals(normalizeGoals(gl));
+      setDismissedPresets(dismissed);
       setBookmarks(bk);
       setArticlesRead(ar);
       setSettings(st);
@@ -199,6 +210,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, [totalSessions, currentStreak, categoriesExplored, checkins.length, totalMinutes, maxAwareness, articlesRead.length]);
 
+  const goalStats = useMemo<GoalStats>(() => ({
+    totalSessions,
+    currentStreak,
+    totalMinutes,
+    totalCheckins: checkins.length,
+    averageAwareness,
+  }), [totalSessions, currentStreak, totalMinutes, checkins.length, averageAwareness]);
+
+  // Goals with live progress computed from current activity. This is what
+  // every screen should render so progress is always current without reloads.
+  const liveGoals = useMemo<Goal[]>(() => {
+    return goals.map(goal => {
+      const current = getGoalProgress(goal.type, goalStats);
+      return { ...goal, currentValue: current, completed: current >= goal.targetValue };
+    });
+  }, [goals, goalStats]);
+
+  // Activity kept in a ref (updated synchronously by hydrateFromServer) so
+  // seeding right after hydration sees fresh data, not stale render state.
+  const activityRef = useRef<{ sessions: SessionRecord[]; checkins: CheckinRecord[] }>({ sessions: [], checkins: [] });
+  // True only after this login's server preferences were successfully
+  // hydrated. Default seeding is disabled until then, so we never seed on
+  // top of unknown server state (e.g. a failed preferences fetch).
+  const goalStateAuthoritativeRef = useRef(false);
+  // Prevents duplicate default-goal seeding when multiple callers race.
+  const seedingInFlightRef = useRef(false);
+  useEffect(() => { activityRef.current = { sessions, checkins }; }, [sessions, checkins]);
+
+  const computeStatsNow = useCallback((): GoalStats => {
+    const { sessions: s, checkins: c } = activityRef.current;
+    return {
+      totalSessions: s.length,
+      currentStreak: calculateStreak(s).current,
+      totalMinutes: s.reduce((sum, x) => sum + x.durationMinutes, 0),
+      totalCheckins: c.length,
+      averageAwareness: c.length === 0 ? 0 : Math.round(c.reduce((sum, x) => sum + x.awarenessScore, 0) / c.length * 10) / 10,
+    };
+  }, []);
+
+  // Surface a celebration for the first completed goal not yet celebrated.
+  useEffect(() => {
+    if (pendingCelebration) return;
+    const justCompleted = liveGoals.find(g => g.completed && !g.celebrated);
+    if (justCompleted) setPendingCelebration(justCompleted);
+  }, [liveGoals, pendingCelebration]);
+
   const advisorState = useMemo(() => {
     return generateAdvisorState(
       profile,
@@ -233,15 +290,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     exerciseBookmarks: string[];
     articlesRead: string[];
     settings: AppSettings;
-  }>({ goals: [], bodyMarks: [], bookmarks: [], exerciseBookmarks: [], articlesRead: [], settings: defaultSettings });
+    dismissedPresets: string[];
+  }>({ goals: [], bodyMarks: [], bookmarks: [], exerciseBookmarks: [], articlesRead: [], settings: defaultSettings, dismissedPresets: [] });
 
   useEffect(() => {
-    prefsRef.current = { goals, bodyMarks, bookmarks, exerciseBookmarks, articlesRead, settings };
-  }, [goals, bodyMarks, bookmarks, exerciseBookmarks, articlesRead, settings]);
+    prefsRef.current = { goals, bodyMarks, bookmarks, exerciseBookmarks, articlesRead, settings, dismissedPresets };
+  }, [goals, bodyMarks, bookmarks, exerciseBookmarks, articlesRead, settings, dismissedPresets]);
 
   const syncPrefsToServer = useCallback(() => {
-    const { goals: g, bodyMarks: bm, bookmarks: ab, exerciseBookmarks: eb, articlesRead: ar, settings: st } = prefsRef.current;
-    apiPut('/api/user/preferences', { goals: g, bodyMarks: bm, articleBookmarks: ab, exerciseBookmarks: eb, articlesRead: ar, settings: st }).catch(() => {});
+    const { goals: g, bodyMarks: bm, bookmarks: ab, exerciseBookmarks: eb, articlesRead: ar, settings: st, dismissedPresets: dp } = prefsRef.current;
+    apiPut('/api/user/preferences', { goals: g, bodyMarks: bm, articleBookmarks: ab, exerciseBookmarks: eb, articlesRead: ar, settings: st, dismissedPresets: dp }).catch(() => {});
   }, []);
 
   const addSession = useCallback(async (session: SessionRecord) => {
@@ -283,6 +341,71 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await Storage.setGoals(newGoals);
     syncPrefsToServer();
   }, [syncPrefsToServer]);
+
+  const removeGoal = useCallback(async (goalId: string) => {
+    const removed = prefsRef.current.goals.find(g => g.id === goalId);
+    const newGoals = prefsRef.current.goals.filter(g => g.id !== goalId);
+    let newDismissed = prefsRef.current.dismissedPresets;
+    // Removing a preset goal dismisses the preset permanently so it never reseeds.
+    if (removed?.presetId && !newDismissed.includes(removed.presetId)) {
+      newDismissed = [...newDismissed, removed.presetId];
+      setDismissedPresets(newDismissed);
+      Storage.setDismissedPresets(newDismissed).catch(() => {});
+    }
+    prefsRef.current = { ...prefsRef.current, goals: newGoals, dismissedPresets: newDismissed };
+    setGoals(newGoals);
+    await Storage.setGoals(newGoals);
+    syncPrefsToServer();
+  }, [syncPrefsToServer]);
+
+  const acknowledgeGoalCompletion = useCallback(async (goalId: string, addNextLevel: boolean) => {
+    const stats = computeStatsNow();
+    let newGoals = prefsRef.current.goals.map(g => {
+      if (g.id !== goalId) return g;
+      const current = getGoalProgress(g.type, stats);
+      return { ...g, currentValue: current, completed: current >= g.targetValue, celebrated: true };
+    });
+    const completedGoal = newGoals.find(g => g.id === goalId);
+    if (addNextLevel && completedGoal) {
+      const next = getNextLevelPreset(completedGoal.type as Goal['type'], completedGoal.targetValue);
+      if (next
+        && !prefsRef.current.dismissedPresets.includes(next.presetId)
+        && !newGoals.some(g => g.presetId === next.presetId && !g.completed)) {
+        newGoals = [...newGoals, createGoalFromPreset(next, stats)];
+      }
+    }
+    prefsRef.current = { ...prefsRef.current, goals: newGoals };
+    setGoals(newGoals);
+    setPendingCelebration(null);
+    await Storage.setGoals(newGoals);
+    syncPrefsToServer();
+  }, [syncPrefsToServer, computeStatsNow]);
+
+  // Seed the curated default goals for users who have none. Only runs after
+  // the server's preferences were SUCCESSFULLY hydrated for this login
+  // (goalStateAuthoritativeRef), so we never seed on top of unknown server
+  // state, removed defaults never resurrect, and server goals are never
+  // overwritten.
+  const ensureDefaultGoals = useCallback(async () => {
+    // In-flight guard: seeding can be triggered from both the post-hydration
+    // path and the goals screen; only one may run at a time.
+    if (seedingInFlightRef.current) return;
+    if (!goalStateAuthoritativeRef.current) return;
+    if (prefsRef.current.goals.length > 0) return;
+    seedingInFlightRef.current = true;
+    try {
+      const seeded = buildDefaultGoals(prefsRef.current.dismissedPresets, computeStatsNow());
+      if (seeded.length === 0) return;
+      // Update the ref synchronously (before any await) so a concurrent call
+      // fails the empty-goals guard even if it slips past the flag.
+      prefsRef.current = { ...prefsRef.current, goals: seeded };
+      setGoals(seeded);
+      await Storage.setGoals(seeded);
+      syncPrefsToServer();
+    } finally {
+      seedingInFlightRef.current = false;
+    }
+  }, [syncPrefsToServer, computeStatsNow]);
 
   const toggleBookmark = useCallback(async (articleId: string) => {
     const cur = prefsRef.current.bookmarks;
@@ -346,12 +469,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     syncPrefsToServer();
   }, [syncPrefsToServer]);
 
-  const hydrateFromServer = useCallback((data: { sessions?: SessionRecord[]; checkins?: CheckinRecord[]; assessments?: AssessmentRecord[]; preferences?: Record<string, unknown> }) => {
+  const hydrateFromServer = useCallback((data: { sessions?: SessionRecord[]; checkins?: CheckinRecord[]; assessments?: AssessmentRecord[]; preferences?: Record<string, unknown> | null }) => {
     if (data.sessions !== undefined) {
+      // Update the ref synchronously so any seeding that runs right after
+      // hydration (before React re-renders) sees the fresh activity data.
+      activityRef.current = { ...activityRef.current, sessions: data.sessions };
       setSessions(data.sessions);
       Storage.setSessions(data.sessions).catch(() => {});
     }
     if (data.checkins !== undefined) {
+      activityRef.current = { ...activityRef.current, checkins: data.checkins };
       setCheckins(data.checkins);
       Storage.setCheckins(data.checkins).catch(() => {});
     }
@@ -359,14 +486,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setAssessments(data.assessments);
       Storage.setAssessments(data.assessments).catch(() => {});
     }
-    if (data.preferences) {
+    // preferences === null means the preferences fetch FAILED: keep local
+    // state untouched and do NOT mark goal state authoritative, so default
+    // seeding stays disabled until a successful fetch establishes truth.
+    if (data.preferences !== undefined && data.preferences !== null) {
       const p = data.preferences;
-      if (Array.isArray(p.goals)) {
-        const vals = p.goals as Goal[];
-        setGoals(vals);
-        prefsRef.current = { ...prefsRef.current, goals: vals };
-        Storage.setGoals(vals).catch(() => {});
-      }
+      // Goals and dismissed presets are authoritative from the server on a
+      // successful fetch: absent fields mean THIS user has none, so any
+      // locally persisted values (possibly from a previous account on this
+      // device) are replaced rather than kept.
+      const { goals: serverGoals, dismissedPresets: serverDismissed } = resolveServerGoalState(p);
+      goalStateAuthoritativeRef.current = true;
+      setDismissedPresets(serverDismissed);
+      setGoals(serverGoals);
+      prefsRef.current = { ...prefsRef.current, goals: serverGoals, dismissedPresets: serverDismissed };
+      Storage.setDismissedPresets(serverDismissed).catch(() => {});
+      Storage.setGoals(serverGoals).catch(() => {});
       if (Array.isArray(p.bodyMarks)) {
         const vals = p.bodyMarks as BodyMark[];
         setBodyMarks(vals);
@@ -412,7 +547,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setExerciseBookmarks([]);
     setArticlesRead([]);
     setSettings(emptySettings);
-    prefsRef.current = { goals: [], bodyMarks: [], bookmarks: [], exerciseBookmarks: [], articlesRead: [], settings: emptySettings };
+    setDismissedPresets([]);
+    setPendingCelebration(null);
+    goalStateAuthoritativeRef.current = false;
+    activityRef.current = { sessions: [], checkins: [] };
+    prefsRef.current = { goals: [], bodyMarks: [], bookmarks: [], exerciseBookmarks: [], articlesRead: [], settings: emptySettings, dismissedPresets: [] };
   }, []);
 
   const value = useMemo<AppContextValue>(() => ({
@@ -423,6 +562,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     checkins,
     bodyMarks,
     goals,
+    liveGoals,
+    pendingCelebration,
     bookmarks,
     exerciseBookmarks,
     articlesRead,
@@ -447,6 +588,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     clearBodyMarks,
     addGoal,
     updateGoals,
+    removeGoal,
+    acknowledgeGoalCompletion,
+    ensureDefaultGoals,
     toggleBookmark,
     markArticleRead,
     updateSettings,
@@ -460,11 +604,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     markOnboardingComplete,
   }), [
     isLoading, onboardingComplete, profile, sessions, checkins, bodyMarks, goals,
+    liveGoals, pendingCelebration,
     bookmarks, exerciseBookmarks, articlesRead, settings, assessments, wearableData, unlockedAchievements,
     totalSessions, totalMinutes, currentStreak, longestStreak, categoriesExplored,
     averageAwareness, maxAwareness, todayCheckedIn, todaySessionCount, advisorState,
     completeOnboarding, addSession, addCheckin, addBodyMark, clearBodyMarks,
-    addGoal, updateGoals, toggleBookmark, markArticleRead, updateSettings,
+    addGoal, updateGoals, removeGoal, acknowledgeGoalCompletion, ensureDefaultGoals,
+    toggleBookmark, markArticleRead, updateSettings,
     addAssessment, addWearableDataCb, updateProfile, toggleExerciseBookmarkCb, loadData,
     hydrateFromServer, clearActivityData, markOnboardingComplete,
   ]);

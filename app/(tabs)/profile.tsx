@@ -40,6 +40,7 @@ export default function ProfileScreen() {
     totalMinutes,
     averageAwareness,
     checkins,
+    liveGoals,
   } = useApp();
 
   const { user, logout } = useAuth();
@@ -47,7 +48,6 @@ export default function ProfileScreen() {
 
   const firstName = profile?.name ? profile.name.split(' ')[0] : 'there';
   const conditions = profile?.conditions || [];
-  const goals = profile?.goals || [];
 
   const daysOnApp = useMemo(() => {
     if (!profile) return 0;
@@ -174,16 +174,43 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {goals.length > 0 && (
+        {liveGoals.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Your Goals</Text>
-            <View style={styles.card}>
-              {goals.map((goal, i) => (
-                <View key={goal} style={[styles.goalRow, i < goals.length - 1 && styles.goalRowBorder]}>
-                  <Feather name="check-circle" size={16} color={Colors.success} />
-                  <Text style={styles.goalText}>{goal}</Text>
-                </View>
-              ))}
+            <View style={styles.goalsHeader}>
+              <Text style={styles.sectionTitle}>Your Goals</Text>
+              <TouchableOpacity onPress={() => router.push('/goals' as any)} activeOpacity={0.7} testID="see-all-goals">
+                <Text style={styles.goalsSeeAll}>See all</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.card} testID="profile-goals-card">
+              {liveGoals.slice(0, 3).map((goal, i, arr) => {
+                const progress = Math.min(goal.currentValue / goal.targetValue, 1);
+                const pct = Math.round(progress * 100);
+                return (
+                  <View key={goal.id} style={[styles.goalRow, i < arr.length - 1 && styles.goalRowBorder]}>
+                    <Feather
+                      name={goal.completed ? 'check-circle' : 'circle'}
+                      size={16}
+                      color={goal.completed ? Colors.success : Colors.textTertiary}
+                      style={{ marginTop: 2 }}
+                    />
+                    <View style={styles.goalProgressArea}>
+                      <View style={styles.goalTitleRow}>
+                        <Text style={styles.goalText} numberOfLines={1}>{goal.title}</Text>
+                        <Text style={styles.goalPct}>{pct}%</Text>
+                      </View>
+                      <View style={styles.goalBarBg}>
+                        <View
+                          style={[
+                            styles.goalBarFill,
+                            { width: `${pct}%` as any, backgroundColor: goal.completed ? Colors.success : Colors.primary },
+                          ]}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                );
+              })}
             </View>
           </View>
         )}
@@ -447,6 +474,13 @@ const styles = StyleSheet.create({
   goalRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 14 },
   goalRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
   goalText: { fontFamily: 'Nunito_500Medium', fontSize: 14, color: Colors.text, flex: 1, lineHeight: 20 },
+  goalsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  goalsSeeAll: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: Colors.primary, marginBottom: 12 },
+  goalProgressArea: { flex: 1 },
+  goalTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  goalPct: { fontFamily: 'Nunito_700Bold', fontSize: 12, color: Colors.textSecondary },
+  goalBarBg: { height: 6, borderRadius: 3, backgroundColor: Colors.borderLight, overflow: 'hidden' },
+  goalBarFill: { height: '100%', borderRadius: 3 },
 
   weekRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, padding: 16 },
   weekRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.borderLight },

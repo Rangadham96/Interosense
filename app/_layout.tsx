@@ -26,10 +26,15 @@ SplashScreen.preventAutoHideAsync();
 
 function AuthGate() {
   const { isAuthenticated, isLoading, fetchServerData, user } = useAuth();
-  const { hydrateFromServer, clearActivityData, markOnboardingComplete } = useApp();
+  const { hydrateFromServer, clearActivityData, markOnboardingComplete, ensureDefaultGoals } = useApp();
   const segments = useSegments();
   const router = useRouter();
   const prevAuthRef = useRef<boolean | null>(null);
+  // Serializes account transitions: a logout's async clear must finish
+  // before the next login hydrates, and a hydration that started before a
+  // logout must never apply afterwards (auth epoch check).
+  const pendingClearRef = useRef<Promise<void>>(Promise.resolve());
+  const authEpochRef = useRef(0);
   const [welcomeChecked, setWelcomeChecked] = useState(false);
   const [hasSeenWelcome, setHasSeenWelcome] = useState(false);
 
@@ -48,27 +53,36 @@ function AuthGate() {
     prevAuthRef.current = isNowAuthenticated;
 
     if (isNowAuthenticated && wasAuthenticated !== true) {
-      fetchServerData().then(data => {
-        if (data) {
-          const assessments = data.assessments.map((a: any) => {
-            if (
-              a.scaleId === 'maia2' &&
-              !a.subscaleScores &&
-              Array.isArray(a.answers) &&
-              a.answers.length === 37
-            ) {
-              return { ...a, subscaleScores: calculateMaia2Subscales(a.answers) };
-            }
-            return a;
-          });
-          hydrateFromServer({
-            sessions: data.sessions,
-            checkins: data.checkins,
-            assessments,
-            preferences: data.preferences,
-          });
-        }
-      });
+      const epoch = ++authEpochRef.current;
+      (async () => {
+        // Wait for any in-flight logout clear so it cannot erase the data
+        // we are about to hydrate for the newly signed-in account.
+        await pendingClearRef.current.catch(() => {});
+        const data = await fetchServerData();
+        // A logout (or another login) happened while fetching: discard.
+        if (authEpochRef.current !== epoch || !data) return;
+        const assessments = data.assessments.map((a: any) => {
+          if (
+            a.scaleId === 'maia2' &&
+            !a.subscaleScores &&
+            Array.isArray(a.answers) &&
+            a.answers.length === 37
+          ) {
+            return { ...a, subscaleScores: calculateMaia2Subscales(a.answers) };
+          }
+          return a;
+        });
+        hydrateFromServer({
+          sessions: data.sessions,
+          checkins: data.checkins,
+          assessments,
+          preferences: data.preferences,
+        });
+        // Seed default goals only after server state is hydrated, so synced
+        // goals, dismissed defaults, and existing activity are respected.
+        // Never seed when hydration failed: we cannot know server state.
+        ensureDefaultGoals();
+      })();
       // If the server user has already completed onboarding (experienceLevel is set),
       // mark it complete locally so we never redirect them to onboarding again.
       if (user?.experienceLevel) {
@@ -77,7 +91,10 @@ function AuthGate() {
     }
 
     if (!isNowAuthenticated && wasAuthenticated === true) {
-      clearActivityData();
+      // Bump the epoch so any hydration still in flight for the previous
+      // account is discarded, and record the clear so the next login waits.
+      authEpochRef.current++;
+      pendingClearRef.current = clearActivityData();
     }
   }, [isAuthenticated, isLoading]);
 
