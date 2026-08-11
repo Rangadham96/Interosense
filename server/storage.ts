@@ -172,8 +172,19 @@ export async function saveInsight(
   return insight;
 }
 
+// 5-minute in-memory cache for exercise practice counts.
+// Prevents the badge from flickering around UTC midnight when the
+// sevenDaysAgo boundary shifts, and keeps counts stable within a session.
+const PRACTICE_COUNTS_TTL_MS = 5 * 60 * 1000;
+let practiceCountsCache: { counts: Record<string, number>; expiresAt: number } | null = null;
+
 export async function getExercisePracticeCounts(): Promise<Record<string, number>> {
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const now = Date.now();
+  if (practiceCountsCache && now < practiceCountsCache.expiresAt) {
+    return practiceCountsCache.counts;
+  }
+
+  const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
   const rows = await db
     .select({ exerciseId: exerciseSessions.exerciseId })
     .from(exerciseSessions)
@@ -183,5 +194,7 @@ export async function getExercisePracticeCounts(): Promise<Record<string, number
   for (const row of rows) {
     counts[row.exerciseId] = (counts[row.exerciseId] || 0) + 1;
   }
+
+  practiceCountsCache = { counts, expiresAt: now + PRACTICE_COUNTS_TTL_MS };
   return counts;
 }
