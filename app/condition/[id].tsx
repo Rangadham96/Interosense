@@ -6,7 +6,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import { getConditionById } from '@/constants/conditions';
-import { getExerciseById } from '@/constants/exercises';
+import { getExerciseById, getExercisesByCategory } from '@/constants/exercises';
 
 export default function ConditionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,10 +25,24 @@ export default function ConditionDetailScreen() {
     );
   }
 
-  const recommendedExercises = condition.recommendedExerciseIds
+  const isTraumaCondition = condition.id === 'ptsd';
+
+  const traumaInformedExercises = isTraumaCondition
+    ? getExercisesByCategory('traumaInformed').filter(ex =>
+        ex.targetConditions.includes('ptsd')
+      ).slice(0, 3)
+    : [];
+
+  const baseExercises = condition.recommendedExerciseIds
     .map(eid => getExerciseById(eid))
     .filter(Boolean)
     .slice(0, 4);
+
+  const traumaIds = new Set(traumaInformedExercises.map(ex => ex.id));
+  const recommendedExercises = [
+    ...traumaInformedExercises,
+    ...baseExercises.filter(ex => ex && !traumaIds.has(ex.id)),
+  ];
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -93,16 +107,43 @@ export default function ConditionDetailScreen() {
               <Feather name="play-circle" size={16} color={Colors.text} />
               <Text style={styles.sectionTitle}>Recommended Exercises</Text>
             </View>
-            {recommendedExercises.map(ex => ex && (
+
+            {isTraumaCondition && traumaInformedExercises.length > 0 && (
+              <View style={styles.traumaNote}>
+                <View style={styles.traumaNoteHeader}>
+                  <Feather name="anchor" size={14} color="#8FAF8A" />
+                  <Text style={styles.traumaNoteTitle}>Trauma-Informed Practice</Text>
+                </View>
+                <Text style={styles.traumaNoteBody}>
+                  These exercises follow somatic safety principles — approaching difficult sensations in small, manageable doses (titration) and always staying within your window of tolerance. Start here before deeper body-awareness work.
+                </Text>
+              </View>
+            )}
+
+            {recommendedExercises.map((ex, idx) => ex && (
               <TouchableOpacity
                 key={ex.id}
-                style={styles.exerciseRow}
+                style={[
+                  styles.exerciseRow,
+                  isTraumaCondition && idx < traumaInformedExercises.length && styles.exerciseRowTrauma,
+                ]}
                 onPress={() => router.push(`/exercise/${ex.id}`)}
                 activeOpacity={0.7}
               >
-                <Feather name={ex.iconName as any} size={18} color={condition.color} />
+                <Feather
+                  name={ex.iconName as any}
+                  size={18}
+                  color={isTraumaCondition && idx < traumaInformedExercises.length ? '#8FAF8A' : condition.color}
+                />
                 <View style={styles.exerciseInfo}>
-                  <Text style={styles.exerciseName}>{ex.title}</Text>
+                  <View style={styles.exerciseNameRow}>
+                    <Text style={styles.exerciseName}>{ex.title}</Text>
+                    {isTraumaCondition && idx < traumaInformedExercises.length && (
+                      <View style={styles.traumaBadge}>
+                        <Text style={styles.traumaBadgeText}>Trauma-Safe</Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={styles.exerciseMeta}>{ex.durationMinutes} min · {ex.difficulty} · {ex.methodology}</Text>
                 </View>
                 <Feather name="chevron-right" size={16} color={Colors.textTertiary} />
@@ -349,4 +390,51 @@ const styles = StyleSheet.create({
   citation: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.textTertiary, lineHeight: 17, marginBottom: 8 },
   errorText: { fontFamily: 'Nunito_600SemiBold', fontSize: 18, color: Colors.text, textAlign: 'center' },
   backLink: { fontFamily: 'Nunito_600SemiBold', fontSize: 16, color: Colors.primary, textAlign: 'center', marginTop: 16 },
+  traumaNote: {
+    backgroundColor: '#8FAF8A18',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#8FAF8A35',
+  },
+  traumaNoteHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    marginBottom: 7,
+  },
+  traumaNoteTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 14,
+    color: '#6A8F65',
+  },
+  traumaNoteBody: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
+  },
+  exerciseRowTrauma: {
+    borderWidth: 1,
+    borderColor: '#8FAF8A35',
+    backgroundColor: '#8FAF8A08',
+  },
+  exerciseNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    flexWrap: 'wrap',
+  },
+  traumaBadge: {
+    backgroundColor: '#8FAF8A25',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  traumaBadgeText: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 10,
+    color: '#6A8F65',
+  },
 });
