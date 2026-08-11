@@ -17,6 +17,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { EXERCISES, CATEGORY_INFO, ExerciseCategory } from '@/constants/exercises';
+import { ARTICLES } from '@/constants/articles';
 import { CONDITIONS } from '@/constants/conditions';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import Svg from 'react-native-svg';
@@ -315,6 +316,14 @@ export default function HomeScreen() {
     return `${currentStreak} days. You are genuinely rewiring your brain.`;
   }, [currentStreak, sessions]);
 
+  const recentArticles = useMemo(() => {
+    const cutoff = 30;
+    return ARTICLES.filter(a => {
+      if (!a.releaseDate) return false;
+      return differenceInDays(new Date(), parseISO(a.releaseDate)) <= cutoff;
+    });
+  }, []);
+
   const nextExercise = advisorState.nextExercise;
   const evidenceBadge = nextExercise ? (EVIDENCE_LABELS[nextExercise.methodology] || 'Emerging Science') : '';
 
@@ -571,6 +580,40 @@ export default function HomeScreen() {
             <InsightCardView key={insight.id} insight={insight} />
           ))}
         </View>
+
+        {recentArticles.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>New in Learn</Text>
+              <TouchableOpacity onPress={() => router.push('/articles' as any)} activeOpacity={0.7}>
+                <Text style={styles.newInLearnSeeAll}>See all</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.newInLearnRow}
+            >
+              {recentArticles.map(article => (
+                <TouchableOpacity
+                  key={article.id}
+                  style={styles.newInLearnCard}
+                  onPress={() => router.push(`/article/${article.id}` as any)}
+                  activeOpacity={0.75}
+                >
+                  <View style={styles.newInLearnIconWrap}>
+                    <Feather name={article.iconName as any} size={18} color={Colors.primary} />
+                  </View>
+                  <View style={styles.newInLearnBadge}>
+                    <Text style={styles.newInLearnBadgeText}>NEW</Text>
+                  </View>
+                  <Text style={styles.newInLearnCardTitle} numberOfLines={2}>{article.title}</Text>
+                  <Text style={styles.newInLearnCardMeta}>{article.readTimeMinutes} min read</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {showNervousSystemSection && (
           <View style={styles.section}>
@@ -891,5 +934,65 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textSecondary,
     marginTop: 1,
+  },
+
+  newInLearnSeeAll: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 12,
+    color: Colors.primary,
+    marginBottom: 12,
+  },
+  newInLearnRow: {
+    paddingRight: 4,
+    gap: 12,
+    flexDirection: 'row',
+  },
+  newInLearnCard: {
+    width: 150,
+    backgroundColor: Colors.surface,
+    borderRadius: 18,
+    padding: 16,
+    shadowColor: Colors.cardShadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  newInLearnIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  newInLearnBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.primary + '20',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginBottom: 8,
+  },
+  newInLearnBadgeText: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 9,
+    color: Colors.primary,
+    letterSpacing: 1,
+  },
+  newInLearnCardTitle: {
+    fontFamily: 'Nunito_700Bold',
+    fontSize: 13,
+    color: Colors.text,
+    lineHeight: 18,
+    marginBottom: 6,
+    flex: 1,
+  },
+  newInLearnCardMeta: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: 4,
   },
 });
