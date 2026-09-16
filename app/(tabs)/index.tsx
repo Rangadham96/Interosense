@@ -26,10 +26,10 @@ import { apiRequest } from '@/lib/query-client';
 import { getWearableContext } from '@/lib/health';
 
 const DAILY_SCIENCE_INSIGHTS = [
-  { label: 'THE INSULA', text: 'Regular interoceptive practice measurably thickens the insular cortex, the region that translates body signals into conscious awareness.' },
+  { label: 'BODY AWARENESS', text: 'Interoceptive practice helps you pay closer attention to body signals and describe what you notice.' },
   { label: 'VAGUS NERVE', text: 'Your vagus nerve carries 80% of signals from gut to brain. Just 5 minutes of slow breathing activates your rest-and-digest system.' },
   { label: 'HRV & RESILIENCE', text: 'Heart rate variability (HRV) is your body\'s resilience score. Box breathing can raise it by 10–15% in a single session.' },
-  { label: 'NEUROPLASTICITY', text: 'Each moment of mindful body attention reshapes neural pathways. Two weeks of daily practice produces measurable changes.' },
+  { label: 'CONSISTENCY', text: 'Regular practice gives you repeated opportunities to notice patterns and learn which responses feel useful.' },
   { label: 'GUT-BRAIN AXIS', text: 'Your gut produces 95% of your body\'s serotonin. Gut awareness exercises directly support mood through the enteric nervous system.' },
   { label: 'INTEROCEPTION', text: 'People with greater interoceptive accuracy tend to experience emotions more intensely and make more intuitive decisions (Critchley, 2004).' },
   { label: 'BREATH & EMOTION', text: 'Your breathing pattern directly reflects your emotional state. Changing your breath can change your feelings within 90 seconds.' },
@@ -62,11 +62,11 @@ function getTimeOfDayGreeting(name: string): { greeting: string; subtext: string
 }
 
 const EVIDENCE_LABELS: Record<string, string> = {
-  MABT: 'Strong Evidence',
-  breathwork: 'Strong Evidence',
-  mindfulness: 'Strong Evidence',
+  MABT: 'Research-informed',
+  breathwork: 'Research-informed',
+  mindfulness: 'Research-informed',
   somatic: 'Emerging Science',
-  exposure: 'Strong Evidence',
+  exposure: 'Research-informed',
 };
 
 function InsightCardView({ insight }: { insight: InsightCard }) {
@@ -311,7 +311,7 @@ export default function HomeScreen() {
     }
     if (currentStreak === 1) return '1 day of practice. A powerful beginning.';
     if (currentStreak < 7) return `${currentStreak} days of consistent awareness. Keep going.`;
-    if (currentStreak < 14) return `${currentStreak} days. Your neural pathways are strengthening.`;
+    if (currentStreak < 14) return `${currentStreak} days. Notice what is becoming more familiar with practice.`;
     if (currentStreak < 30) return `${currentStreak} days. Remarkable dedication to yourself.`;
     return `${currentStreak} days. You are genuinely rewiring your brain.`;
   }, [currentStreak, sessions]);

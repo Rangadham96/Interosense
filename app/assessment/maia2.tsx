@@ -11,7 +11,6 @@ import {
   MAIA2_SCALE,
   calculateMaia2Subscales,
   getMaia2OverallAverage,
-  getMaia2ClinicalFlags,
   generateClinicianReport,
   hasCompleteSubscaleScores,
 } from '@/constants/clinical-scales';
@@ -79,11 +78,6 @@ export default function Maia2Screen() {
     }
   };
 
-  const clinicalFlags = useMemo(() => {
-    if (Object.keys(subscaleScores).length === 0) return [];
-    return getMaia2ClinicalFlags(subscaleScores);
-  }, [subscaleScores]);
-
   const handleShareWithClinician = useCallback(async () => {
     const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     const report = generateClinicianReport(subscaleScores, date);
@@ -105,7 +99,7 @@ export default function Maia2Screen() {
       scaleName: 'MAIA-2',
       completedAt: new Date().toISOString(),
       totalScore: score100,
-      severity: getMaia2SeverityLabel(overallAverage),
+      severity: 'Profile recorded',
       answers,
       subscaleScores,
     };
@@ -143,7 +137,7 @@ export default function Maia2Screen() {
           <Text style={styles.introTitle}>MAIA-2</Text>
           <Text style={styles.introFullName}>Multidimensional Assessment of Interoceptive Awareness</Text>
           <Text style={styles.introDesc}>
-            The only scientifically validated measure of body awareness. 37 questions across 8 dimensions reveal exactly where your interoceptive awareness is strongest, and where it is growing.
+            A validated self-report questionnaire with 37 questions across 8 dimensions. It can help you reflect on how you notice and relate to body sensations over time.
           </Text>
 
           <View style={styles.introMetaRow}>
@@ -189,7 +183,7 @@ export default function Maia2Screen() {
               {previousMaia2.slice(0, 3).map((pa, i) => (
                 <View key={i} style={styles.prevRow}>
                   <Text style={styles.prevDate}>{new Date(pa.completedAt).toLocaleDateString()}</Text>
-                  <Text style={styles.prevScore}>Score: {pa.totalScore}/100</Text>
+                  <Text style={styles.prevScore}>8-dimension profile saved</Text>
                 </View>
               ))}
             </View>
@@ -315,17 +309,11 @@ export default function Maia2Screen() {
       >
         <Text style={styles.resultsTitle}>Your Body Awareness Profile</Text>
 
-        <View style={styles.aggregateRow}>
-          <View style={styles.scoreCircle}>
-            <Text style={styles.scoreNumber}>{Math.round(overallAverage * 20)}</Text>
-            <Text style={styles.scoreMax}>/100</Text>
-          </View>
-          <View style={styles.aggregateNote}>
-            <Text style={styles.aggregateNoteLabel}>Aggregate indicator only</Text>
-            <Text style={styles.aggregateNoteText}>
-              MAIA-2 authors advise against a single composite score, the pattern across all 8 subscales is the clinically meaningful result.
-            </Text>
-          </View>
+        <View style={styles.profileNote}>
+          <Feather name="info" size={16} color="#88D5E0" />
+          <Text style={styles.profileNoteText}>
+            MAIA-2 is interpreted as an 8-dimension profile, not a single overall or severity score.
+          </Text>
         </View>
 
         <View style={styles.radarContainer}>
@@ -412,25 +400,6 @@ export default function Maia2Screen() {
           })}
         </View>
 
-        {clinicalFlags.length > 0 && (
-          <View style={styles.clinicalFlagsCard}>
-            <Text style={styles.clinicalFlagsTitle}>Clinical Interpretation</Text>
-            {clinicalFlags.map(flag => (
-              <View key={flag.key} style={styles.clinicalFlagItem}>
-                <View style={styles.clinicalFlagHeader}>
-                  <Feather
-                    name={flag.type === 'professional' ? 'user' : flag.type === 'distress' ? 'alert-circle' : 'trending-up'}
-                    size={14}
-                    color={flag.type === 'professional' ? '#88D5E0' : flag.type === 'distress' ? '#E8A48B' : '#7FB069'}
-                  />
-                  <Text style={styles.clinicalFlagTitle}>{flag.title}</Text>
-                </View>
-                <Text style={styles.clinicalFlagMessage}>{flag.message}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
         <View style={styles.citationBox}>
           <Feather name="book-open" size={14} color="rgba(255,255,255,0.5)" />
           <Text style={styles.citationText}>{MAIA2_SCALE.citation}</Text>
@@ -460,14 +429,6 @@ export default function Maia2Screen() {
       </ScrollView>
     </LinearGradient>
   );
-}
-
-function getMaia2SeverityLabel(avg: number): string {
-  if (avg >= 4) return 'Excellent';
-  if (avg >= 3) return 'Good';
-  if (avg >= 2) return 'Developing';
-  if (avg >= 1) return 'Beginning';
-  return 'Starting Out';
 }
 
 const styles = StyleSheet.create({
@@ -549,6 +510,11 @@ const styles = StyleSheet.create({
 
   resultsContent: { paddingHorizontal: 24, alignItems: 'center' },
   resultsTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 22, color: '#FFF', marginBottom: 20, textAlign: 'center' },
+  profileNote: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10, width: '100%',
+    backgroundColor: 'rgba(136,213,224,0.12)', borderRadius: 14, padding: 14, marginBottom: 20,
+  },
+  profileNoteText: { flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 13, lineHeight: 19, color: 'rgba(255,255,255,0.82)' },
   aggregateRow: {
     flexDirection: 'row', alignItems: 'center', gap: 16, width: '100%', marginBottom: 24,
   },

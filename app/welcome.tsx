@@ -28,8 +28,8 @@ const SLIDES = [
   {
     icon: 'layers' as const,
     iconColor: '#88B3B5',
-    headline: 'Built on validated science',
-    body: '37 research-backed exercises across 8 dimensions of interoceptive awareness. Designed with the same methods used in clinical settings.',
+    headline: 'Grounded in interoception research',
+    body: '37 guided practices across 8 dimensions of interoceptive awareness, with clear explanations and space to reflect on what you notice.',
   },
   {
     icon: 'user-check' as const,

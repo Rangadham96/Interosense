@@ -80,7 +80,7 @@ function generatePlan(conditions: string[], experienceLevel: string): WeekPlan[]
       {
         week: 3,
         title: 'Heartbeat Awareness',
-        focus: 'Safely build cardiac interoception',
+        focus: 'Explore cardiac sensations at a comfortable pace',
         exerciseIds: ['heartbeat-detection', '478-breathing'],
         color: '#E8B4B8',
       },
@@ -139,14 +139,14 @@ function generatePlan(conditions: string[], experienceLevel: string): WeekPlan[]
       {
         week: 2,
         title: 'Movement & Breath',
-        focus: 'Activate the body through mindful movement',
+        focus: 'Explore the body through mindful movement',
         exerciseIds: ['slow-walking', 'box-breathing'],
         color: '#7FB069',
       },
       {
         week: 3,
         title: 'Gut & Heart',
-        focus: 'Engage gut-brain and cardiac pathways for mood',
+        focus: 'Notice gut and cardiac sensations alongside mood',
         exerciseIds: ['gut-feeling-scan', 'heartbeat-detection'],
         color: '#C4A484',
       },
@@ -209,67 +209,67 @@ function getAhaMoment(conditions: string[], baseline: InteroceptiveAnswer | null
 
   if (isPtsd) {
     return {
-      whatWeNoticed: baseline === 'clear'
-        ? "Your nervous system is highly attuned, you detected signals most people miss."
-        : "Your body has learned to protect itself by dimming internal signals. That is a survival adaptation.",
-      whatYourBodyDoes: "Trauma rewires the brain's threat detector (amygdala) to stay on high alert, while the prefrontal cortex, your rational mind, goes quieter. Your body holds the story of what happened.",
-      whatWellTrain: "Trauma-sensitive interoceptive exercises will gently rebuild your sense of body safety, starting with neutral areas like hands and feet, never pushing past your window of tolerance.",
+        whatWeNoticed: baseline === 'clear'
+        ? "You noticed several body signals clearly. We can use that awareness as a starting point."
+        : "Some people notice body signals very strongly after difficult experiences, while others feel disconnected from them. Both responses are understandable.",
+      whatYourBodyDoes: "After trauma, the systems involved in threat and attention can respond differently. Some people become more watchful of sensations, while others feel numb or distant. Responses vary from person to person.",
+      whatWellTrain: "We will start with choice-based, trauma-sensitive noticing practices. Begin with neutral sensations such as your hands or feet, pause when needed, and stay within what feels manageable.",
       citation: "van der Kolk, B. (2014). The Body Keeps the Score., Porges, S. (2011). The Polyvagal Theory.",
     };
   }
 
   if (isPanic) {
     return {
-      whatWeNoticed: baseline === 'clear'
-        ? "You can feel your heartbeat clearly, a strength we will use to retrain your threat response."
-        : "Panic often makes the body feel unreadable. Safe exposure changes that.",
-      whatYourBodyDoes: "During a panic attack, your amygdala fires a false alarm. The body sensations of panic (racing heart, breathlessness) are physically identical to vigorous exercise, but catastrophically misread as danger.",
-      whatWellTrain: "Interoceptive exposure: deliberately inducing mild versions of panic sensations in a safe context teaches your brain that these sensations are uncomfortable, not dangerous. This reduces panic attacks by up to 80%.",
+        whatWeNoticed: baseline === 'clear'
+        ? "You noticed your heartbeat clearly. We can explore that awareness gently and without forcing it."
+        : "Panic can make ordinary body sensations feel confusing or threatening. We will begin with observation and choice.",
+      whatYourBodyDoes: "During panic, changes in breathing, heart rate, muscle tension, and attention can arrive together and feel alarming. The meaning your mind gives those sensations can influence how intense the experience feels.",
+      whatWellTrain: "Clinicians sometimes use carefully planned interoceptive exposure within CBT for panic. In this app, we will stay with gentle observation and grounding rather than deliberately inducing intense sensations.",
       citation: "Craske et al. (2008). Interoceptive exposure vs. breathing retraining within CBT for panic disorder. BJCP, 47(1).",
     };
   }
 
   if (isAnxiety) {
     return {
-      whatWeNoticed: baseline === 'none'
-        ? "Anxiety can suppress body awareness even when the nervous system is highly activated."
-        : "You have interoceptive sensitivity, you notice signals. We will build accuracy so signals are interpreted correctly.",
-      whatYourBodyDoes: "Anxiety overactivates the insula (your internal body-sensor), making it interpret normal sensations as threats. A racing heart gets labeled 'danger' instead of 'I just climbed stairs.'",
-      whatWellTrain: "Training interoceptive accuracy closes the gap between sensing and interpreting body signals. Research shows 30–40% anxiety reduction with 8 weeks of practice.",
+        whatWeNoticed: baseline === 'none'
+        ? "Anxiety can make it harder to notice or describe body signals, even when you feel activated."
+        : "You notice body signals. We will practice separating what you sense from the story your mind may attach to it.",
+      whatYourBodyDoes: "Anxiety can increase attention to internal sensations and make ambiguous signals feel more concerning. A racing heart can have many explanations, including movement, emotion, or stress.",
+      whatWellTrain: "We will practice noticing a sensation, describing its qualities, and considering more than one possible explanation. This is a reflection skill, not a way to diagnose what a sensation means.",
       citation: "Garfinkel et al. (2015). Knowing your own heart. Biological Psychology, 104, 65–74.",
     };
   }
 
   if (isAlexithymia) {
     return {
-      whatWeNoticed: baseline === 'clear'
-        ? "You have more body access than you might think. We will build the translation layer."
-        : "Difficulty detecting body signals is the signature of alexithymia. This is precisely what we train.",
-      whatYourBodyDoes: "Your anterior insula receives body signals, but the translation step, from raw sensation to emotional meaning, is impaired. It is like having a radio but a broken decoder.",
-      whatWellTrain: "Kelly Mahler's 3-step framework: Notice (detect the sensation) → Describe (name it precisely) → Connect (link it to an emotion). Repeated practice rewires the insula-prefrontal pathway.",
+        whatWeNoticed: baseline === 'clear'
+        ? "You have some access to body signals already. We will build a clearer vocabulary for describing them."
+        : "Some people find body signals or emotion words difficult to identify. We can start with simple, pressure-free observations.",
+      whatYourBodyDoes: "Body sensations and emotions influence one another, but the connection is not always easy to interpret. Attention, language, context, and personal experience all shape what a sensation means to you.",
+      whatWellTrain: "We will use a simple Notice, Describe, Connect sequence: detect a sensation, name its qualities, and consider what emotion or context may be present. Treat your interpretation as a hypothesis, not a fact.",
       citation: "Price & Hooven (2018). Interoceptive awareness skills for emotion regulation. Frontiers in Psychology, 9, 798.",
     };
   }
 
   if (isDepression) {
     return {
-      whatWeNoticed: baseline === 'faint' || baseline === 'none'
-        ? "Depression blunts interoception, your body signals have been turned down. We will turn them back up."
-        : "Your body awareness is stronger than depression typically allows. That is a real asset.",
-      whatYourBodyDoes: "Depression reduces insula activation, creating interoceptive blunting, the body feels muted or distant. Critically, 95% of serotonin is produced in the gut. Your enteric nervous system is a mood pathway.",
-      whatWellTrain: "Gentle body-based practices restore the interoceptive signal. Even 2-minute practices measurably increase insula activation and create a bottom-up path to emotional re-engagement.",
+        whatWeNoticed: baseline === 'faint' || baseline === 'none'
+        ? "Low energy or low mood can make body signals feel faint or far away. We will begin with small, manageable observations."
+        : "You noticed some body awareness today. That can be a useful starting point, even when mood and energy fluctuate.",
+      whatYourBodyDoes: "Depression can affect energy, attention, sleep, appetite, and the way emotions are felt in the body. These experiences differ across people and are not a diagnostic test.",
+      whatWellTrain: "Gentle practices can give you a brief, structured moment to notice sensations such as temperature, tension, or breathing. They are a complement to professional care, not a treatment for depression.",
       citation: "Paulus & Stein (2010). Interoception in anxiety and depression. Brain Structure and Function, 214(5–6).",
     };
   }
 
   return {
     whatWeNoticed: baseline === 'clear'
-      ? "Strong interoceptive access, you are already operating above average on body awareness."
+      ? "You noticed body signals clearly in this exercise. That is a useful starting point."
       : baseline === 'faint'
-      ? "Faint awareness is a great starting point, interoception improves rapidly with targeted practice."
-      : "Low baseline awareness is common and very trainable. The insula is neuroplastic throughout life.",
+      ? "Faint awareness is a valid starting point. We can build your vocabulary gradually without forcing stronger sensations."
+      : "Low baseline awareness is common. We can start with brief, practical observations and see what feels useful.",
     whatYourBodyDoes: "Your insular cortex constantly receives signals from every organ and tissue. Most of this traffic never reaches consciousness, interoception is the skill of tuning in to this stream.",
-    whatWellTrain: "Evidence-based exercises using MABT methodology will systematically expand your interoceptive vocabulary, training you to notice, describe, and interpret your body's signals with increasing precision.",
+    whatWellTrain: "Structured practices informed by body awareness research can help you notice, describe, and reflect on sensations with more detail over time.",
     citation: "Price, C. J. & Hooven, C. (2018). MABT. Frontiers in Psychology, 9, 798.",
   };
 }
@@ -482,13 +482,13 @@ export default function OnboardingScreen() {
             </View>
             <Text style={styles.step1Title}>Welcome to{'\n'}Interosense</Text>
             <Text style={styles.step1Subtitle}>
-              Science-backed body awareness training, personalized to your nervous system.
+               Evidence-informed body awareness practice, personalized to your goals and comfort.
             </Text>
 
             <View style={styles.trustLines}>
-              <TrustLine icon="shield" text="Built on clinical MABT research" />
+              <TrustLine icon="shield" text="Informed by body awareness research" />
               <TrustLine icon="lock" text="Your data stays private and secure" />
-              <TrustLine icon="users" text="Used by therapists and practitioners" />
+              <TrustLine icon="users" text="Designed to complement professional care" />
               <TrustLine icon="star" text="Personalized to your conditions" />
             </View>
 
@@ -667,7 +667,7 @@ export default function OnboardingScreen() {
           <Animated.View entering={FadeIn.duration(300)}>
             <Text style={styles.setupTitle}>What brings you here?</Text>
             <Text style={styles.setupSubtitle}>
-              Select any that apply, this determines which exercises and science we show you. Interoception research is condition-specific.
+               Select any that apply. Your choices help us tailor educational context and practice suggestions.
             </Text>
 
             <View style={styles.conditionsList}>

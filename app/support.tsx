@@ -28,7 +28,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'What is the MAIA-2 assessment?',
-    a: 'The Multidimensional Assessment of Interoceptive Awareness (MAIA-2) is a validated 37-item questionnaire developed by Mehling et al. (2018) that measures 8 dimensions of body awareness. It is the gold standard research tool for interoception and gives you a radar chart showing your profile across dimensions such as noticing, emotional awareness, and self-regulation.',
+    a: 'The Multidimensional Assessment of Interoceptive Awareness (MAIA-2) is a validated 37-item self-report questionnaire developed by Mehling et al. (2018). It describes 8 dimensions of interoceptive awareness, including noticing, emotional awareness, and self-regulation. Your results are reflective rather than diagnostic.',
   },
   {
     q: 'Is my health data private?',

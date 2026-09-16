@@ -44,7 +44,7 @@ const BADGE_MEANINGS: Record<string, string> = {
   'hundred-sessions': 'A hundred practices. Extraordinary commitment to your own awareness.',
   'streak-3': 'Three days in a row. Consistency is where change really begins.',
   'streak-7': 'A full week of practice. Your nervous system is responding.',
-  'streak-14': 'Two weeks of daily practice. Your neural pathways are strengthening.',
+  'streak-14': 'Two weeks of daily practice. Notice which skills and exercises feel more familiar.',
   'streak-30': 'Thirty consecutive days. This level of dedication is rare and meaningful.',
   'streak-60': 'Sixty days unbroken. You have transformed practice into identity.',
   'explore-2': 'You stepped beyond the familiar. Curiosity is the root of awareness.',

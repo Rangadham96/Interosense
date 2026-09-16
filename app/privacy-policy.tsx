@@ -110,7 +110,7 @@ export default function PrivacyPolicyScreen() {
             Your data is stored in a PostgreSQL database hosted on secure cloud infrastructure. A local cache is maintained on your device using AsyncStorage to allow the app to function when offline.
           </Body>
           <Body style={{ marginTop: 10 }}>
-            Health wearable data (HRV, sleep) is read from Apple Health or Health Connect only at the time of use and is not permanently stored on our servers beyond the current session's AI advisor request.
+            Raw health wearable readings (HRV, sleep) are read from Apple Health or Health Connect at the time of use and are not permanently stored on our servers. When enough baseline data is available, a broad comparison such as higher, lower, or similar to your recent average may be reflected in a saved daily insight.
           </Body>
           <Body style={{ marginTop: 10 }}>
             All data in transit is encrypted using HTTPS/TLS.
@@ -145,7 +145,7 @@ export default function PrivacyPolicyScreen() {
           <BulletItem>It is never shared with advertisers, data brokers, or any third party for commercial purposes</BulletItem>
           <BulletItem>It is used only to personalise your experience within the app</BulletItem>
           <BulletItem>Clinical reports are generated only at your explicit request and shared only by you (via the native share sheet)</BulletItem>
-          <BulletItem>Wearable health data is processed in real time and not retained on our servers</BulletItem>
+          <BulletItem>Raw wearable readings are processed in real time and are not retained on our servers; saved insights may include a broad comparison with your recent average</BulletItem>
         </View>
 
         <View style={styles.card}>

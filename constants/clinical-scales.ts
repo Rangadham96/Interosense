@@ -196,7 +196,7 @@ export const MAIA2_SCALE: Maia2Scale = {
   id: 'maia2',
   name: 'Multidimensional Assessment of Interoceptive Awareness',
   shortName: 'MAIA-2',
-  description: 'A validated 37-item questionnaire measuring 8 dimensions of interoceptive awareness. The only scientifically validated measure of body awareness that tracks genuine improvement over time.',
+  description: 'A validated 37-item self-report questionnaire measuring 8 dimensions of interoceptive awareness. Its subscales can help you reflect on how you relate to body sensations over time.',
   citation: 'Mehling, W. E., et al. (2018). The Multidimensional Assessment of Interoceptive Awareness, Version 2 (MAIA-2). PLOS ONE, 13(12), e0208034. Freely available for research and clinical use.',
   disclaimer: 'MAIA-2 measures interoceptive awareness, not clinical symptoms. Results reflect your current level of body awareness and are not diagnostic. Higher scores indicate stronger body awareness in each dimension.',
   estimatedMinutes: 10,
@@ -256,14 +256,14 @@ export const MAIA2_SCALE: Maia2Scale = {
       key: 'bodyListening',
       name: 'Body Listening',
       description: 'Active listening to the body for insight',
-      clinicalContext: 'Body Listening reflects the degree to which you consult your body as a source of wisdom. High scores characterise people who make health decisions informed by physical intuition.',
+      clinicalContext: 'Body Listening reflects the degree to which you attend to body sensations when reflecting on your emotional state and choices.',
       questionIds: [32, 33, 34],
     },
     {
       key: 'trusting',
       name: 'Trusting',
       description: 'Experience of one\'s body as safe and trustworthy',
-      clinicalContext: 'Trusting is your sense of the body as a reliable, safe place to inhabit. Low scores are common in trauma and chronic illness; improvement here signals deep healing.',
+      clinicalContext: 'Trusting reflects the extent to which your body feels safe and reliable to you. Changes can be useful to discuss with a qualified professional alongside your wider context.',
       questionIds: [35, 36, 37],
     },
   ],
@@ -275,14 +275,14 @@ export const MAIA2_SCALE: Maia2Scale = {
     { id: 5, subscale: 'notDistracting', reverseScored: true, text: 'I ignore physical tension or discomfort until they become more severe.' },
     { id: 6, subscale: 'notDistracting', reverseScored: true, text: 'I distract myself from sensations of discomfort.' },
     { id: 7, subscale: 'notDistracting', reverseScored: true, text: 'When I feel pain or discomfort, I try to power through it.' },
-    { id: 8, subscale: 'notDistracting', reverseScored: true, text: 'I try not to feel discomfort or pain.' },
-    { id: 9, subscale: 'notDistracting', reverseScored: true, text: 'When I feel unpleasant body sensations, I occupy myself with something else so I do not have to feel them.' },
-    { id: 10, subscale: 'notDistracting', reverseScored: true, text: 'When I feel physical pain, I become upset.' },
-    { id: 11, subscale: 'notWorrying', reverseScored: true, text: 'I start to worry that something is wrong if I feel any discomfort.' },
-    { id: 12, subscale: 'notWorrying', reverseScored: true, text: 'I can notice an unpleasant body sensation without worrying about it.' },
-    { id: 13, subscale: 'notWorrying', reverseScored: true, text: 'When I feel unpleasant body sensations, I become frightened.' },
-    { id: 14, subscale: 'notWorrying', reverseScored: true, text: 'When I am in physical pain, I cannot stand it.' },
-    { id: 15, subscale: 'notWorrying', reverseScored: true, text: 'I can stay calm and not worry when I have unpleasant feelings in my body.' },
+    { id: 8, subscale: 'notDistracting', reverseScored: true, text: 'I try to ignore pain.' },
+    { id: 9, subscale: 'notDistracting', reverseScored: true, text: 'I push feelings of discomfort away by focusing on something else.' },
+    { id: 10, subscale: 'notDistracting', reverseScored: true, text: 'When I feel unpleasant body sensations, I occupy myself with something else so I do not have to feel them.' },
+    { id: 11, subscale: 'notWorrying', reverseScored: true, text: 'When I feel physical pain, I become upset.' },
+    { id: 12, subscale: 'notWorrying', reverseScored: true, text: 'I start to worry that something is wrong if I feel any discomfort.' },
+    { id: 13, subscale: 'notWorrying', text: 'I can notice an unpleasant body sensation without worrying about it.' },
+    { id: 14, subscale: 'notWorrying', text: 'I can stay calm and not worry when I have feelings of discomfort or pain.' },
+    { id: 15, subscale: 'notWorrying', reverseScored: true, text: 'When I am in discomfort or pain I cannot get it out of my mind.' },
     { id: 16, subscale: 'attentionRegulation', text: 'I can pay attention to my breath without being distracted by things happening around me.' },
     { id: 17, subscale: 'attentionRegulation', text: 'I can maintain awareness of my inner body sensations even when there is a lot going on around me.' },
     { id: 18, subscale: 'attentionRegulation', text: 'When I am in conversation with someone, I can pay attention to my body sensations at the same time.' },
@@ -442,7 +442,7 @@ export function generateClinicianReport(
   lines.push('CLINICAL NOTE');
   lines.push('The MAIA-2 (Mehling et al., 2018, PLOS ONE) is a validated 37-item');
   lines.push('instrument. Authors explicitly caution against computing a composite');
-  lines.push('score, the 8-subscale profile is the clinically meaningful unit.');
+  lines.push('score; interpret the pattern across the 8 subscales instead.');
   lines.push('');
   lines.push('Citation: Mehling WE et al. (2018). The Multidimensional Assessment of');
   lines.push('Interoceptive Awareness, Version 2 (MAIA-2). PLOS ONE 13(12): e0208034.');

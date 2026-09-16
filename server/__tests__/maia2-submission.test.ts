@@ -34,6 +34,21 @@ describe("normalizeMaia2Submission", () => {
     );
   });
 
+  it("uses the official MAIA-2 reverse-scoring key for Not-Worrying", () => {
+    const answers = new Array(37).fill(0);
+    answers[10] = 1; // Q11 reversed
+    answers[11] = 2; // Q12 reversed
+    answers[12] = 3; // Q13 direct
+    answers[13] = 4; // Q14 direct
+    answers[14] = 5; // Q15 reversed
+
+    const result = normalizeMaia2Submission(answers);
+
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.subscaleScores.notWorrying, 2.8);
+  });
+
   it("rejects partial answers instead of manufacturing missing values", () => {
     const result = normalizeMaia2Submission(new Array(36).fill(3));
     assert.deepEqual(result, {

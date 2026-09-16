@@ -3,3 +3,4 @@
 - [Onboarding AsyncStorage flag](onboarding-asyncstorage.md) — onboardingComplete is device-local; check user.experienceLevel server-side on login to skip re-onboarding.
 - [Stale web build at /app](web-build-staleness.md) — merges rebuild dist automatically; unmerged frontend changes still require an export before testing /app.
 - [Server HTML template caching](server-template-caching.md) — landing/pitch HTML templates load once at startup; restart the backend after editing them.
+- [Health product claims standard](health-claims-standard.md) — keep product copy evidence-literate; never turn plausible mechanisms or wearable readings into personal medical facts.

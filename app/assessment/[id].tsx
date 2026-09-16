@@ -286,6 +286,7 @@ export default function AssessmentScreen() {
   }, [id, phase, answers]);
 
   const interpretation = interpretScore(scale, totalScore);
+  const hasPositivePhq9Response = id === 'phq-9' && (answers[8] ?? 0) > 0;
   const scorePercent = totalScore / scale.maxScore;
   const ringSize = 140;
   const ringStroke = 10;
@@ -301,6 +302,26 @@ export default function AssessmentScreen() {
       >
         <Text style={styles.resultsTitle}>{scale.shortName} Results</Text>
 
+        {hasPositivePhq9Response && (
+          <View style={[styles.warningCard, styles.urgentSupportCard]}>
+            <Feather name="heart" size={18} color="#FFB4B4" />
+            <View style={styles.warningContent}>
+              <Text style={styles.warningText}>
+                You reported thoughts of being better off dead or hurting yourself. This response matters regardless of your total score. Please contact a qualified healthcare professional promptly. If you may act on these thoughts or are in immediate danger, contact local emergency services now.
+              </Text>
+              <TouchableOpacity
+                style={styles.supportButton}
+                onPress={() => router.push('/crisis' as any)}
+                accessibilityRole="button"
+                accessibilityLabel="Open immediate support resources"
+              >
+                <Text style={styles.supportButtonText}>Open immediate support</Text>
+                <Feather name="arrow-right" size={14} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         <View style={styles.scoreRingContainer}>
           <Svg width={ringSize} height={ringSize} style={{ transform: [{ rotate: '-90deg' }] }}>
             <Circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius}
@@ -315,18 +336,22 @@ export default function AssessmentScreen() {
           </View>
         </View>
 
-        <View style={[styles.severityBadge, { backgroundColor: interpretation.color + '30' }]}>
-          <Text style={[styles.severityText, { color: interpretation.color }]}>{interpretation.severity}</Text>
-        </View>
+        {!hasPositivePhq9Response && (
+          <>
+            <View style={[styles.severityBadge, { backgroundColor: interpretation.color + '30' }]}>
+              <Text style={[styles.severityText, { color: interpretation.color }]}>{interpretation.severity}</Text>
+            </View>
 
-        <View style={styles.interpretCard}>
-          <Text style={styles.interpretDesc}>{interpretation.description}</Text>
-          <View style={styles.interpretDivider} />
-          <View style={styles.interpretRecRow}>
-            <Feather name="arrow-right-circle" size={16} color={Colors.secondary} />
-            <Text style={styles.interpretRec}>{interpretation.recommendation}</Text>
-          </View>
-        </View>
+            <View style={styles.interpretCard}>
+              <Text style={styles.interpretDesc}>{interpretation.description}</Text>
+              <View style={styles.interpretDivider} />
+              <View style={styles.interpretRecRow}>
+                <Feather name="arrow-right-circle" size={16} color={Colors.secondary} />
+                <Text style={styles.interpretRec}>{interpretation.recommendation}</Text>
+              </View>
+            </View>
+          </>
+        )}
 
         {totalScore >= scale.clinicalCutoff && (
           <View style={styles.warningCard}>
@@ -512,6 +537,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(240,192,90,0.15)', borderRadius: 14, padding: 16, width: '100%', marginBottom: 16,
   },
   warningText: { fontFamily: 'Nunito_500Medium', fontSize: 13, color: 'rgba(255,255,255,0.85)', flex: 1, lineHeight: 19 },
+  urgentSupportCard: { backgroundColor: 'rgba(232,93,93,0.2)' },
+  warningContent: { flex: 1 },
+  supportButton: {
+    flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 7,
+    marginTop: 12, paddingVertical: 9, paddingHorizontal: 13, borderRadius: 18,
+    backgroundColor: 'rgba(232,93,93,0.9)',
+  },
+  supportButtonText: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: '#FFF' },
   disclaimerBoxResult: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 12 },
   disclaimerTextResult: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: 'rgba(255,255,255,0.45)', flex: 1, lineHeight: 16 },
   citationResult: { fontFamily: 'Nunito_400Regular', fontSize: 10, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 24, lineHeight: 14 },

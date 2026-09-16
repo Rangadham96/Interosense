@@ -95,8 +95,8 @@ const TOTAL_STEPS = 8;
 
 const CHECK_IN_BENEFITS = [
   'Personalises your exercises for today',
-  'Tracks your interoceptive growth',
-  'Helps your nervous system find its baseline',
+  'Helps you notice patterns over time',
+  'Creates a record you can reflect on',
 ];
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
@@ -178,60 +178,60 @@ function getNervousSystemDiagnosis(
   if (stress >= 7 && sleep <= 4) {
     const ex = EXERCISES.find(e => e.category === 'breathing' && e.difficulty === 'beginner') ?? EXERCISES.find(e => e.category === 'breathing');
     return {
-      state: 'Sympathetic overdrive',
-      heading: 'High stress and low sleep are compounding',
-      body: 'Your sympathetic system (fight-or-flight mode) is sustaining high activation. Poor sleep prevents your nervous system from resetting overnight, so stress compounds. Your amygdala (the brain\'s threat-detection center) is running the show. The fastest clinical reset: breathwork that directly stimulates your vagus nerve (the calming nerve connecting brain, heart, and gut).',
+      state: 'High stress and low rest',
+      heading: 'Today may need a gentler pace',
+      body: 'Your check-in suggests high stress alongside low sleep. That combination can make ordinary sensations feel more demanding. A short, comfortable breathing practice gives you a structured way to pause and check what you need without forcing yourself to feel different.',
       recommendedExerciseId: ex?.id ?? '',
-      exerciseReason: 'Slow breathing activates your vagus nerve, which directly suppresses your amygdala\'s threat signal and drops cortisol within 5 minutes.',
+      exerciseReason: 'Try a short breathing practice as a simple anchor. Keep the pace comfortable and stop if focusing on your breath feels unpleasant.',
     };
   }
   if (stress >= 7 || mood === 'anxious' || mood === 'stressed') {
     const ex = EXERCISES.find(e => e.category === 'breathing');
     return {
-      state: 'Elevated stress response',
-      heading: 'Your nervous system is working hard',
-      body: 'High stress is information, not failure. Your sympathetic system (fight-or-flight) is activated. The good news: your parasympathetic system (rest-and-recover mode) is one breath away. Slow, extended exhales directly stimulate the vagus nerve (your calming nerve) and can downregulate stress within 90 seconds.',
+      state: 'Elevated stress today',
+      heading: 'Your body is carrying a lot today',
+      body: 'High stress is information, not failure. A short pause can help you notice where that stress is showing up and choose a manageable next step. You do not need to make the feeling disappear for the check-in to be useful.',
       recommendedExerciseId: ex?.id ?? '',
-      exerciseReason: 'This exercise stimulates your vagus nerve through controlled breathing, activating your parasympathetic system and reducing cortisol measurably in a single session.',
+      exerciseReason: 'This exercise gives you a guided way to follow your breath and notice whether the pace feels supportive today.',
     };
   }
   if (energy <= 3) {
     const ex = EXERCISES.find(e => e.category === 'bodyScanning' && e.difficulty === 'beginner') ?? EXERCISES.find(e => e.category === 'bodyScanning');
     return {
-      state: 'Parasympathetic depletion',
+      state: 'Low energy today',
       heading: 'Your body is asking for rest',
-      body: 'Low energy is your body\'s wisdom. Your parasympathetic system (rest-and-recover mode) is depleted. A gentle body scan can help you reconnect without draining you further. It often reveals hidden tension patterns that are quietly consuming your energy reserves without your awareness.',
+      body: 'Low energy is useful information. A gentle body scan lets you check in without asking for a demanding response. You can notice heaviness, ease, or nothing in particular, then decide what would support you next.',
       recommendedExerciseId: ex?.id ?? '',
-      exerciseReason: 'Body scanning is low-effort interoceptive practice. It activates your insular cortex (the brain region that maps body signals) without taxing your energy system.',
+      exerciseReason: 'This is a low-effort way to notice sensations at your own pace. You can keep it brief or stop whenever you need to.',
     };
   }
   if (mood === 'sad' || mood === 'down') {
     const ex = EXERCISES.find(e => e.category === 'gut') ?? EXERCISES.find(e => e.category === 'movement');
     return {
-      state: 'Low arousal state',
+      state: 'Low mood today',
       heading: 'Your body is carrying something heavy',
-      body: 'Sadness reduces body activation and dampens interoception. Your enteric nervous system (your gut\'s own brain, containing 500 million neurons) produces 95% of the body\'s serotonin. Gut awareness exercises create a direct bottom-up pathway to mood that bypasses the thinking mind entirely.',
+      body: 'Sadness can change how we experience energy, movement, and body sensations. A gentle practice can offer a moment of contact with what is present, without asking it to resolve your mood.',
       recommendedExerciseId: ex?.id ?? '',
-      exerciseReason: 'This exercise directly engages your enteric nervous system (gut\'s own brain), activating serotonin pathways that support mood from the bottom up.',
+      exerciseReason: 'This practice invites gentle attention to sensations in your abdomen. You can stay curious without needing to interpret what you notice.',
     };
   }
   if (awareness >= 7 && energy >= 6) {
     const ex = EXERCISES.find(e => e.category === 'heartbeat' && e.difficulty !== 'beginner') ?? EXERCISES.find(e => e.category === 'heartbeat');
     return {
-      state: 'Optimal interoceptive window',
+      state: 'Ready to explore',
       heading: 'Your body is open and receptive today',
-      body: 'High awareness and good energy create an ideal window for deeper interoceptive practice. Your insular cortex (the brain region that maps body signals and connects them to emotion) is primed and receptive. This is the time for more demanding exercises that build lasting neural change.',
+      body: 'Your ratings suggest you have attention and energy available today. If you are curious, this may be a good moment to explore a more focused practice while keeping your pace comfortable.',
       recommendedExerciseId: ex?.id ?? '',
-      exerciseReason: 'In your current state, heartbeat detection training delivers maximum insular cortex activation: you have the attention and energy to access subtle cardiac signals.',
+      exerciseReason: 'Heartbeat practice asks you to notice a subtle internal rhythm. Treat it as an observation exercise, not a performance test.',
     };
   }
   const ex = EXERCISES.find(e => e.category === 'bodyScanning');
   return {
-    state: 'Baseline balance',
+    state: 'A moment to notice',
     heading: 'Thank you for checking in with yourself',
-    body: 'Even on ordinary days, this practice is building something real. Every check-in trains your insular cortex (the brain region that builds your internal body map). The science is clear: consistency of practice matters more than intensity. You are accumulating interoceptive vocabulary over time.',
+    body: 'An ordinary day is useful information too. This check-in gives you a snapshot of sensations, energy, mood, and context that you can compare with later days.',
     recommendedExerciseId: ex?.id ?? '',
-    exerciseReason: 'Body scanning on a balanced day builds baseline interoceptive precision, making you more sensitive to subtle signals over weeks of practice.',
+    exerciseReason: 'A body scan gives you a quiet opportunity to notice subtle sensations without needing to change them.',
   };
 }
 
@@ -463,7 +463,7 @@ export default function CheckinScreen() {
             </View>
             <Text style={styles.introTitle}>Daily Body Check-In</Text>
             <Text style={styles.introSubtitle}>
-              Tuning into your body each day builds the neural pathways of self-awareness that underpin emotional health.
+              Tuning into your body each day gives you a clearer record of sensations, energy, and mood.
             </Text>
             <View style={styles.introBenefitsList}>
               {CHECK_IN_BENEFITS.map((b, i) => (
@@ -531,7 +531,7 @@ export default function CheckinScreen() {
         {step === 2 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepQuestion}>{STEP_QUESTIONS[2]}</Text>
-            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][2] || 'Sleep quality directly shapes interoceptive sensitivity and emotional regulation throughout the day.'}</Text>
+            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][2] || 'Notice how the quality of your sleep may be showing up in your energy and body sensations today.'}</Text>
             <ScaleSelector value={sleep} onChange={setSleep} leftLabel="Very Poor" rightLabel="Excellent" color="#5A6FB5" />
           </Animated.View>
         )}
@@ -539,7 +539,7 @@ export default function CheckinScreen() {
         {step === 3 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepQuestion}>{STEP_QUESTIONS[3]}</Text>
-            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][3] || 'Stress lives in the body first. Notice physical cues: jaw tension, shallow breathing, tight shoulders.'}</Text>
+            <Text style={styles.stepHint}>{TIME_HINTS[timeOfDay][3] || 'Stress can show up in physical cues such as jaw tension, changes in breathing, or tight shoulders.'}</Text>
             <ScaleSelector value={stress} onChange={setStress} leftLabel="Very Calm" rightLabel="Very Stressed" color="#E07A5F" />
           </Animated.View>
         )}
@@ -593,7 +593,7 @@ export default function CheckinScreen() {
         {step === 6 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepQuestion}>{STEP_QUESTIONS[6]}</Text>
-            <Text style={styles.stepHint}>Mapping sensations to body regions improves interoceptive accuracy over time. Select anywhere you notice something.</Text>
+            <Text style={styles.stepHint}>Mapping sensations to body regions can make them easier to describe. Select anywhere you notice something.</Text>
             <View style={styles.sensationContainer}>
               {BODY_AREAS.map(a => {
                 const isSelected = selectedBodyAreas.includes(a);

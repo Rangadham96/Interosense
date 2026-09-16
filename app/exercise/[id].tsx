@@ -37,60 +37,60 @@ const TIMER_RADIUS = (TIMER_SIZE - TIMER_STROKE) / 2;
 const TIMER_CIRCUMFERENCE = 2 * Math.PI * TIMER_RADIUS;
 
 const EVIDENCE_LABELS: Record<string, { label: string; bg: string }> = {
-  MABT: { label: 'Strong Evidence', bg: '#4A8C3F20' },
-  breathwork: { label: 'Strong Evidence', bg: '#4A8C3F20' },
-  mindfulness: { label: 'Strong Evidence', bg: '#4A8C3F20' },
+  MABT: { label: 'Research-informed', bg: '#4A8C3F20' },
+  breathwork: { label: 'Research-informed', bg: '#4A8C3F20' },
+  mindfulness: { label: 'Research-informed', bg: '#4A8C3F20' },
   somatic: { label: 'Emerging Science', bg: '#B8860B20' },
-  exposure: { label: 'Strong Evidence', bg: '#4A8C3F20' },
+  exposure: { label: 'Research-informed', bg: '#4A8C3F20' },
 };
 
 const CATEGORY_SCIENCE_REFLECTIONS: Record<string, string> = {
-  heartbeat: 'Your insular cortex (the brain region that bridges body signals and conscious emotion) has been actively processing your cardiac rhythm. Research shows this strengthens the brain-heart connection underlying emotional awareness and decision-making.',
-  breathing: 'Your vagus nerve (the nerve connecting brain, heart, lungs, and gut) has been stimulated through this practice. Each slow exhale activated your parasympathetic system (your rest-and-recover mode), reducing cortisol and increasing heart rate variability (HRV), a measure of nervous system flexibility.',
-  bodyScanning: 'You have just completed a systematic interoceptive sweep of your body. Your insular cortex (the brain region that builds your internal body map) processed each region you attended to, creating a more precise model of your body from the inside.',
-  tension: 'By noticing and releasing tension, you engaged your proprioceptive system (sense of body position) and your interoceptive system (sense of internal signals) together. This integration is what gives somatic (body-based) practices their power over stress.',
-  temperature: 'Thermal sensing activates your trigeminal nerve (the nerve serving your face and sinuses) alongside your insular cortex (your internal body-mapping region). Developing this sensitivity sharpens all other forms of body awareness.',
-  exposure: 'Controlled exposure to uncomfortable sensations builds distress tolerance. Your amygdala (the brain\'s threat-detection center) has learned, just slightly, that these sensations are safe to feel rather than signals to escape from.',
-  gut: 'The enteric nervous system (your gut\'s own brain, containing 500 million neurons) that you just connected with produces 95% of the body\'s serotonin. You have strengthened the gut-brain axis, a direct two-way pathway to mood regulation.',
-  movement: 'Mindful movement engages proprioceptive receptors (sensors in your muscles, joints, and tendons) throughout your body, feeding rich positional data to your cerebellum (your movement coordinator) and insular cortex (your internal body mapper) at the same time.',
+  heartbeat: 'You practiced noticing cardiac sensations with focused attention. You may leave with a clearer description of rhythm, pace, or change. This is an observation practice, not a test of heart health.',
+  breathing: 'You practiced following the pace and texture of your breath. A slower rhythm can feel settling for some people, while others may prefer their natural breathing. Notice what was true for you today.',
+  bodyScanning: 'You completed a systematic scan from one area of the body to another. You may have noticed sensations that were easy to miss when attention was elsewhere. There is no required result.',
+  tension: 'You practiced noticing tension and experimenting with a small release. You can use that information to describe what changed, stayed the same, or felt more comfortable.',
+  temperature: 'You practiced noticing warmth, coolness, and other subtle changes without needing to explain them. This expands the vocabulary you can use when describing your experience.',
+  exposure: 'You practiced meeting a chosen sensation in a measured way, with permission to pause or stop. The useful information is how the sensation changed, stayed steady, or affected your attention.',
+  gut: 'You practiced bringing gentle attention to sensations in your abdomen. You may notice movement, pressure, warmth, or very little at all. Each response is information rather than a verdict.',
+  movement: 'You practiced tracking position, balance, and effort while moving. Notice which movements felt clear, effortful, comfortable, or worth exploring again.',
 };
 
 const SCIENCE_PROGRESSION: Record<string, { category: string; bridge: string }> = {
   heartbeat: {
     category: 'bodyScanning',
-    bridge: 'Cardiac sensing activates your insular cortex (the brain region that processes body signals and emotion). Body scanning extends that same activation to every region of your body, building a full internal map.',
+    bridge: 'You practiced noticing cardiac sensations. A body scan offers a wider tour, helping you compare signals across different areas at your own pace.',
   },
   breathing: {
     category: 'heartbeat',
-    bridge: 'You just trained your breath to regulate your nervous system. Now sense your heartbeat directly: the signal your breath was calming. This completes the loop between breath and heart.',
+    bridge: 'You just followed the rhythm of your breath. Next, you can notice your heartbeat and compare how two internal rhythms feel from the inside.',
   },
   bodyScanning: {
     category: 'tension',
-    bridge: 'You have mapped your body systematically. The next step is to locate the tension patterns within that map and learn to release them, turning awareness into active self-regulation.',
+    bridge: 'You mapped your body systematically. Next, you can explore one area with tension and try a small, choice-based release.',
   },
   tension: {
     category: 'movement',
-    bridge: 'You released stored tension from your nervous system. Movement practice integrates that release through proprioception (your sense of body position in space), making the effect more lasting.',
+    bridge: 'You noticed tension and experimented with release. Movement offers another way to explore effort, position, and ease without needing to force a particular outcome.',
   },
   temperature: {
     category: 'bodyScanning',
-    bridge: 'Thermal sensing is one interoceptive channel. Body scanning trains all channels together, deepening your interoceptive vocabulary well beyond temperature.',
+    bridge: 'Temperature is one way to notice the body. A body scan invites you to compare it with pressure, movement, tension, and other sensations.',
   },
   exposure: {
     category: 'breathing',
-    bridge: 'Exposure exercises safely activate your amygdala (the brain\'s threat-detection center). Breathwork is the clinical next step: it stimulates your vagus nerve (the calming nerve), bringing arousal back down.',
+    bridge: 'After meeting a sensation in a measured way, a breathing practice can give you a simple anchor for pausing and checking what you need next.',
   },
   gut: {
     category: 'breathing',
-    bridge: 'Your vagus nerve (the communication highway between brain, heart, and gut) carries 80% of its signals upward from gut to brain. Breathwork directly stimulates it, strengthening that gut-brain connection.',
+    bridge: 'You noticed sensations in your abdomen. A breathing practice offers another gentle way to observe rhythm, comfort, and change.',
   },
   movement: {
     category: 'bodyScanning',
-    bridge: 'Movement engages your proprioceptive system (your sense of where your body is in space). Body scanning captures the rich interoceptive signals generated by that activation.',
+    bridge: 'You tracked your position and effort while moving. A body scan lets you pause and notice what those sensations feel like at rest.',
   },
   nervousSystem: {
     category: 'breathing',
-    bridge: 'Vagal tone (the strength of your calming nerve signal) is built primarily through breath. This next practice deepens the parasympathetic (rest-and-recover) state you began training just now.',
+    bridge: 'Breathing is one way to practice a deliberate pause. This next exercise keeps the focus on noticing what feels supportive for you.',
   },
   traumaInformed: {
     category: 'temperature',
@@ -105,12 +105,12 @@ function formatTime(seconds: number): string {
 }
 
 function getSessionMilestone(total: number): string {
-  if (total === 1) return 'First session. Your insular cortex (the brain region that processes body signals) has begun to receive new structured input.';
-  if (total <= 4) return 'Early practice. Interoceptive pathways are forming. Consistent repetition is what creates lasting change.';
-  if (total <= 9) return `${total} sessions in. Research shows self-reported body awareness begins to shift after 5 or more practices.`;
-  if (total <= 19) return `${total} sessions of practice. MRI studies show measurable changes in insula thickness and activation begin around session 10.`;
-  if (total <= 29) return `${total} sessions. Your autonomic nervous system (the network governing heart rate, breathing, and stress response) is building durable regulation.`;
-  return `${total} sessions. Long-term practitioners show structural differences in interoceptive brain networks. You are building something lasting.`;
+  if (total === 1) return 'First session. You have created a starting point for noticing and describing your inner experience.';
+  if (total <= 4) return 'Early practice. Each session gives you another opportunity to learn what feels useful, neutral, or challenging.';
+  if (total <= 9) return `${total} sessions in. Look for your own patterns in what you notice and which practices feel worth repeating.`;
+  if (total <= 19) return `${total} sessions of practice. Your notes and ratings can help you see which exercises fit different moments.`;
+  if (total <= 29) return `${total} sessions. You are building a personal record of body signals, context, and responses to reflect on.`;
+  return `${total} sessions. Your consistency gives you a richer record of what you notice and what supports you.`;
 }
 
 export default function ExerciseSessionScreen() {
@@ -535,7 +535,7 @@ export default function ExerciseSessionScreen() {
                     </View>
                   </View>
                   <Text style={styles.nextExercisePromise}>
-                    {nextExerciseBridge || 'Continues building your interoceptive awareness through targeted nervous system training.'}
+                    {nextExerciseBridge || 'Continues your interoceptive awareness practice with a focused exercise.'}
                   </Text>
                   <TouchableOpacity
                     style={styles.nextExerciseStartBtn}

@@ -9,7 +9,7 @@ import { format, parseISO } from 'date-fns';
 import Svg, { Polyline, Circle, Line, Text as SvgText, Rect, Path } from 'react-native-svg';
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
-import { MAIA2_SCALE, getMaia2OverallAverage, generateClinicianReport, PastMaia2Assessment } from '@/constants/clinical-scales';
+import { MAIA2_SCALE, generateClinicianReport, PastMaia2Assessment } from '@/constants/clinical-scales';
 import RadarChart from '@/components/RadarChart';
 import { exportMaia2Pdf } from '@/lib/maia2-pdf';
 
@@ -558,7 +558,6 @@ export default function Maia2HistoryScreen() {
           const isExpanded = expandedId === (assessment.id || String(index));
           const id = assessment.id || String(index);
           const scores = assessment.subscaleScores;
-          const overall = scores ? getMaia2OverallAverage(scores) : null;
           const isLatest = index === 0;
 
           const radarDimensions = scores
@@ -590,11 +589,7 @@ export default function Maia2HistoryScreen() {
                   <Text style={styles.assessmentDate}>
                     {format(parseISO(assessment.completedAt), 'MMMM d, yyyy')}
                   </Text>
-                  {overall !== null && (
-                    <Text style={styles.assessmentOverall}>
-                      Avg {overall.toFixed(1)}/5
-                    </Text>
-                  )}
+                  <Text style={styles.assessmentOverall}>8-dimension profile</Text>
                 </View>
                 <View style={styles.assessmentCardRight}>
                   {scores && (
@@ -675,7 +670,7 @@ export default function Maia2HistoryScreen() {
         <View style={styles.disclaimer}>
           <Feather name="info" size={13} color={Colors.textTertiary} />
           <Text style={styles.disclaimerText}>
-            MAIA-2 authors advise against a single composite score. The pattern across all 8 subscales is the clinically meaningful result (Mehling et al., 2018, PLOS ONE).
+            MAIA-2 authors advise against a single composite score. Interpret the pattern across all 8 subscales (Mehling et al., 2018, PLOS ONE).
           </Text>
         </View>
       </ScrollView>

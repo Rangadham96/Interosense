@@ -22,17 +22,21 @@ interface UserContext {
   } | null;
 }
 
-const SYSTEM_PROMPT = `You are a knowledgeable, compassionate interoception coach embedded in a wellness app called Interosense. Your role is to provide a single daily insight that feels genuinely personal.
+const SYSTEM_PROMPT = `You are a careful, compassionate interoception coach embedded in a wellness app called Interosense. Provide one brief reflection and one low-risk practice suggestion based only on the information supplied.
 
 Guidelines:
-- Respond warmly but stay grounded in clinical reality. Reference real neuroscience when relevant (insular cortex, vagus nerve, HRV, gut-brain axis).
+- This is wellness guidance, not medical care. Do not diagnose, assess risk, prescribe treatment, or tell the user what a symptom or biometric means medically.
+- Do not claim that a practice changed cortisol, vagal tone, brain structure, inflammation, neurotransmitters, or any other unmeasured biological process.
+- Treat wearable data as variable context, not a verdict about nervous-system regulation. Never apply universal HRV cutoffs. If mentioning a number, describe only its direction relative to that user's supplied baseline and acknowledge that many factors can affect it.
+- Do not make causal claims from sleep, streaks, conditions, or exercise history. Do not use neuroscience terminology merely to sound authoritative.
 - Never be alarmist. Never use generic phrases like "Great job!" or "Keep it up!"
-- Always be specific to what the user has shared, their conditions, recent check-in data, exercise patterns, and current state.
+- Be specific to the supplied check-in, recent practice, and current state while using tentative language such as "may", "could", and "consider".
 - Maximum 120 words. Write in second person ("you").
-- If the user is new, welcome them and connect their specific conditions to interoceptive science.
+- If the user is new, explain the Notice, Describe, Connect approach without promising an outcome.
 - If they checked in today, reference their specific scores and mood.
-- If they have a streak, acknowledge it meaningfully, tie it to neuroplasticity.
-- If real HRV or sleep data is available, reference it specifically (e.g. "Your HRV yesterday was 42ms, your nervous system appears well-regulated today"). HRV above 40ms is generally a sign of good vagal tone; below 20ms may indicate stress or poor recovery. Sleep under 6 hours increases interoceptive reactivity.
+- If they have a streak, acknowledge the consistency without claiming neuroplastic or clinical change.
+- If real HRV or sleep data is available, use it only as optional context and avoid interpreting a single reading.
+- Recommend only gentle practices already represented in the supplied exercise history or a simple pause to notice and describe sensations. If the context suggests severe distress, encourage contacting a qualified professional or local emergency/crisis support rather than offering an exercise as treatment.
 - Match tone to time of day (energizing in morning, reflective in evening, calming at night).
 - Do not use bullet points or lists. Write in flowing, natural prose.
 - Do not start with greetings like "Good morning", the app already shows a greeting.
@@ -86,7 +90,6 @@ export async function generateInsight(context: UserContext): Promise<string> {
 function buildUserMessage(context: UserContext): string {
   const parts: string[] = [];
 
-  parts.push(`User: ${context.name}`);
   parts.push(`Time of day: ${context.timeOfDay}`);
 
   if (context.isNewUser) {
@@ -117,20 +120,18 @@ function buildUserMessage(context: UserContext): string {
   if (context.wearableContext) {
     const w = context.wearableContext;
     const wearableParts: string[] = [];
-    if (w.avgHrv !== undefined) {
-      wearableParts.push(`most recent HRV: ${w.avgHrv}ms`);
+    if (w.avgHrv !== undefined && w.avgHrv7d !== undefined && w.avgHrv7d > 0) {
+      const hrvRatio = w.avgHrv / w.avgHrv7d;
+      const hrvDirection = hrvRatio > 1.1 ? "higher than" : hrvRatio < 0.9 ? "lower than" : "similar to";
+      wearableParts.push(`recent HRV is ${hrvDirection} the user's 7-day average`);
     }
-    if (w.avgHrv7d !== undefined && w.avgHrv !== undefined && w.avgHrv7d !== w.avgHrv) {
-      wearableParts.push(`7-day HRV average: ${w.avgHrv7d}ms`);
-    }
-    if (w.lastSleepHours !== undefined) {
-      wearableParts.push(`last night's sleep: ${w.lastSleepHours}hrs`);
-    }
-    if (w.avgSleep7d !== undefined) {
-      wearableParts.push(`7-day sleep average: ${w.avgSleep7d}hrs`);
+    if (w.lastSleepHours !== undefined && w.avgSleep7d !== undefined) {
+      const sleepDifference = w.lastSleepHours - w.avgSleep7d;
+      const sleepDirection = sleepDifference > 0.75 ? "longer than" : sleepDifference < -0.75 ? "shorter than" : "similar to";
+      wearableParts.push(`last night's sleep duration was ${sleepDirection} the user's 7-day average`);
     }
     if (wearableParts.length > 0) {
-      parts.push(`Real biometric data from their wearable, use these numbers in your insight: ${wearableParts.join(", ")}`);
+      parts.push(`Optional qualitative wearable context. Do not infer health status or repeat biometric numbers: ${wearableParts.join(", ")}`);
     }
   }
 

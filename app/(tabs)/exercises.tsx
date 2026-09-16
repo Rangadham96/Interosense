@@ -27,11 +27,11 @@ const DIFFICULTY_COLORS: Record<string, { bg: string; text: string }> = {
 };
 
 const EVIDENCE_LABELS: Record<string, { label: string; color: string }> = {
-  MABT: { label: 'Strong Evidence', color: '#4A8C3F' },
-  breathwork: { label: 'Strong Evidence', color: '#4A8C3F' },
-  mindfulness: { label: 'Strong Evidence', color: '#4A8C3F' },
+  MABT: { label: 'Research-informed', color: '#4A8C3F' },
+  breathwork: { label: 'Research-informed', color: '#4A8C3F' },
+  mindfulness: { label: 'Research-informed', color: '#4A8C3F' },
   somatic: { label: 'Emerging Science', color: '#B8860B' },
-  exposure: { label: 'Strong Evidence', color: '#4A8C3F' },
+  exposure: { label: 'Research-informed', color: '#4A8C3F' },
 };
 
 const ALL_CATEGORIES: ExerciseCategory[] = [

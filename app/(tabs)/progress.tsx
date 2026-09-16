@@ -8,7 +8,7 @@ import { format, parseISO, startOfWeek, addDays, isSameDay, differenceInDays } f
 import { useApp } from '@/contexts/AppContext';
 import Colors from '@/constants/colors';
 import { ACHIEVEMENTS, TIER_COLORS } from '@/constants/achievements';
-import { CLINICAL_SCALES, MAIA2_SCALE, getMaia2OverallAverage, getMaia2ClinicalFlags, generateClinicianReport, PastMaia2Assessment, hasCompleteSubscaleScores } from '@/constants/clinical-scales';
+import { CLINICAL_SCALES, MAIA2_SCALE, generateClinicianReport, PastMaia2Assessment, hasCompleteSubscaleScores } from '@/constants/clinical-scales';
 import RadarChart from '@/components/RadarChart';
 import Svg, { Circle } from 'react-native-svg';
 
@@ -113,16 +113,6 @@ export default function ProgressScreen() {
       maxValue: 5,
     }));
   }, [previousMaia2]);
-
-  const maia2OverallScore = useMemo(() => {
-    if (!latestMaia2SubscalesComplete || !latestMaia2?.subscaleScores) return null;
-    return getMaia2OverallAverage(latestMaia2.subscaleScores);
-  }, [latestMaia2, latestMaia2SubscalesComplete]);
-
-  const maia2ClinicalFlags = useMemo(() => {
-    if (!latestMaia2SubscalesComplete || !latestMaia2?.subscaleScores) return [];
-    return getMaia2ClinicalFlags(latestMaia2.subscaleScores);
-  }, [latestMaia2, latestMaia2SubscalesComplete]);
 
   const handleShareWithClinician = useCallback(async () => {
     if (!latestMaia2SubscalesComplete || !latestMaia2?.subscaleScores) return;
@@ -408,7 +398,7 @@ export default function ProgressScreen() {
                   <View style={styles.subscaleProfileSection}>
                     <Text style={styles.subscaleProfileTitle}>8-Dimension Subscale Profile</Text>
                     <Text style={styles.subscaleProfileNote}>
-                      MAIA-2 authors advise against a single composite score. The pattern across all 8 subscales is the clinically meaningful result.
+                      MAIA-2 authors advise against a single composite score. Interpret the pattern across all 8 subscales.
                     </Text>
                     {MAIA2_SCALE.subscales.map(s => {
                       const score = latestMaia2.subscaleScores![s.key];
@@ -431,27 +421,6 @@ export default function ProgressScreen() {
                       );
                     })}
                   </View>
-
-                  {maia2ClinicalFlags.length > 0 && (
-                    <View style={styles.clinicalFlagsSection}>
-                      <Text style={styles.clinicalFlagsTitle}>Clinical Interpretation</Text>
-                      {maia2ClinicalFlags.map(flag => (
-                        <View key={flag.key} style={[styles.clinicalFlagCard, styles[`flagType_${flag.type}` as keyof typeof styles] as any]}>
-                          <View style={styles.clinicalFlagHeader}>
-                            <Feather
-                              name={flag.type === 'professional' ? 'user' : flag.type === 'distress' ? 'alert-circle' : 'trending-up'}
-                              size={15}
-                              color={flag.type === 'professional' ? '#4A6FA5' : flag.type === 'distress' ? '#E07A5F' : Colors.success}
-                            />
-                            <Text style={[styles.clinicalFlagTitle, {
-                              color: flag.type === 'professional' ? '#2D4A7A' : flag.type === 'distress' ? '#7A3020' : '#1A5C30',
-                            }]}>{flag.title}</Text>
-                          </View>
-                          <Text style={styles.clinicalFlagMessage}>{flag.message}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
 
                   {hasCompleteSubscaleScores(previousMaia2?.subscaleScores) && previousMaia2?.subscaleScores && (
                     <View style={styles.maia2Comparisons}>
