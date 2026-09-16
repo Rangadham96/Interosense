@@ -24,15 +24,16 @@ import Svg from 'react-native-svg';
 import type { Recommendation, InsightCard } from '@/lib/personalization-engine';
 import { apiRequest } from '@/lib/query-client';
 import { getWearableContext } from '@/lib/health';
+import { getCompletedPathwayDays, getPathwayPurpose } from '@/lib/pathway';
 
 const DAILY_SCIENCE_INSIGHTS = [
   { label: 'BODY AWARENESS', text: 'Interoceptive practice helps you pay closer attention to body signals and describe what you notice.' },
-  { label: 'VAGUS NERVE', text: 'Your vagus nerve carries 80% of signals from gut to brain. Just 5 minutes of slow breathing activates your rest-and-digest system.' },
-  { label: 'HRV & RESILIENCE', text: 'Heart rate variability (HRV) is your body\'s resilience score. Box breathing can raise it by 10–15% in a single session.' },
+  { label: 'BREATHING COMFORT', text: 'Slow breathing feels settling for some people and uncomfortable for others. Use a natural pace, and stop if you feel dizzy or distressed.' },
+  { label: 'WEARABLE CONTEXT', text: 'Heart rate variability changes for many reasons. Compare readings with your own recent pattern rather than treating one number as a resilience score.' },
   { label: 'CONSISTENCY', text: 'Regular practice gives you repeated opportunities to notice patterns and learn which responses feel useful.' },
-  { label: 'GUT-BRAIN AXIS', text: 'Your gut produces 95% of your body\'s serotonin. Gut awareness exercises directly support mood through the enteric nervous system.' },
-  { label: 'INTEROCEPTION', text: 'People with greater interoceptive accuracy tend to experience emotions more intensely and make more intuitive decisions (Critchley, 2004).' },
-  { label: 'BREATH & EMOTION', text: 'Your breathing pattern directly reflects your emotional state. Changing your breath can change your feelings within 90 seconds.' },
+  { label: 'GUT-BRAIN CONTEXT', text: 'The gut and brain communicate through several pathways. Abdominal sensations can be noticed without assuming they explain mood or health.' },
+  { label: 'INTEROCEPTION', text: 'Interoception includes noticing signals such as breath, heartbeat, temperature, hunger, and tension. Accuracy and comfort can vary by signal and situation.' },
+  { label: 'BREATH & EMOTION', text: 'Breathing and emotion can influence each other, but responses differ. Treat each practice as an observation rather than a promised result.' },
 ];
 
 function getTimeOfDayGreeting(name: string): { greeting: string; subtext: string } {
@@ -160,6 +161,7 @@ export default function HomeScreen() {
     assessments,
     totalSessions,
     wearableData,
+    pathway14,
   } = useApp();
 
   const queryClient = useQueryClient();
@@ -325,6 +327,10 @@ export default function HomeScreen() {
   }, []);
 
   const nextExercise = advisorState.nextExercise;
+  const pathwayExercise = pathway14 && !pathway14.completedAt
+    ? EXERCISES.find(exercise => exercise.id === pathway14.currentExerciseId) ?? null
+    : null;
+  const pathwayCompletedDays = pathway14 ? getCompletedPathwayDays(pathway14).length : 0;
   const nextExerciseRecommendation = nextExercise
     ? advisorState.recommendations.find(rec => rec.type === 'exercise' && rec.actionId === nextExercise.id)
     : null;
@@ -457,9 +463,56 @@ export default function HomeScreen() {
           </View>
         )}
 
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>14-Day Body-Signal Pathway</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.pathwayCard}
+            onPress={() => router.push('/pathway')}
+            activeOpacity={0.75}
+          >
+            <View style={styles.pathwayTopRow}>
+              <View style={styles.pathwayIcon}>
+                <Feather name={pathway14?.completedAt ? 'check' : 'compass'} size={20} color={Colors.primary} />
+              </View>
+              <View style={styles.pathwayHeading}>
+                <Text style={styles.pathwayTitle}>
+                  {!pathway14
+                    ? 'Start a focused 14-day sequence'
+                    : pathway14.completedAt
+                      ? 'Pathway complete'
+                      : `Day ${pathway14.currentDay}: ${pathwayExercise?.title ?? 'Your next practice'}`}
+                </Text>
+                <Text style={styles.pathwaySubtitle}>
+                  {!pathway14
+                    ? 'Short beginner practices that adapt to your comfort and saved responses.'
+                    : pathway14.completedAt
+                      ? 'Review your daily responses and what felt useful.'
+                      : getPathwayPurpose(pathway14)}
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
+            </View>
+            {pathway14 && (
+              <View style={styles.pathwayProgressRow}>
+                <View style={styles.pathwayProgressTrack}>
+                  <View
+                    style={[
+                      styles.pathwayProgressFill,
+                      { width: `${pathway14.completedAt ? 100 : Math.round((pathwayCompletedDays / 14) * 100)}%` },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.pathwayProgressText}>{pathwayCompletedDays}/14</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
         {nextExercise && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Today's Exercise</Text>
+            <Text style={styles.sectionTitle}>Today&apos;s Exercise</Text>
             <TouchableOpacity
               style={styles.nextExerciseCard}
               onPress={() => router.push(`/exercise/${nextExercise!.id}`)}
@@ -539,7 +592,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Today's Science</Text>
+          <Text style={styles.sectionTitle}>Today&apos;s Science</Text>
           {aiInsightText ? (
             <LinearGradient
               colors={[Colors.primaryDark, Colors.primary]}
@@ -573,7 +626,7 @@ export default function HomeScreen() {
               end={{ x: 1, y: 1 }}
               style={styles.dailyInsightCard}
             >
-              <Text style={styles.scienceLabel}>TODAY'S SCIENCE</Text>
+              <Text style={styles.scienceLabel}>TODAY&apos;S SCIENCE</Text>
               <Text style={styles.scienceHeading}>{todayScience.label}</Text>
               <Text style={styles.scienceBody}>{todayScience.text}</Text>
             </LinearGradient>
@@ -748,6 +801,19 @@ const styles = StyleSheet.create({
   section: { marginBottom: 26 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionTitle: { fontFamily: 'Nunito_700Bold', fontSize: 12, color: Colors.textSecondary, marginBottom: 12, letterSpacing: 1.4, textTransform: 'uppercase' as const },
+  pathwayCard: {
+    backgroundColor: '#F5F1FA', borderRadius: 18, padding: 17,
+    borderWidth: 1, borderColor: '#E5DCF2',
+  },
+  pathwayTopRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  pathwayIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  pathwayHeading: { flex: 1 },
+  pathwayTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: Colors.text },
+  pathwaySubtitle: { fontFamily: 'Nunito_400Regular', fontSize: 12, lineHeight: 17, color: Colors.textSecondary, marginTop: 3 },
+  pathwayProgressRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 },
+  pathwayProgressTrack: { flex: 1, height: 7, borderRadius: 4, backgroundColor: '#FFFFFF', overflow: 'hidden' },
+  pathwayProgressFill: { height: '100%', borderRadius: 4, backgroundColor: Colors.primary },
+  pathwayProgressText: { fontFamily: 'Nunito_700Bold', fontSize: 11, color: Colors.primary },
   nextExerciseCard: { borderRadius: 20, overflow: 'hidden' },
   nextExerciseGradient: { padding: 22, borderRadius: 20 },
   nextExerciseHeader: { flexDirection: 'row', gap: 8, marginBottom: 12 },

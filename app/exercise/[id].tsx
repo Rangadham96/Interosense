@@ -27,6 +27,7 @@ import { useApp } from '@/contexts/AppContext';
 import { apiPost } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/query-client';
+import { getPathwayPurpose, isCurrentPathwayExercise } from '@/lib/pathway';
 
 type SessionPhase = 'prestart' | 'active' | 'complete';
 
@@ -113,11 +114,48 @@ function getSessionMilestone(total: number): string {
   return `${total} sessions. Your consistency gives you a richer record of what you notice and what supports you.`;
 }
 
+function ScorePicker({
+  value,
+  onChange,
+}: {
+  value: number | null;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <View style={styles.scorePicker}>
+      {Array.from({ length: 11 }, (_, score) => (
+        <TouchableOpacity
+          key={score}
+          style={[styles.scoreOption, value === score && styles.scoreOptionSelected]}
+          onPress={() => onChange(score)}
+        >
+          <Text style={[styles.scoreOptionText, value === score && styles.scoreOptionTextSelected]}>
+            {score}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
 export default function ExerciseSessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { addSession, sessions, totalSessions, currentStreak, unlockedAchievements, exerciseBookmarks, toggleExerciseBookmark, profile, averageAwareness, checkins } = useApp();
+  const {
+    addSession,
+    sessions,
+    totalSessions,
+    currentStreak,
+    unlockedAchievements,
+    exerciseBookmarks,
+    toggleExerciseBookmark,
+    profile,
+    averageAwareness,
+    checkins,
+    pathway14,
+    recordPathway14Response,
+  } = useApp();
   const exercise = getExerciseById(id);
 
   const [phase, setPhase] = useState<SessionPhase>('prestart');
@@ -131,6 +169,10 @@ export default function ExerciseSessionScreen() {
   const [saved, setSaved] = useState(false);
   const [prevAchievementCount] = useState(unlockedAchievements.length);
   const [showEscapeLink, setShowEscapeLink] = useState(false);
+  const [beforeAwareness, setBeforeAwareness] = useState<number | null>(null);
+  const [beforeComfort, setBeforeComfort] = useState<number | null>(null);
+  const [afterAwareness, setAfterAwareness] = useState<number | null>(null);
+  const [afterComfort, setAfterComfort] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -139,6 +181,10 @@ export default function ExerciseSessionScreen() {
     staleTime: 5 * 60 * 1000,
   });
   const practiceCount = practiceCountsData?.counts?.[id] ?? 0;
+  const pathwayDayAtStart = useRef(
+    isCurrentPathwayExercise(pathway14, id) ? pathway14!.currentDay : null,
+  );
+  const isPathwaySession = pathwayDayAtStart.current !== null;
 
   const celebrationScale = useSharedValue(0);
   const celebrationOpacity = useSharedValue(0);
@@ -160,6 +206,9 @@ export default function ExerciseSessionScreen() {
 
   const nextExercise = useMemo(() => {
     if (!exercise) return null;
+    if (pathwayDayAtStart.current !== null && pathway14 && !pathway14.completedAt) {
+      return getExerciseById(pathway14.currentExerciseId) ?? null;
+    }
     const progression = SCIENCE_PROGRESSION[exercise.category];
     if (progression) {
       const candidates = EXERCISES.filter(e => e.category === progression.category && e.id !== exercise.id);
@@ -168,12 +217,21 @@ export default function ExerciseSessionScreen() {
     const sameCategory = EXERCISES.filter(e => e.category === exercise.category && e.id !== exercise.id);
     if (sameCategory.length > 0) return sameCategory[0];
     return EXERCISES.find(e => e.id !== exercise.id) ?? null;
-  }, [exercise]);
+  }, [exercise, pathway14]);
 
   const nextExerciseBridge = useMemo(() => {
     if (!exercise) return null;
+    if (pathwayDayAtStart.current !== null && pathway14 && !pathway14.completedAt) {
+      if (pathway14.currentExerciseId === exercise.id) {
+        return 'Your responses suggest repeating this practice rather than pushing ahead. You can shorten it or stop at any time.';
+      }
+      if (pathway14.currentExerciseId === 'safety-anchoring') {
+        return 'The pathway is offering a gentler support practice before continuing. This is not a setback.';
+      }
+      return `Day ${pathway14.currentDay}: ${getPathwayPurpose(pathway14)}`;
+    }
     return SCIENCE_PROGRESSION[exercise.category]?.bridge ?? null;
-  }, [exercise]);
+  }, [exercise, pathway14]);
 
   const newAchievements = useMemo(() => {
     if (!saved) return [];
@@ -227,13 +285,14 @@ export default function ExerciseSessionScreen() {
 
   const handleBegin = useCallback(() => {
     if (!exercise) return;
+    if (isPathwaySession && (beforeAwareness === null || beforeComfort === null)) return;
     setCurrentStepIndex(0);
     setTimeRemaining(exercise.steps[0].duration);
     setElapsedSeconds(0);
     setShowEscapeLink(false);
     setPhase('active');
     setIsPaused(false);
-  }, [exercise]);
+  }, [exercise, isPathwaySession, beforeAwareness, beforeComfort]);
 
   const handleSkip = useCallback(() => {
     if (!exercise) return;
@@ -261,6 +320,23 @@ export default function ExerciseSessionScreen() {
     };
     try {
       await addSession(sessionData);
+      if (
+        isPathwaySession &&
+        beforeAwareness !== null &&
+        beforeComfort !== null &&
+        afterAwareness !== null &&
+        afterComfort !== null
+      ) {
+        await recordPathway14Response({
+          exerciseId: exercise.id,
+          rating: selectedRating,
+          beforeAwareness,
+          beforeComfort,
+          afterAwareness,
+          afterComfort,
+          completedAt: sessionData.completedAt,
+        });
+      }
       setSaved(true);
       if (Platform.OS !== 'web') {
         try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
@@ -276,7 +352,19 @@ export default function ExerciseSessionScreen() {
     } catch (e) {
       console.error('Failed to sync session to server:', e);
     }
-  }, [exercise, addSession, selectedRating, notes, isSaving]);
+  }, [
+    exercise,
+    addSession,
+    selectedRating,
+    notes,
+    isSaving,
+    isPathwaySession,
+    beforeAwareness,
+    beforeComfort,
+    afterAwareness,
+    afterComfort,
+    recordPathway14Response,
+  ]);
 
   if (!exercise) {
     return (
@@ -301,7 +389,7 @@ export default function ExerciseSessionScreen() {
   const evidence = EVIDENCE_LABELS[exercise.methodology] || { label: 'Emerging Science', bg: '#B8860B20' };
   const hasContraindications = exercise.contraindications && exercise.contraindications.length > 0;
   const userName = profile?.name ? profile.name.split(' ')[0] : '';
-  const categoryReflection = CATEGORY_SCIENCE_REFLECTIONS[exercise.category] || 'You have just completed an interoceptive practice session. Each session strengthens your body awareness pathways.';
+  const categoryReflection = CATEGORY_SCIENCE_REFLECTIONS[exercise.category] || 'You completed an interoceptive practice session. Notice what felt useful, neutral, unclear, or uncomfortable for you.';
 
   if (phase === 'prestart') {
     return (
@@ -434,7 +522,35 @@ export default function ExerciseSessionScreen() {
             </View>
           )}
 
-          <TouchableOpacity style={styles.beginButton} onPress={handleBegin} activeOpacity={0.85}>
+          {isPathwaySession && (
+            <View style={styles.pathwayResponseCard}>
+              <View style={styles.pathwayResponseHeader}>
+                <Feather name="compass" size={16} color={Colors.secondaryLight} />
+                <Text style={styles.pathwayResponseTitle}>DAY {pathwayDayAtStart.current} STARTING POINT</Text>
+              </View>
+              <Text style={styles.pathwayQuestion}>How clear are your body sensations right now?</Text>
+              <Text style={styles.pathwayScaleHint}>0 = not clear, 10 = very clear</Text>
+              <ScorePicker value={beforeAwareness} onChange={setBeforeAwareness} />
+              <Text style={[styles.pathwayQuestion, styles.pathwaySecondQuestion]}>
+                How comfortable do these sensations feel right now?
+              </Text>
+              <Text style={styles.pathwayScaleHint}>0 = very uncomfortable, 10 = very comfortable</Text>
+              <ScorePicker value={beforeComfort} onChange={setBeforeComfort} />
+              <Text style={styles.pathwayPrivacyText}>
+                These responses guide this pathway and are not combined into a clinical score.
+              </Text>
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={[
+              styles.beginButton,
+              isPathwaySession && (beforeAwareness === null || beforeComfort === null) && styles.saveButtonDisabled,
+            ]}
+            onPress={handleBegin}
+            activeOpacity={0.85}
+            disabled={isPathwaySession && (beforeAwareness === null || beforeComfort === null)}
+          >
             <Feather name="play" size={22} color={Colors.primary} />
             <Text style={styles.beginButtonText}>Begin</Text>
           </TouchableOpacity>
@@ -523,7 +639,7 @@ export default function ExerciseSessionScreen() {
 
             {nextExercise && (
               <View style={styles.nextUpSection}>
-                <Text style={styles.nextUpLabel}>Train This Next</Text>
+                <Text style={styles.nextUpLabel}>{isPathwaySession ? 'Continue Your Pathway' : 'Explore This Next'}</Text>
                 <View style={styles.nextExerciseCard}>
                   <View style={styles.nextExerciseCardTop}>
                     <View style={[styles.nextExerciseIcon, { backgroundColor: (CATEGORY_INFO[nextExercise.category as keyof typeof CATEGORY_INFO]?.color || Colors.primary) + '30' }]}>
@@ -606,6 +722,23 @@ export default function ExerciseSessionScreen() {
             </View>
           </View>
 
+          {isPathwaySession && (
+            <View style={styles.pathwayCompletionCard}>
+              <Text style={styles.pathwayCompletionTitle}>After this practice</Text>
+              <Text style={styles.pathwayCompletionQuestion}>How clear are your body sensations now?</Text>
+              <Text style={styles.pathwayCompletionHint}>0 = not clear, 10 = very clear</Text>
+              <ScorePicker value={afterAwareness} onChange={setAfterAwareness} />
+              <Text style={[styles.pathwayCompletionQuestion, styles.pathwaySecondQuestion]}>
+                How comfortable do these sensations feel now?
+              </Text>
+              <Text style={styles.pathwayCompletionHint}>0 = very uncomfortable, 10 = very comfortable</Text>
+              <ScorePicker value={afterComfort} onChange={setAfterComfort} />
+              <Text style={styles.pathwayCompletionSafety}>
+                A lower response is useful information. The pathway may repeat or offer a gentler practice.
+              </Text>
+            </View>
+          )}
+
           <View style={styles.notesSection}>
             <Text style={styles.notesLabel}>Notes (optional)</Text>
             <TextInput
@@ -620,10 +753,25 @@ export default function ExerciseSessionScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+            style={[
+              styles.saveButton,
+              (isSaving ||
+                (isPathwaySession && (
+                  selectedRating === 0 ||
+                  afterAwareness === null ||
+                  afterComfort === null
+                ))) && styles.saveButtonDisabled,
+            ]}
             onPress={handleSave}
             activeOpacity={0.85}
-            disabled={isSaving}
+            disabled={
+              isSaving ||
+              (isPathwaySession && (
+                selectedRating === 0 ||
+                afterAwareness === null ||
+                afterComfort === null
+              ))
+            }
           >
             <Feather name="check-circle" size={20} color={Colors.primary} />
             <Text style={styles.saveButtonText}>{isSaving ? 'Saving...' : 'Save Session'}</Text>
@@ -707,7 +855,7 @@ export default function ExerciseSessionScreen() {
             activeOpacity={0.7}
           >
             <Feather name="heart" size={14} color="rgba(255,255,255,0.6)" />
-            <Text style={styles.escapeLinkText}>If you feel overwhelmed, it's okay to stop</Text>
+            <Text style={styles.escapeLinkText}>If you feel overwhelmed, it&apos;s okay to stop</Text>
           </TouchableOpacity>
         )}
 
@@ -966,6 +1114,32 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.primary,
   },
+  pathwayResponseCard: {
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.16)',
+  },
+  pathwayResponseHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  pathwayResponseTitle: {
+    fontFamily: 'Nunito_700Bold', fontSize: 12, letterSpacing: 1,
+    color: Colors.secondaryLight,
+  },
+  pathwayQuestion: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, lineHeight: 20, color: '#FFFFFF' },
+  pathwaySecondQuestion: { marginTop: 16 },
+  pathwayScaleHint: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: 'rgba(255,255,255,0.58)', marginTop: 3, marginBottom: 9 },
+  pathwayPrivacyText: { fontFamily: 'Nunito_400Regular', fontSize: 11, lineHeight: 16, color: 'rgba(255,255,255,0.55)', marginTop: 12 },
+  scorePicker: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  scoreOption: {
+    width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)',
+  },
+  scoreOptionSelected: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+  scoreOptionText: { fontFamily: 'Nunito_700Bold', fontSize: 12, color: 'rgba(255,255,255,0.75)' },
+  scoreOptionTextSelected: { color: Colors.primary },
 
   activeContainer: {
     flex: 1,
@@ -1146,6 +1320,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 28,
   },
+  pathwayCompletionCard: {
+    width: '100%', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 16,
+    padding: 16, marginBottom: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)',
+  },
+  pathwayCompletionTitle: { fontFamily: 'Nunito_700Bold', fontSize: 16, color: '#FFFFFF', marginBottom: 12 },
+  pathwayCompletionQuestion: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, lineHeight: 20, color: '#FFFFFF' },
+  pathwayCompletionHint: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: 'rgba(255,255,255,0.58)', marginTop: 3, marginBottom: 9 },
+  pathwayCompletionSafety: { fontFamily: 'Nunito_400Regular', fontSize: 11, lineHeight: 16, color: 'rgba(255,255,255,0.62)', marginTop: 12 },
   ratingLabel: {
     fontFamily: 'Nunito_600SemiBold',
     fontSize: 16,

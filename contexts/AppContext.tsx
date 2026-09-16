@@ -5,6 +5,13 @@ import { getUnlockedAchievements } from '@/constants/achievements';
 import { buildDefaultGoals, createGoalFromPreset, getGoalProgress, getNextLevelPreset, normalizeGoals, resolveServerGoalState, GoalStats } from '@/constants/default-goals';
 import { generateAdvisorState, AdvisorState } from '@/lib/personalization-engine';
 import { format, isToday, isYesterday, differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
+import {
+  createPathwayState,
+  normalizePathwayState,
+  PathwayResponse,
+  PathwayState,
+  recordPathwayResponse,
+} from '@/lib/pathway';
 
 interface AppState {
   isLoading: boolean;
@@ -33,6 +40,7 @@ interface AppState {
   todayCheckedIn: boolean;
   todaySessionCount: number;
   advisorState: AdvisorState;
+  pathway14: PathwayState | null;
 }
 
 interface AppActions {
@@ -57,6 +65,9 @@ interface AppActions {
   hydrateFromServer: (data: { sessions?: SessionRecord[]; checkins?: CheckinRecord[]; assessments?: AssessmentRecord[]; preferences?: Record<string, unknown> | null }) => void;
   clearActivityData: () => Promise<void>;
   markOnboardingComplete: () => Promise<void>;
+  startPathway14: () => Promise<void>;
+  recordPathway14Response: (response: PathwayResponse) => Promise<void>;
+  resetPathway14: () => Promise<void>;
 }
 
 type AppContextValue = AppState & AppActions;
@@ -139,10 +150,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [exerciseBookmarks, setExerciseBookmarks] = useState<string[]>([]);
   const [dismissedPresets, setDismissedPresets] = useState<string[]>([]);
   const [pendingCelebration, setPendingCelebration] = useState<Goal | null>(null);
+  const [pathway14, setPathway14] = useState<PathwayState | null>(null);
 
   const loadData = useCallback(async () => {
     try {
-      const [ob, prof, sess, chk, bm, gl, bk, ar, st, assess, wear, exBk, dismissed] = await Promise.all([
+      const [ob, prof, sess, chk, bm, gl, bk, ar, st, assess, wear, exBk, dismissed, savedPathway] = await Promise.all([
         Storage.isOnboardingComplete(),
         Storage.getUserProfile(),
         Storage.getSessions(),
@@ -156,6 +168,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         Storage.getWearableData(),
         Storage.getExerciseBookmarks(),
         Storage.getDismissedPresets(),
+        Storage.getPathway14(),
       ]);
       setOnboardingComplete(ob);
       setProfile(prof);
@@ -170,6 +183,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setAssessments(assess);
       setWearableData(wear);
       setExerciseBookmarks(exBk);
+      setPathway14(normalizePathwayState(savedPathway));
     } catch (e) {
       console.error('Failed to load data:', e);
     } finally {
@@ -293,21 +307,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
     articlesRead: string[];
     settings: AppSettings;
     dismissedPresets: string[];
-  }>({ goals: [], bodyMarks: [], bookmarks: [], exerciseBookmarks: [], articlesRead: [], settings: defaultSettings, dismissedPresets: [] });
+    pathway14: PathwayState | null;
+  }>({ goals: [], bodyMarks: [], bookmarks: [], exerciseBookmarks: [], articlesRead: [], settings: defaultSettings, dismissedPresets: [], pathway14: null });
 
   useEffect(() => {
-    prefsRef.current = { goals, bodyMarks, bookmarks, exerciseBookmarks, articlesRead, settings, dismissedPresets };
-  }, [goals, bodyMarks, bookmarks, exerciseBookmarks, articlesRead, settings, dismissedPresets]);
+    prefsRef.current = { goals, bodyMarks, bookmarks, exerciseBookmarks, articlesRead, settings, dismissedPresets, pathway14 };
+  }, [goals, bodyMarks, bookmarks, exerciseBookmarks, articlesRead, settings, dismissedPresets, pathway14]);
 
   const syncPrefsToServer = useCallback(() => {
-    const { goals: g, bodyMarks: bm, bookmarks: ab, exerciseBookmarks: eb, articlesRead: ar, settings: st, dismissedPresets: dp } = prefsRef.current;
-    apiPut('/api/user/preferences', { goals: g, bodyMarks: bm, articleBookmarks: ab, exerciseBookmarks: eb, articlesRead: ar, settings: st, dismissedPresets: dp }).catch(() => {});
+    const { goals: g, bodyMarks: bm, bookmarks: ab, exerciseBookmarks: eb, articlesRead: ar, settings: st, dismissedPresets: dp, pathway14: pathway } = prefsRef.current;
+    apiPut('/api/user/preferences', { goals: g, bodyMarks: bm, articleBookmarks: ab, exerciseBookmarks: eb, articlesRead: ar, settings: st, dismissedPresets: dp, pathway14: pathway }).catch(() => {});
   }, []);
 
   const addSession = useCallback(async (session: SessionRecord) => {
     await Storage.addSession(session);
     setSessions(prev => [...prev, session]);
   }, []);
+
+  const savePathway14 = useCallback(async (pathway: PathwayState | null) => {
+    prefsRef.current = { ...prefsRef.current, pathway14: pathway };
+    setPathway14(pathway);
+    await Storage.setPathway14(pathway);
+    syncPrefsToServer();
+  }, [syncPrefsToServer]);
+
+  const startPathway14 = useCallback(async () => {
+    if (prefsRef.current.pathway14 && !prefsRef.current.pathway14.completedAt) return;
+    await savePathway14(createPathwayState());
+  }, [savePathway14]);
+
+  const recordPathway14Response = useCallback(async (response: PathwayResponse) => {
+    const current = prefsRef.current.pathway14;
+    if (!current) return;
+    await savePathway14(recordPathwayResponse(current, response));
+  }, [savePathway14]);
+
+  const resetPathway14 = useCallback(async () => {
+    await savePathway14(null);
+  }, [savePathway14]);
 
   const addCheckin = useCallback(async (checkin: CheckinRecord) => {
     await Storage.addCheckin(checkin);
@@ -534,6 +571,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         prefsRef.current = { ...prefsRef.current, settings: vals };
         Storage.setSettings(vals).catch(() => {});
       }
+      const serverPathway = normalizePathwayState(p.pathway14);
+      setPathway14(serverPathway);
+      prefsRef.current = { ...prefsRef.current, pathway14: serverPathway };
+      Storage.setPathway14(serverPathway).catch(() => {});
     }
   }, []);
 
@@ -551,9 +592,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSettings(emptySettings);
     setDismissedPresets([]);
     setPendingCelebration(null);
+    setPathway14(null);
     goalStateAuthoritativeRef.current = false;
     activityRef.current = { sessions: [], checkins: [] };
-    prefsRef.current = { goals: [], bodyMarks: [], bookmarks: [], exerciseBookmarks: [], articlesRead: [], settings: emptySettings, dismissedPresets: [] };
+    prefsRef.current = { goals: [], bodyMarks: [], bookmarks: [], exerciseBookmarks: [], articlesRead: [], settings: emptySettings, dismissedPresets: [], pathway14: null };
   }, []);
 
   const value = useMemo<AppContextValue>(() => ({
@@ -583,6 +625,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     todayCheckedIn,
     todaySessionCount,
     advisorState,
+    pathway14,
     completeOnboarding,
     addSession,
     addCheckin,
@@ -604,17 +647,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     hydrateFromServer,
     clearActivityData,
     markOnboardingComplete,
+    startPathway14,
+    recordPathway14Response,
+    resetPathway14,
   }), [
     isLoading, onboardingComplete, profile, sessions, checkins, bodyMarks, goals,
     liveGoals, pendingCelebration,
     bookmarks, exerciseBookmarks, articlesRead, settings, assessments, wearableData, unlockedAchievements,
     totalSessions, totalMinutes, currentStreak, longestStreak, categoriesExplored,
-    averageAwareness, maxAwareness, todayCheckedIn, todaySessionCount, advisorState,
+    averageAwareness, maxAwareness, todayCheckedIn, todaySessionCount, advisorState, pathway14,
     completeOnboarding, addSession, addCheckin, addBodyMark, clearBodyMarks,
     addGoal, updateGoals, removeGoal, acknowledgeGoalCompletion, ensureDefaultGoals,
     toggleBookmark, markArticleRead, updateSettings,
     addAssessment, addWearableDataCb, updateProfile, toggleExerciseBookmarkCb, loadData,
     hydrateFromServer, clearActivityData, markOnboardingComplete,
+    startPathway14, recordPathway14Response, resetPathway14,
   ]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

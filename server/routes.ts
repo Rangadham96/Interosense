@@ -218,7 +218,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/user/preferences", async (req: Request, res: Response) => {
     if (!req.session.userId) return res.status(401).json({ message: "Not authenticated" });
     try {
-      await setUserPreferences(req.session.userId, req.body);
+      const existing = await getUserPreferences(req.session.userId);
+      await setUserPreferences(req.session.userId, {
+        ...(existing ?? {}),
+        ...(req.body && typeof req.body === "object" ? req.body : {}),
+      });
       return res.status(200).json({ ok: true });
     } catch (error) {
       console.error("Set preferences error:", error);

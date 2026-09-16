@@ -6,3 +6,4 @@
 - [Health product claims standard](health-claims-standard.md) — keep product copy evidence-literate; never turn plausible mechanisms or wearable readings into personal medical facts.
 - [Body-pattern privacy boundary](body-pattern-privacy.md) — deterministic personalization may use structured entries; free-text notes stay out unless the user explicitly opts in.
 - [Expo workflow on Replit](expo-workflow.md) — backend owns web preview; run Metro as a console workflow without a port health gate and ignore managed temp dirs.
+- [Pathway safety adaptation](pathway-safety-adaptation.md) — 14-day progression follows completion and comfort, never calendar streaks or awareness improvement.

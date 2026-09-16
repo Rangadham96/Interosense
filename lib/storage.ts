@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { PathwayState } from '@/lib/pathway';
 
 const KEYS = {
   ONBOARDING_COMPLETE: '@interosense:onboarding_complete',
@@ -14,6 +15,7 @@ const KEYS = {
   WEARABLE_DATA: '@interosense:wearable_data',
   EXERCISE_BOOKMARKS: '@interosense:exercise_bookmarks',
   DISMISSED_PRESETS: '@interosense:dismissed_presets',
+  PATHWAY_14: '@interosense:pathway_14',
 };
 
 export interface UserProfile {
@@ -276,6 +278,13 @@ export const Storage = {
   async getExerciseBookmarks(): Promise<string[]> {
     return getJSON<string[]>(KEYS.EXERCISE_BOOKMARKS, []);
   },
+
+  async getPathway14(): Promise<PathwayState | null> {
+    return getJSON<PathwayState | null>(KEYS.PATHWAY_14, null);
+  },
+  async setPathway14(pathway: PathwayState | null): Promise<void> {
+    await setJSON(KEYS.PATHWAY_14, pathway);
+  },
   async toggleExerciseBookmark(exerciseId: string): Promise<boolean> {
     const bookmarks = await this.getExerciseBookmarks();
     const idx = bookmarks.indexOf(exerciseId);
@@ -303,6 +312,7 @@ export const Storage = {
       KEYS.BOOKMARKS,
       KEYS.EXERCISE_BOOKMARKS,
       KEYS.ARTICLES_READ,
+      KEYS.PATHWAY_14,
     ]);
   },
 };
