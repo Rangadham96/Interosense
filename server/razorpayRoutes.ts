@@ -161,6 +161,68 @@ router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
     const userId = notes.userId;
     const subscriptionId = sub?.id;
 
+    const webhookEventId = typeof event.id === 'string' ? event.id : null;
+    const webhookCreatedAt = Number(event.created_at);
+    const webhookAt = Number.isFinite(webhookCreatedAt) && webhookCreatedAt > 0
+      ? new Date(webhookCreatedAt * 1000).toISOString()
+      : null;
+    const terminalEvents = new Set([
+      'subscription.cancelled',
+      'subscription.expired',
+      'subscription.completed',
+      'subscription.halted',
+    ]);
+    const activatingEvents = new Set([
+      'subscription.activated',
+      'subscription.charged',
+    ]);
+
+    // Webhooks are signed, but signatures only prove authenticity, not
+    // freshness. Load the current subscription state before applying an
+    // event so a delayed/replayed event cannot move the account backwards.
+    const user = userId ? await storage.getUser(String(userId)) : undefined;
+    if (userId && !user) {
+      return res.status(404).json({ error: 'Webhook user not found' });
+    }
+
+    if (user && subscriptionId && user.razorpaySubscriptionId &&
+        user.razorpaySubscriptionId !== subscriptionId) {
+      // This belongs to an older subscription. A new purchase owns the
+      // account now, so old events must never change its premium state.
+      return res.json({ received: true, ignored: 'stale_subscription' });
+    }
+
+    if (user && (
+      (webhookEventId && user.razorpayLastWebhookEventId === webhookEventId) ||
+      (webhookAt && user.razorpayLastWebhookAt &&
+        new Date(webhookAt).getTime() <= new Date(user.razorpayLastWebhookAt).getTime())
+    )) {
+      return res.json({ received: true, ignored: 'stale_event' });
+    }
+
+    // Once a subscription has reached a terminal state, an activation or
+    // charge for that same subscription is an old/replayed event. Resumed
+    // subscriptions stay active and do not pass through this terminal state;
+    // a new purchase gets a new subscription ID.
+    if (user && subscriptionId === user.razorpaySubscriptionId &&
+        activatingEvents.has(event.event) &&
+        terminalEvents.has(user.razorpaySubscriptionStatus || '')) {
+      return res.json({ received: true, ignored: 'terminal_subscription' });
+    }
+
+    const eventState = activatingEvents.has(event.event)
+      ? (sub?.status || 'active')
+      : terminalEvents.has(event.event)
+        ? event.event.replace('subscription.', '')
+        : null;
+    const webhookState = eventState
+      ? {
+          ...(webhookAt ? { razorpayLastWebhookAt: webhookAt } : {}),
+          ...(webhookEventId ? { razorpayLastWebhookEventId: webhookEventId } : {}),
+          razorpaySubscriptionStatus: eventState,
+        }
+      : {};
+
     if (event.event === 'subscription.activated' || event.event === 'subscription.charged') {
       if (userId) {
         await storage.updateUser(String(userId), {
@@ -169,6 +231,7 @@ router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
           // Keep local cancellation intent in sync with Razorpay's state
           razorpayCancelAtCycleEnd: sub?.cancel_at_cycle_end === 1 || sub?.cancel_at_cycle_end === true,
           razorpayCurrentEnd: sub?.current_end ? new Date(sub.current_end * 1000).toISOString() : null,
+          ...webhookState,
         });
       }
     } else if (
@@ -182,6 +245,7 @@ router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
           isPremium: false,
           razorpayCancelAtCycleEnd: false,
           razorpayCurrentEnd: sub?.current_end ? new Date(sub.current_end * 1000).toISOString() : null,
+          ...webhookState,
         });
       }
     } else if (event.event === 'subscription.halted') {
@@ -189,8 +253,8 @@ router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
         // Preserve razorpaySubscriptionId so returning subscribers never get a free trial again
         await storage.updateUser(String(userId), {
           isPremium: false,
+          ...webhookState,
         });
-        const user = await storage.getUser(String(userId));
         if (user) {
           notifySubscriptionHalted(user, subscriptionId).catch(err =>
             console.error('notifySubscriptionHalted failed:', err)

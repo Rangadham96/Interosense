@@ -32,9 +32,19 @@ const TEST_SUB_ID = 'sub_TESTONLY';
 // Replacing updateUser on the object therefore affects the router too.
 import { storage } from '../storage';
 
-const updateUserMock = mock.fn(async (_id: string, _data: Record<string, unknown>) =>
-  ({ id: _id, isPremium: false } as any),
-);
+let fakeUser: Record<string, unknown> = {
+  id: TEST_USER_ID,
+  isPremium: true,
+  razorpaySubscriptionId: TEST_SUB_ID,
+  razorpaySubscriptionStatus: 'active',
+};
+
+const getUserMock = mock.fn(async (_id: string) => fakeUser as any);
+const updateUserMock = mock.fn(async (_id: string, data: Record<string, unknown>) => {
+  fakeUser = { ...fakeUser, ...data };
+  return fakeUser as any;
+});
+(storage as any).getUser = getUserMock;
 (storage as any).updateUser = updateUserMock;
 
 // ── Import router AFTER patching (Node module cache ensures shared reference) ──
@@ -60,13 +70,19 @@ function makeSignature(body: string, secret = WEBHOOK_SECRET): string {
   return crypto.createHmac('sha256', secret).update(body).digest('hex');
 }
 
-function webhookPayload(eventName: string) {
+function webhookPayload(eventName: string, options: {
+  id?: string;
+  createdAt?: number;
+  subscriptionId?: string;
+} = {}) {
   return {
+    ...(options.id ? { id: options.id } : {}),
+    ...(options.createdAt ? { created_at: options.createdAt } : {}),
     event: eventName,
     payload: {
       subscription: {
         entity: {
-          id: TEST_SUB_ID,
+          id: options.subscriptionId ?? TEST_SUB_ID,
           notes: { userId: TEST_USER_ID },
         },
       },
@@ -86,6 +102,13 @@ describe('POST /api/razorpay/webhook — signature guard', () => {
 
   beforeEach(() => {
     updateUserMock.mock.resetCalls();
+    getUserMock.mock.resetCalls();
+    fakeUser = {
+      id: TEST_USER_ID,
+      isPremium: true,
+      razorpaySubscriptionId: TEST_SUB_ID,
+      razorpaySubscriptionStatus: 'active',
+    };
   });
 
   // ── Forged / bad-signature cases ────────────────────────────────────────────
@@ -228,5 +251,65 @@ describe('POST /api/razorpay/webhook — signature guard', () => {
 
     assert.equal(res.status, 200);
     assert.equal(updateUserMock.mock.callCount(), 0, 'unknown events must NOT trigger a DB update');
+  });
+
+  it('does not let an older activation replay restore premium after cancellation', async () => {
+    const cancelledBody = JSON.stringify(webhookPayload('subscription.cancelled', {
+      id: 'evt-cancel',
+      createdAt: 2_000,
+    }));
+    const cancelledRes = await supertestRequest
+      .post('/api/razorpay/webhook')
+      .set('Content-Type', 'application/json')
+      .set('x-razorpay-signature', makeSignature(cancelledBody))
+      .send(cancelledBody);
+
+    assert.equal(cancelledRes.status, 200);
+    assert.equal(fakeUser.isPremium, false);
+    assert.equal(fakeUser.razorpaySubscriptionStatus, 'cancelled');
+
+    const replayBody = JSON.stringify(webhookPayload('subscription.activated', {
+      id: 'evt-old-activation',
+      createdAt: 1_000,
+    }));
+    const replayRes = await supertestRequest
+      .post('/api/razorpay/webhook')
+      .set('Content-Type', 'application/json')
+      .set('x-razorpay-signature', makeSignature(replayBody))
+      .send(replayBody);
+
+    assert.equal(replayRes.status, 200);
+    assert.equal(replayRes.body.ignored, 'stale_event');
+    assert.equal(fakeUser.isPremium, false, 'replayed activation must not restore premium');
+    assert.equal(
+      updateUserMock.mock.callCount(),
+      1,
+      'only the cancellation should have updated the user',
+    );
+  });
+
+  it('ignores events from an older subscription after a new purchase', async () => {
+    fakeUser = {
+      ...fakeUser,
+      isPremium: true,
+      razorpaySubscriptionId: 'sub_NEW',
+      razorpaySubscriptionStatus: 'active',
+    };
+
+    const oldEventBody = JSON.stringify(webhookPayload('subscription.cancelled', {
+      id: 'evt-old-sub',
+      createdAt: 3_000,
+      subscriptionId: TEST_SUB_ID,
+    }));
+    const response = await supertestRequest
+      .post('/api/razorpay/webhook')
+      .set('Content-Type', 'application/json')
+      .set('x-razorpay-signature', makeSignature(oldEventBody))
+      .send(oldEventBody);
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.ignored, 'stale_subscription');
+    assert.equal(fakeUser.isPremium, true);
+    assert.equal(updateUserMock.mock.callCount(), 0);
   });
 });
