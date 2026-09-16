@@ -133,6 +133,13 @@ declare module "express-session" {
 
 const router = Router();
 
+export const SOCIAL_PASSWORD_ACCOUNT_MESSAGE =
+  "An account with this email already uses a password. Sign in with your email and password. You can link a social account from Profile settings when linked accounts become available.";
+
+function isPasswordAccount(user: { password?: string | null }): boolean {
+  return typeof user.password === "string" && user.password.length > 0;
+}
+
 router.post("/api/auth/register", async (req: Request, res: Response) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
@@ -525,9 +532,11 @@ router.post("/api/auth/social", async (req: Request, res: Response) => {
     // Find or create user
     let user = await storage.getUserByEmail(verifiedEmail);
     if (user) {
-      // Update provider info if signing in via social for the first time
-      if (user.provider === "email" || !user.provider) {
-        user = await storage.updateUser(user.id, { provider, providerId }) ?? user;
+      if (isPasswordAccount(user)) {
+        return res.status(409).json({
+          code: "PASSWORD_ACCOUNT_EXISTS",
+          message: SOCIAL_PASSWORD_ACCOUNT_MESSAGE,
+        });
       }
     } else {
       user = await storage.createUser({
@@ -594,8 +603,11 @@ router.post("/api/auth/google/verify", async (req: Request, res: Response) => {
 
     let user = await storage.getUserByEmail(email);
     if (user) {
-      if (user.provider === "email" || !user.provider) {
-        user = await storage.updateUser(user.id, { provider: "google", providerId: info.sub }) ?? user;
+      if (isPasswordAccount(user)) {
+        return res.status(409).json({
+          code: "PASSWORD_ACCOUNT_EXISTS",
+          message: SOCIAL_PASSWORD_ACCOUNT_MESSAGE,
+        });
       }
     } else {
       user = await storage.createUser({
