@@ -128,6 +128,12 @@ router.post('/api/razorpay/verify-payment', async (req: Request, res: Response) 
       // A fresh purchase clears any previous cancellation intent
       razorpayCancelAtCycleEnd: false,
       razorpayCurrentEnd: null,
+      // A new subscription starts a new webhook ordering chain. Keeping the
+      // previous subscription's terminal state would incorrectly reject this
+      // subscription's first activation event.
+      razorpaySubscriptionStatus: 'created',
+      razorpayLastWebhookAt: null,
+      razorpayLastWebhookEventId: null,
     });
     return res.json({ success: true });
   } catch (err: any) {
@@ -195,7 +201,7 @@ router.post('/api/razorpay/webhook', async (req: Request, res: Response) => {
     if (user && (
       (webhookEventId && user.razorpayLastWebhookEventId === webhookEventId) ||
       (webhookAt && user.razorpayLastWebhookAt &&
-        new Date(webhookAt).getTime() <= new Date(user.razorpayLastWebhookAt).getTime())
+        new Date(webhookAt).getTime() < new Date(user.razorpayLastWebhookAt).getTime())
     )) {
       return res.json({ received: true, ignored: 'stale_event' });
     }

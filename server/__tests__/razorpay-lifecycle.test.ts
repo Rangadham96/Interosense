@@ -305,6 +305,10 @@ describe('POST /api/razorpay/verify-payment — fresh purchase after ended subsc
     // A fresh purchase clears any previous cancellation intent
     assert.equal(fakeUser?.razorpayCancelAtCycleEnd, false);
     assert.equal(fakeUser?.razorpayCurrentEnd, null);
+    // It also starts a fresh webhook-ordering chain for the new subscription.
+    assert.equal(fakeUser?.razorpaySubscriptionStatus, 'created');
+    assert.equal(fakeUser?.razorpayLastWebhookAt, null);
+    assert.equal(fakeUser?.razorpayLastWebhookEventId, null);
   });
 
   it('rejects an invalid signature without touching the user', async () => {

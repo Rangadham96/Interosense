@@ -1,6 +1,5 @@
 import type { Express } from "express";
 import type { Request, Response } from "express";
-import { MAIA2_REQUIRED_SUBSCALE_KEYS } from "../constants/clinical-scales";
 import { createServer, type Server } from "node:http";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
@@ -25,6 +24,7 @@ import {
 } from "./storage";
 import { storage } from "./storage";
 import { generateInsight } from "./advisor";
+import { normalizeMaia2Submission } from "./assessmentValidation";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Trust Cloud Run / Replit's load balancer so req.secure is correct
@@ -159,18 +159,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     try {
       const { id, scaleId, scaleName, completedAt, totalScore, severity, answers, subscaleScores } = req.body;
+      let normalizedAnswers = Array.isArray(answers) ? answers : [];
+      let normalizedSubscaleScores = subscaleScores ?? null;
+      let normalizedTotalScore = totalScore ?? 0;
 
       if (scaleId === "maia2") {
-        const scores = subscaleScores ?? {};
-        const missingKeys = MAIA2_REQUIRED_SUBSCALE_KEYS.filter(
-          key => !(key in scores) || typeof scores[key] !== "number" || isNaN(scores[key])
-        );
-        if (missingKeys.length > 0) {
-          return res.status(422).json({
-            message: "MAIA-2 assessment rejected: subscaleScores is missing required keys",
-            missingKeys,
-          });
+        const normalized = normalizeMaia2Submission(answers);
+        if (!normalized.ok) {
+          return res.status(422).json({ message: normalized.message });
         }
+        normalizedAnswers = normalized.answers;
+        normalizedSubscaleScores = normalized.subscaleScores;
+        normalizedTotalScore = normalized.totalScore;
       }
 
       const assessment = await createAssessment({
@@ -179,10 +179,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scaleId,
         scaleName,
         completedAt,
-        totalScore: totalScore ?? 0,
+        totalScore: normalizedTotalScore,
         severity: severity ?? "",
-        answers: Array.isArray(answers) ? answers : [],
-        subscaleScores: subscaleScores ?? null,
+        answers: normalizedAnswers,
+        subscaleScores: normalizedSubscaleScores,
       });
       return res.status(201).json({ assessment });
     } catch (error) {
