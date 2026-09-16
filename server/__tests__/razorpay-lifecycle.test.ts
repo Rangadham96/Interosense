@@ -322,4 +322,26 @@ describe('POST /api/razorpay/verify-payment — fresh purchase after ended subsc
     assert.equal(updateUserMock.mock.callCount(), 0);
     assert.equal(fakeUser?.isPremium, false);
   });
+
+  for (const missingField of [
+    'razorpay_payment_id',
+    'razorpay_subscription_id',
+    'razorpay_signature',
+  ] as const) {
+    it(`rejects a missing ${missingField} without touching the user`, async () => {
+      const body: Record<string, string> = {
+        razorpay_payment_id: 'pay_NEW_1',
+        razorpay_subscription_id: 'sub_NEW_1',
+        razorpay_signature: signPayment('pay_NEW_1', 'sub_NEW_1'),
+      };
+      delete body[missingField];
+
+      const res = await request.post('/api/razorpay/verify-payment').send(body);
+
+      assert.equal(res.status, 400);
+      assert.deepEqual(res.body, { error: 'Missing payment verification fields' });
+      assert.equal(updateUserMock.mock.callCount(), 0);
+      assert.equal(fakeUser?.isPremium, false);
+    });
+  }
 });
