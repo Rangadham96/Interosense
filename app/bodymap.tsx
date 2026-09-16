@@ -16,6 +16,7 @@ import { Feather } from '@expo/vector-icons';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { BodyMark } from '@/lib/storage';
+import { formatPatternLabel, getBodyPatternSummary } from '@/lib/body-patterns';
 
 const SENSATIONS = ['tension', 'tingling', 'warmth', 'coolness', 'heaviness', 'pulsing', 'pain', 'numbness'] as const;
 
@@ -134,6 +135,11 @@ export default function BodyMapScreen() {
   const maxRegionCount = useMemo(() => {
     return Math.max(1, ...Object.values(regionCounts));
   }, [regionCounts]);
+
+  const patternSummary = useMemo(
+    () => getBodyPatternSummary(bodyMarks, []),
+    [bodyMarks],
+  );
 
   const viewMarks = useMemo(() => {
     return bodyMarks.filter(m => m.view === currentView);
@@ -298,6 +304,27 @@ export default function BodyMapScreen() {
               ))
             )}
           </>
+        )}
+
+        {bodyMarks.length > 0 && (
+          <View style={styles.patternCard}>
+            <View style={styles.patternHeader}>
+              <Feather name="search" size={16} color={Colors.primary} />
+              <Text style={styles.patternTitle}>Your recorded pattern</Text>
+            </View>
+            <Text style={styles.patternText}>
+              {patternSummary.topSensation && patternSummary.topRegion
+                ? `${formatPatternLabel(patternSummary.topSensation.value)} appeared ${patternSummary.topSensation.count} times, and ${formatPatternLabel(patternSummary.topRegion.value)} was your most recorded region.`
+                : patternSummary.topSensation
+                  ? `${formatPatternLabel(patternSummary.topSensation.value)} appeared ${patternSummary.topSensation.count} times in the last 30 days.`
+                  : patternSummary.topRegion
+                    ? `${formatPatternLabel(patternSummary.topRegion.value)} was recorded ${patternSummary.topRegion.count} times in the last 30 days.`
+                    : 'Add another entry on a different day to begin seeing repeated patterns.'}
+            </Text>
+            <Text style={styles.patternCaution}>
+              This summarizes what you recorded. It does not identify a medical cause.
+            </Text>
+          </View>
         )}
 
         {bodyMarks.length > 0 && (
@@ -536,6 +563,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
+  patternCard: {
+    backgroundColor: '#F5F1FB', borderRadius: 14, padding: 15, marginBottom: 16,
+    borderWidth: 1, borderColor: '#E5DCF2',
+  },
+  patternHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  patternTitle: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: Colors.text },
+  patternText: { fontFamily: 'Nunito_500Medium', fontSize: 13, lineHeight: 19, color: Colors.text },
+  patternCaution: { fontFamily: 'Nunito_400Regular', fontSize: 11, lineHeight: 16, color: Colors.textTertiary, marginTop: 7 },
   marksTitle: {
     fontFamily: 'Nunito_600SemiBold',
     fontSize: 15,

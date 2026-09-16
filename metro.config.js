@@ -3,17 +3,21 @@ const path = require("path");
 
 const config = getDefaultConfig(__dirname);
 
-// Exclude .local directory from Metro's file watcher to prevent crashes
-// from temporary Replit skill directories being created/deleted
+// Exclude Replit-managed temporary directories from Metro's file watcher.
+// Their contents can be created and removed while Metro is walking the tree.
+const ignoredDirectories = [".local", ".config", ".cache"];
+
 config.watchFolders = (config.watchFolders || []).filter(
-  (folder) => !folder.includes(".local")
+  (folder) => !ignoredDirectories.some(directory => folder.includes(directory))
 );
 
 config.resolver = {
   ...config.resolver,
   blockList: [
     ...(config.resolver?.blockList ? [config.resolver.blockList].flat() : []),
-    new RegExp(path.resolve(__dirname, ".local").replace(/\\/g, "\\\\") + "/.*"),
+    ...ignoredDirectories.map(
+      directory => new RegExp(path.resolve(__dirname, directory).replace(/\\/g, "\\\\") + "/.*"),
+    ),
   ],
 };
 

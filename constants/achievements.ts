@@ -8,7 +8,7 @@ export interface Achievement {
   iconName: string;
   category: 'consistency' | 'exploration' | 'mastery' | 'progress' | 'special';
   requirement: {
-    type: 'sessions' | 'streak' | 'categories' | 'checkins' | 'minutes' | 'awareness' | 'exercises' | 'articles';
+    type: 'sessions' | 'streak' | 'categories' | 'checkins' | 'minutes' | 'awareness' | 'exercises' | 'articles' | 'bodymarks';
     value: number;
   };
 }
@@ -56,7 +56,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'read-8', title: 'Well Read', description: 'Read 8 articles', tier: 'silver', iconName: 'book', category: 'exploration', requirement: { type: 'articles', value: 8 } },
   { id: 'read-15', title: 'Scholar', description: 'Read all articles', tier: 'gold', iconName: 'book', category: 'exploration', requirement: { type: 'articles', value: 15 } },
 
-  { id: 'first-bodymap', title: 'Body Cartographer', description: 'Mark your first body map sensation', tier: 'bronze', iconName: 'map-pin', category: 'special', requirement: { type: 'sessions', value: 1 } },
+  { id: 'first-bodymap', title: 'Body Cartographer', description: 'Mark your first body map sensation', tier: 'bronze', iconName: 'map-pin', category: 'special', requirement: { type: 'bodymarks', value: 1 } },
   { id: 'night-owl', title: 'Night Practitioner', description: 'Complete an exercise after 10pm', tier: 'bronze', iconName: 'moon', category: 'special', requirement: { type: 'sessions', value: 1 } },
   { id: 'early-bird', title: 'Dawn Awareness', description: 'Complete an exercise before 7am', tier: 'bronze', iconName: 'sunrise', category: 'special', requirement: { type: 'sessions', value: 1 } },
 ];
@@ -69,6 +69,7 @@ export function getUnlockedAchievements(stats: {
   totalMinutes: number;
   maxAwareness: number;
   articlesRead: number;
+  bodyMarks?: number;
 }): string[] {
   const unlocked: string[] = [];
   for (const achievement of ACHIEVEMENTS) {
@@ -82,6 +83,7 @@ export function getUnlockedAchievements(stats: {
       case 'minutes': met = stats.totalMinutes >= value; break;
       case 'awareness': met = stats.maxAwareness >= value; break;
       case 'articles': met = stats.articlesRead >= value; break;
+      case 'bodymarks': met = (stats.bodyMarks ?? 0) >= value; break;
     }
     if (met) unlocked.push(achievement.id);
   }

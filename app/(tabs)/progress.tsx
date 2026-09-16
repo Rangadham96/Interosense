@@ -10,7 +10,7 @@ import Colors from '@/constants/colors';
 import { ACHIEVEMENTS, TIER_COLORS } from '@/constants/achievements';
 import { CLINICAL_SCALES, MAIA2_SCALE, generateClinicianReport, PastMaia2Assessment, hasCompleteSubscaleScores } from '@/constants/clinical-scales';
 import RadarChart from '@/components/RadarChart';
-import Svg, { Circle } from 'react-native-svg';
+import { formatPatternLabel, getBodyPatternSummary } from '@/lib/body-patterns';
 
 const CATEGORY_LABELS: Record<string, string> = {
   heartbeat: 'Heartbeat',
@@ -23,11 +23,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   movement: 'Movement',
 };
 
-const GAUGE_SIZE = 120;
-const GAUGE_STROKE = 10;
-const GAUGE_RADIUS = (GAUGE_SIZE - GAUGE_STROKE) / 2;
-const GAUGE_CIRCUMFERENCE = 2 * Math.PI * GAUGE_RADIUS;
-
 export default function ProgressScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -37,6 +32,7 @@ export default function ProgressScreen() {
     sessions,
     checkins,
     assessments,
+    bodyMarks,
     totalSessions,
     totalMinutes,
     currentStreak,
@@ -171,6 +167,11 @@ export default function ProgressScreen() {
       .slice(0, 3);
   }, [sessions]);
 
+  const bodyPatternSummary = useMemo(
+    () => getBodyPatternSummary(bodyMarks, checkins),
+    [bodyMarks, checkins],
+  );
+
   const weeklyActivity = useMemo(() => {
     const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
     const days: { date: Date; count: number; label: string }[] = [];
@@ -186,35 +187,21 @@ export default function ProgressScreen() {
     return ACHIEVEMENTS.filter(a => unlockedAchievements.includes(a.id)).slice(0, 4);
   }, [unlockedAchievements]);
 
-  const interoceptiveScore = useMemo(() => {
+  const recentCheckinAverages = useMemo(() => {
     if (checkins.length === 0) return null;
-    const recent = checkins.slice(-7);
+    const recent = [...checkins]
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 7);
     const avgAwareness = recent.reduce((s, c) => s + c.awarenessScore, 0) / recent.length;
     const avgEnergy = recent.reduce((s, c) => s + c.energyLevel, 0) / recent.length;
-    const avgStress = recent.reduce((s, c) => s + (c.stressLevel || 5), 0) / recent.length;
-    const score = Math.round((avgAwareness * 0.5 + avgEnergy * 0.3 + (10 - avgStress) * 0.2) * 10);
-    return Math.min(100, Math.max(0, score));
+    const avgStress = recent.reduce((s, c) => s + (c.stressLevel ?? 5), 0) / recent.length;
+    return {
+      count: recent.length,
+      awareness: Math.round(avgAwareness * 10) / 10,
+      energy: Math.round(avgEnergy * 10) / 10,
+      stress: Math.round(avgStress * 10) / 10,
+    };
   }, [checkins]);
-
-  const priorMonthScore = useMemo(() => {
-    if (checkins.length < 8) return null;
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-    const prior = checkins.filter(c => {
-      const d = parseISO(c.date);
-      return d >= sixtyDaysAgo && d < thirtyDaysAgo;
-    });
-    if (prior.length < 3) return null;
-    const avgA = prior.reduce((s, c) => s + c.awarenessScore, 0) / prior.length;
-    const avgE = prior.reduce((s, c) => s + c.energyLevel, 0) / prior.length;
-    const avgSt = prior.reduce((s, c) => s + (c.stressLevel || 5), 0) / prior.length;
-    return Math.min(100, Math.max(0, Math.round((avgA * 0.5 + avgE * 0.3 + (10 - avgSt) * 0.2) * 10)));
-  }, [checkins]);
-
-  const gaugeDashOffset = interoceptiveScore !== null
-    ? GAUGE_CIRCUMFERENCE * (1 - interoceptiveScore / 100)
-    : GAUGE_CIRCUMFERENCE;
 
   return (
     <View style={[styles.container, { paddingTop: topPadding }]}>
@@ -228,61 +215,32 @@ export default function ProgressScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Interoceptive Awareness Score</Text>
+          <Text style={styles.sectionTitle}>Recent Check-in Snapshot</Text>
           <View style={styles.card}>
-            {interoceptiveScore !== null ? (
-              <View style={styles.scoreSection}>
-                <View style={styles.gaugeWrap}>
-                  <Svg width={GAUGE_SIZE} height={GAUGE_SIZE}>
-                    <Circle
-                      cx={GAUGE_SIZE / 2}
-                      cy={GAUGE_SIZE / 2}
-                      r={GAUGE_RADIUS}
-                      stroke={Colors.backgroundSecondary}
-                      strokeWidth={GAUGE_STROKE}
-                      fill="none"
-                    />
-                    <Circle
-                      cx={GAUGE_SIZE / 2}
-                      cy={GAUGE_SIZE / 2}
-                      r={GAUGE_RADIUS}
-                      stroke={Colors.primary}
-                      strokeWidth={GAUGE_STROKE}
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeDasharray={`${GAUGE_CIRCUMFERENCE}`}
-                      strokeDashoffset={gaugeDashOffset}
-                      transform={`rotate(-90 ${GAUGE_SIZE / 2} ${GAUGE_SIZE / 2})`}
-                    />
-                  </Svg>
-                  <View style={styles.gaugeCenter}>
-                    <Text style={styles.gaugeScore}>{interoceptiveScore}</Text>
-                    <Text style={styles.gaugeLabel}>/ 100</Text>
+            {recentCheckinAverages !== null ? (
+              <View>
+                <Text style={styles.snapshotDescription}>
+                  Your averages across the last {recentCheckinAverages.count} check-in{recentCheckinAverages.count === 1 ? '' : 's'}. These are separate self-reports, not a combined clinical score.
+                </Text>
+                <View style={styles.snapshotMetrics}>
+                  <View style={styles.snapshotMetric}>
+                    <Text style={styles.snapshotValue}>{recentCheckinAverages.awareness.toFixed(1)}</Text>
+                    <Text style={styles.snapshotLabel}>Awareness</Text>
                   </View>
-                </View>
-                <View style={styles.scoreDetails}>
-                  <Text style={styles.scoreTitle}>Your Score</Text>
-                  <Text style={styles.scoreDescription}>
-                    Based on your last {Math.min(checkins.length, 7)} check-ins
-                  </Text>
-                  {priorMonthScore !== null && (
-                    <View style={styles.comparisonRow}>
-                      <Feather
-                        name={interoceptiveScore > priorMonthScore ? 'trending-up' : 'trending-down'}
-                        size={14}
-                        color={interoceptiveScore > priorMonthScore ? Colors.success : Colors.error}
-                      />
-                      <Text style={[styles.comparisonText, { color: interoceptiveScore > priorMonthScore ? Colors.success : Colors.error }]}>
-                        {Math.abs(interoceptiveScore - priorMonthScore)} pts vs. prior month
-                      </Text>
-                    </View>
-                  )}
+                  <View style={styles.snapshotMetric}>
+                    <Text style={styles.snapshotValue}>{recentCheckinAverages.energy.toFixed(1)}</Text>
+                    <Text style={styles.snapshotLabel}>Energy</Text>
+                  </View>
+                  <View style={styles.snapshotMetric}>
+                    <Text style={styles.snapshotValue}>{recentCheckinAverages.stress.toFixed(1)}</Text>
+                    <Text style={styles.snapshotLabel}>Stress</Text>
+                  </View>
                 </View>
               </View>
             ) : (
               <View style={styles.emptyState}>
                 <Feather name="activity" size={32} color={Colors.primary} />
-                <Text style={styles.emptyText}>Complete 7 check-ins to see your Interoceptive Awareness Score</Text>
+                <Text style={styles.emptyText}>Complete a check-in to begin seeing your recent self-reported patterns</Text>
                 <TouchableOpacity style={styles.emptyActionBtn} onPress={() => router.push('/(tabs)/checkin')}>
                   <Text style={styles.emptyActionText}>Start a Check-In</Text>
                 </TouchableOpacity>
@@ -328,6 +286,61 @@ export default function ProgressScreen() {
           </View>
         )}
 
+        {bodyPatternSummary.totalReports > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Body Signal Patterns</Text>
+            <View style={[styles.card, styles.bodyPatternCard]}>
+              <View style={styles.bodyPatternHeader}>
+                <View style={styles.bodyPatternIcon}>
+                  <Feather name="map-pin" size={18} color={Colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.bodyPatternTitle}>Last {bodyPatternSummary.windowDays} days</Text>
+                  <Text style={styles.bodyPatternMeta}>
+                    {bodyPatternSummary.totalReports} recorded entr{bodyPatternSummary.totalReports === 1 ? 'y' : 'ies'} across {bodyPatternSummary.activeDays} day{bodyPatternSummary.activeDays === 1 ? '' : 's'}
+                  </Text>
+                </View>
+              </View>
+
+              {bodyPatternSummary.topSensation && (
+                <View style={styles.bodyPatternRow}>
+                  <Text style={styles.bodyPatternLabel}>Most recorded sensation</Text>
+                  <Text style={styles.bodyPatternValue}>
+                    {formatPatternLabel(bodyPatternSummary.topSensation.value)} · {bodyPatternSummary.topSensation.count} times
+                  </Text>
+                </View>
+              )}
+              {bodyPatternSummary.topRegion && (
+                <View style={styles.bodyPatternRow}>
+                  <Text style={styles.bodyPatternLabel}>Most recorded area</Text>
+                  <Text style={styles.bodyPatternValue}>
+                    {formatPatternLabel(bodyPatternSummary.topRegion.value)} · {bodyPatternSummary.topRegion.count} times
+                  </Text>
+                </View>
+              )}
+              {bodyPatternSummary.averageMappedIntensity !== null && (
+                <View style={styles.bodyPatternRow}>
+                  <Text style={styles.bodyPatternLabel}>Average mapped intensity</Text>
+                  <Text style={styles.bodyPatternValue}>{bodyPatternSummary.averageMappedIntensity.toFixed(1)}/5</Text>
+                </View>
+              )}
+
+              {!bodyPatternSummary.topSensation && !bodyPatternSummary.topRegion && (
+                <Text style={styles.bodyPatternEmpty}>
+                  Keep recording on different days to see repeated sensations and areas.
+                </Text>
+              )}
+              <Text style={styles.bodyPatternCaution}>
+                These are patterns in what you entered, not a diagnosis or explanation of cause.
+              </Text>
+              <TouchableOpacity style={styles.bodyPatternLink} onPress={() => router.push('/bodymap' as any)}>
+                <Text style={styles.bodyPatternLinkText}>Open Body Map</Text>
+                <Feather name="arrow-right" size={14} color={Colors.primary} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {showMaia2Prompt && (
           <TouchableOpacity
             style={styles.maia2Prompt}
@@ -343,7 +356,7 @@ export default function ProgressScreen() {
               </Text>
               <Text style={styles.maia2PromptSubtitle}>
                 {maia2Assessments.length === 0
-                  ? 'Take the validated MAIA-2 assessment to get your scientific body awareness score across 8 dimensions.'
+                  ? 'Take the validated MAIA-2 assessment to view your self-reported profile across 8 dimensions.'
                   : "It's been 30+ days since your last MAIA-2. Track your progress with a new measurement."}
               </Text>
             </View>
@@ -860,18 +873,31 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 12, fontFamily: 'Nunito_700Bold', color: Colors.textSecondary, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 12 },
   seeAll: { fontSize: 13, fontFamily: 'Nunito_600SemiBold', color: Colors.primary, marginBottom: 12 },
   card: { backgroundColor: Colors.surface, borderRadius: 16, padding: 20 },
+  bodyPatternCard: { padding: 18 },
+  bodyPatternHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
+  bodyPatternIcon: {
+    width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.primaryLight,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  bodyPatternTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15, color: Colors.text },
+  bodyPatternMeta: { fontFamily: 'Nunito_400Regular', fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  bodyPatternRow: {
+    flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
+    gap: 16, paddingVertical: 9, borderTopWidth: 1, borderTopColor: Colors.border,
+  },
+  bodyPatternLabel: { flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 12, color: Colors.textSecondary },
+  bodyPatternValue: { fontFamily: 'Nunito_700Bold', fontSize: 12, color: Colors.text, textAlign: 'right' },
+  bodyPatternEmpty: { fontFamily: 'Nunito_400Regular', fontSize: 13, color: Colors.textSecondary, lineHeight: 19 },
+  bodyPatternCaution: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: Colors.textTertiary, lineHeight: 16, marginTop: 10 },
+  bodyPatternLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, alignSelf: 'flex-start' },
+  bodyPatternLinkText: { fontFamily: 'Nunito_700Bold', fontSize: 13, color: Colors.primary },
   chartContextLabel: { fontSize: 12, fontFamily: 'Nunito_400Regular', color: Colors.textTertiary, marginBottom: 14, lineHeight: 17 },
 
-  scoreSection: { flexDirection: 'row', alignItems: 'center', gap: 20 },
-  gaugeWrap: { width: GAUGE_SIZE, height: GAUGE_SIZE, justifyContent: 'center', alignItems: 'center' },
-  gaugeCenter: { position: 'absolute', alignItems: 'center' },
-  gaugeScore: { fontSize: 28, fontFamily: 'Nunito_800ExtraBold', color: Colors.primary },
-  gaugeLabel: { fontSize: 12, fontFamily: 'Nunito_500Medium', color: Colors.textTertiary },
-  scoreDetails: { flex: 1 },
-  scoreTitle: { fontSize: 16, fontFamily: 'Nunito_700Bold', color: Colors.text, marginBottom: 4 },
-  scoreDescription: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.textSecondary, lineHeight: 18, marginBottom: 10 },
-  comparisonRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  comparisonText: { fontSize: 13, fontFamily: 'Nunito_600SemiBold' },
+  snapshotDescription: { fontSize: 13, fontFamily: 'Nunito_400Regular', color: Colors.textSecondary, lineHeight: 19, marginBottom: 16 },
+  snapshotMetrics: { flexDirection: 'row', gap: 10 },
+  snapshotMetric: { flex: 1, backgroundColor: Colors.backgroundSecondary, borderRadius: 12, paddingVertical: 13, alignItems: 'center' },
+  snapshotValue: { fontSize: 22, fontFamily: 'Nunito_800ExtraBold', color: Colors.primary },
+  snapshotLabel: { fontSize: 11, fontFamily: 'Nunito_600SemiBold', color: Colors.textSecondary, marginTop: 2 },
 
   avgRow: { flexDirection: 'row', alignItems: 'baseline', marginBottom: 8 },
   avgLabel: { fontSize: 14, fontFamily: 'Nunito_500Medium', color: Colors.textSecondary, marginRight: 8 },

@@ -4,3 +4,5 @@
 - [Stale web build at /app](web-build-staleness.md) — merges rebuild dist automatically; unmerged frontend changes still require an export before testing /app.
 - [Server HTML template caching](server-template-caching.md) — landing/pitch HTML templates load once at startup; restart the backend after editing them.
 - [Health product claims standard](health-claims-standard.md) — keep product copy evidence-literate; never turn plausible mechanisms or wearable readings into personal medical facts.
+- [Body-pattern privacy boundary](body-pattern-privacy.md) — deterministic personalization may use structured entries; free-text notes stay out unless the user explicitly opts in.
+- [Expo workflow on Replit](expo-workflow.md) — backend owns web preview; run Metro as a console workflow without a port health gate and ignore managed temp dirs.

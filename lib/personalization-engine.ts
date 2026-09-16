@@ -1,7 +1,8 @@
 import { Exercise, EXERCISES, ExerciseCategory, TargetCondition } from '@/constants/exercises';
 import { CONDITIONS } from '@/constants/conditions';
 import { CLINICAL_SCALES } from '@/constants/clinical-scales';
-import { SessionRecord, CheckinRecord, AssessmentRecord, UserProfile, WearableDataPoint } from '@/lib/storage';
+import { SessionRecord, CheckinRecord, AssessmentRecord, UserProfile, WearableDataPoint, BodyMark } from '@/lib/storage';
+import { getBodyPatternSummary } from '@/lib/body-patterns';
 import { parseISO, differenceInDays, isToday, format } from 'date-fns';
 
 export interface Recommendation {
@@ -74,9 +75,9 @@ function getStreakMessage(streak: number): string {
   if (streak === 0) return 'Start your streak today with a quick exercise';
   if (streak === 1) return '1 day streak - great start, keep it going';
   if (streak < 7) return `${streak} day streak - building momentum`;
-  if (streak < 14) return `${streak} day streak - your neural pathways are strengthening`;
+  if (streak < 14) return `${streak} day streak - notice what is becoming more familiar`;
   if (streak < 30) return `${streak} day streak - remarkable consistency`;
-  return `${streak} day streak - you are rewiring your brain`;
+  return `${streak} day streak - a sustained practice record`;
 }
 
 function getTodayFocus(profile: UserProfile | null, sessions: SessionRecord[], checkins: CheckinRecord[], assessments: AssessmentRecord[]): string {
@@ -89,27 +90,27 @@ function getTodayFocus(profile: UserProfile | null, sessions: SessionRecord[], c
 
   if (recentCheckin) {
     if (recentCheckin.mood === 'anxious' || recentCheckin.mood === 'stressed') {
-      return 'Your recent check-in shows elevated stress. Breathing exercises can help regulate your nervous system.';
+      return 'Your recent check-in included higher stress. Consider a brief, comfortable practice and stop if it feels unhelpful.';
     }
     if (recentCheckin.mood === 'sad' || recentCheckin.mood === 'down') {
-      return 'Gentle movement and gut awareness exercises support mood through the serotonin pathway.';
+      return 'Your recent check-in included low mood. A gentle movement or grounding practice may offer a manageable place to begin.';
     }
     if (recentCheckin.sleepQuality <= 3) {
-      return 'Poor sleep affects interoception. Try the 4-7-8 breathing or progressive muscle relaxation tonight.';
+      return 'You reported lower sleep quality. Consider a short, low-effort practice rather than pushing through a long session.';
     }
     if (recentCheckin.energyLevel <= 3) {
-      return 'Low energy detected. A quick body check can help you reconnect and recharge.';
+      return 'You reported lower energy. A short body check may help you notice what feels manageable right now.';
     }
   }
 
   if (conditions.includes('anxiety')) {
-    return 'Focus on breathing exercises today - they reduce anxiety by activating the vagus nerve.';
+    return 'A comfortable breathing or grounding practice may be a useful place to start today.';
   }
   if (conditions.includes('ptsd')) {
     return 'Today\'s focus: trauma-informed somatic exercises that reconnect you safely with your body.';
   }
   if (conditions.includes('depression')) {
-    return 'Movement-based practices help lift mood through the body-brain connection.';
+    return 'A brief movement practice may offer a gentle way to notice energy and body sensations.';
   }
 
   if (tod === 'morning') return 'Morning is ideal for body scanning - start your day with full-body awareness.';
@@ -124,6 +125,7 @@ function getExerciseRecommendations(
   checkins: CheckinRecord[],
   assessments: AssessmentRecord[],
   wearableData: WearableDataPoint[],
+  bodyMarks: BodyMark[],
 ): Recommendation[] {
   const recs: Recommendation[] = [];
   const completedIds = new Set(sessions.map(s => s.exerciseId));
@@ -136,7 +138,7 @@ function getExerciseRecommendations(
   const level = profile?.experienceLevel || 'beginner';
   const tod = getTimeOfDay();
 
-  const recentCheckin = checkins.sort((a, b) => b.date.localeCompare(a.date))[0];
+  const recentCheckin = [...checkins].sort((a, b) => b.date.localeCompare(a.date))[0];
   const recentMood = recentCheckin?.mood || '';
   const recentEnergy = recentCheckin?.energyLevel || 5;
   const recentSleep = recentCheckin?.sleepQuality || 5;
@@ -150,15 +152,17 @@ function getExerciseRecommendations(
   const pcl5Score = latestPcl5?.totalScore ?? 0;
   const highPcl5 = pcl5Score >= 33;
 
-  const recentWearable = wearableData.length > 0
-    ? wearableData.filter(w => w.hrv !== undefined).slice(-3)
-    : [];
-  const avgRecentHrv = recentWearable.length > 0
-    ? recentWearable.reduce((s, w) => s + (w.hrv || 0), 0) / recentWearable.length
-    : null;
-  const lowHrv = avgRecentHrv !== null && avgRecentHrv < 40;
-
   const highStress = recentStress >= 7 || recentMood === 'anxious' || recentMood === 'stressed';
+  const bodyPattern = getBodyPatternSummary(bodyMarks, checkins);
+  const tensionLikePattern = ['tension', 'pressure', 'heaviness'].includes(bodyPattern.topSensation?.value ?? '');
+  const ratingByExercise = new Map<string, { total: number; count: number }>();
+  for (const session of sessions) {
+    if (!session.rating) continue;
+    const current = ratingByExercise.get(session.exerciseId) ?? { total: 0, count: 0 };
+    current.total += session.rating;
+    current.count += 1;
+    ratingByExercise.set(session.exerciseId, current);
+  }
 
   const scored = EXERCISES.map(ex => {
     let score = 0;
@@ -183,7 +187,6 @@ function getExerciseRecommendations(
     if (recentEnergy <= 3 && ex.category === 'movement') score += 15;
 
     if (highStress && ex.category === 'nervousSystem') score += 30;
-    if (lowHrv && ex.category === 'nervousSystem') score += 25;
     if ((hasPtsdCondition || highPcl5) && ex.category === 'traumaInformed') score += 35;
     if (highPcl5 && ex.targetConditions.includes('ptsd')) score += 20;
 
@@ -194,6 +197,15 @@ function getExerciseRecommendations(
 
     if (recentEnergy <= 3 && ex.durationMinutes <= 5) score += 10;
     if (recentEnergy >= 7 && ex.durationMinutes >= 8) score += 5;
+    if (bodyPattern.topSensation && ex.category === 'bodyScanning') score += 12;
+    if (tensionLikePattern && ex.category === 'tension') score += 24;
+
+    const priorRating = ratingByExercise.get(ex.id);
+    if (priorRating) {
+      const averageRating = priorRating.total / priorRating.count;
+      if (averageRating >= 4) score += 18;
+      if (averageRating <= 2) score -= 25;
+    }
 
     return { exercise: ex, score };
   });
@@ -215,16 +227,24 @@ function getExerciseRecommendations(
       reason = 'Based on your recent check-in: helps with anxiety';
     }
     if (highStress && ex.category === 'nervousSystem') {
-      reason = 'Your stress signals are elevated - this exercise regulates your autonomic nervous system';
-    }
-    if (lowHrv && ex.category === 'nervousSystem') {
-      reason = `Your HRV is low (${avgRecentHrv!.toFixed(0)} ms) - vagal regulation exercises help restore balance`;
+      reason = 'Your recent check-in included higher stress, so this offers a structured pause without requiring a particular outcome';
     }
     if (hasPtsdCondition && ex.category === 'traumaInformed') {
       reason = 'Trauma-informed practice: gentle somatic work designed for nervous system safety';
     }
     if (highPcl5 && ex.category === 'traumaInformed') {
       reason = 'Your PCL-5 results suggest trauma-informed exercises would be most supportive right now';
+    }
+    if (bodyPattern.topSensation && ex.category === 'bodyScanning') {
+      reason = `You have recently reported ${bodyPattern.topSensation.value}. This practice can help you describe what you notice without interpreting it medically`;
+    }
+    if (tensionLikePattern && ex.category === 'tension') {
+      const regionText = bodyPattern.topRegion ? ` around your ${bodyPattern.topRegion.value}` : '';
+      reason = `You have repeatedly recorded ${bodyPattern.topSensation!.value}${regionText}. This practice offers a gentle way to explore that pattern`;
+    }
+    const priorRating = ratingByExercise.get(ex.id);
+    if (priorRating && priorRating.total / priorRating.count >= 4) {
+      reason = `You rated this practice as helpful before. It may be worth returning to based on your own response`;
     }
     if (!completedIds.has(ex.id)) {
       reason = `New exercise: ${reason}`;
@@ -276,7 +296,7 @@ function getSystemRecommendations(
       type: 'streak',
       title: `Protect Your ${currentStreak}-Day Streak`,
       subtitle: 'Complete any exercise today',
-      reason: 'Consistency is the key to neural rewiring',
+      reason: 'A short practice can help you maintain the routine you chose',
       priority: 90,
       iconName: 'trending-up',
       color: '#F0C05A',
@@ -322,7 +342,7 @@ function getSystemRecommendations(
       type: 'bodymap',
       title: 'Update Your Body Map',
       subtitle: 'Mark current sensations',
-      reason: `After ${sessions.length} sessions, map how your body awareness has changed`,
+      reason: `After ${sessions.length} sessions, record what you notice so you can compare your own patterns over time`,
       priority: 60,
       iconName: 'map',
       color: '#E8B4B8',
@@ -340,26 +360,45 @@ function generateInsights(
   currentStreak: number,
   totalMinutes: number,
   wearableData: WearableDataPoint[],
+  bodyMarks: BodyMark[],
 ): InsightCard[] {
   const insights: InsightCard[] = [];
+  const bodyPattern = getBodyPatternSummary(bodyMarks, checkins);
+
+  if (bodyPattern.topRegion || bodyPattern.topSensation) {
+    const details: string[] = [];
+    if (bodyPattern.topSensation) {
+      details.push(`${bodyPattern.topSensation.value} was recorded ${bodyPattern.topSensation.count} times`);
+    }
+    if (bodyPattern.topRegion) {
+      details.push(`${bodyPattern.topRegion.value} appeared ${bodyPattern.topRegion.count} times`);
+    }
+    insights.push({
+      id: 'body-signal-pattern',
+      title: 'A Pattern in Your Records',
+      body: `Across the last ${bodyPattern.windowDays} days, ${details.join(' and ')}. This describes what you entered; it does not determine what the sensations mean medically.`,
+      type: 'pattern',
+      iconName: 'map-pin',
+      color: '#E8B4B8',
+    });
+  }
 
   if (sessions.length === 0) {
     insights.push({
       id: 'welcome',
       title: 'Your Journey Begins',
-      body: 'Interoceptive awareness develops with consistent practice. Research shows meaningful changes in just 2 weeks of daily practice. Start with a beginner exercise today.',
+      body: 'A short beginner practice can help you start noticing and describing body sensations without requiring them to change.',
       type: 'encouragement',
       iconName: 'compass',
       color: '#6B5B95',
     });
-    return insights;
   }
 
   if (currentStreak >= 7) {
     insights.push({
       id: 'streak-science',
-      title: `${currentStreak} Days of Neural Rewiring`,
-      body: `After ${currentStreak} days of consistent practice, your insular cortex is measurably stronger. MRI studies show increased cortical thickness with regular interoceptive practice.`,
+      title: `${currentStreak} Days of Practice`,
+      body: `You have practiced on ${currentStreak} consecutive days. Consider what feels more familiar now and what still feels difficult.`,
       type: 'milestone',
       iconName: 'trending-up',
       color: '#7FB069',
@@ -371,7 +410,7 @@ function generateInsights(
     insights.push({
       id: 'time-invested',
       title: `${hours}+ Hours of Body Awareness`,
-      body: `You have invested ${totalMinutes} minutes in interoceptive training. Garfinkel et al. (2015) found that this level of practice significantly improves cardiac interoceptive accuracy.`,
+      body: `You have recorded ${totalMinutes} minutes of practice. Your own ratings and check-ins are the best way to see which practices have felt useful.`,
       type: 'milestone',
       iconName: 'clock',
       color: '#88B3B5',
@@ -379,15 +418,16 @@ function generateInsights(
   }
 
   if (checkins.length >= 5) {
-    const recentCheckins = checkins.slice(-5);
+    const chronologicalCheckins = [...checkins].sort((a, b) => a.date.localeCompare(b.date));
+    const recentCheckins = chronologicalCheckins.slice(-5);
     const avgAwareness = recentCheckins.reduce((s, c) => s + c.awarenessScore, 0) / recentCheckins.length;
-    const firstCheckins = checkins.slice(0, Math.min(5, checkins.length));
+    const firstCheckins = chronologicalCheckins.slice(0, Math.min(5, chronologicalCheckins.length));
     const firstAvg = firstCheckins.reduce((s, c) => s + c.awarenessScore, 0) / firstCheckins.length;
     if (avgAwareness > firstAvg + 1) {
       insights.push({
         id: 'awareness-improving',
-        title: 'Your Awareness Is Growing',
-        body: `Your average awareness score has improved from ${firstAvg.toFixed(1)} to ${avgAwareness.toFixed(1)}. This reflects real neuroplastic changes in your insular cortex.`,
+        title: 'Your Awareness Ratings Changed',
+        body: `Your recent self-reported awareness average is ${avgAwareness.toFixed(1)}, compared with ${firstAvg.toFixed(1)} in your earliest check-ins. This is a pattern in your own reports, not a clinical measurement.`,
         type: 'pattern',
         iconName: 'trending-up',
         color: '#7FB069',
@@ -400,7 +440,7 @@ function generateInsights(
     insights.push({
       id: 'category-diversity',
       title: 'Diverse Practice',
-      body: `You have explored ${categories.size} categories. Research shows diverse interoceptive training builds broader body awareness than focusing on a single modality.`,
+      body: `You have explored ${categories.size} practice categories. Your ratings can help identify which formats feel most useful to you.`,
       type: 'science',
       iconName: 'layers',
       color: '#6B5B95',
@@ -416,6 +456,7 @@ function generateInsights(
     });
     scaleGroups.forEach((records, scaleId) => {
       if (records.length < 2) return;
+      if (scaleId === 'maia2') return;
       const sorted = records.sort((a, b) => a.completedAt.localeCompare(b.completedAt));
       const first = sorted[0];
       const last = sorted[sorted.length - 1];
@@ -423,8 +464,8 @@ function generateInsights(
         const decrease = first.totalScore - last.totalScore;
         insights.push({
           id: `improvement-${scaleId}`,
-          title: `${last.scaleName} Score Improving`,
-          body: `Your ${last.scaleName} score has decreased by ${decrease} points since your first assessment. Lower scores indicate symptom improvement.`,
+          title: `${last.scaleName} Score Changed`,
+          body: `Your latest ${last.scaleName} self-report score is ${decrease} points lower than your first recorded score. Consider discussing meaningful changes or concerns with a qualified professional.`,
           type: 'pattern',
           iconName: 'trending-down',
           color: '#7FB069',
@@ -433,50 +474,35 @@ function generateInsights(
     });
   }
 
-  if (wearableData.length >= 3) {
-    const recent = wearableData.filter(w => w.hrv !== undefined).slice(-7);
-    if (recent.length >= 3) {
-      const avgHrv = recent.reduce((s, w) => s + (w.hrv || 0), 0) / recent.length;
-      insights.push({
-        id: 'hrv-insight',
-        title: 'Heart Rate Variability',
-        body: `Your average HRV is ${avgHrv.toFixed(0)} ms. Higher HRV indicates better vagal tone and stress resilience. Regular breathing exercises directly increase HRV.`,
-        type: 'science',
-        iconName: 'heart',
-        color: '#E8B4B8',
-      });
-    }
-  }
-
   const scienceFacts: InsightCard[] = [
     {
       id: 'science-insula',
-      title: 'The Insula: Your Awareness Hub',
-      body: 'The insular cortex processes all interoceptive signals. Regular practice literally thickens this brain region, improving your ability to read your body.',
+      title: 'Practice Observation, Not Diagnosis',
+      body: 'Interoception includes noticing signals such as breath, tension, temperature, and heartbeat. A sensation can have many possible influences, so begin by describing it rather than assigning a medical meaning.',
       type: 'science',
       iconName: 'book-open',
       color: '#6B5B95',
     },
     {
       id: 'science-vagus',
-      title: 'Vagus Nerve Power',
-      body: 'Your vagus nerve carries 80% of signals from gut to brain. Breathing exercises directly stimulate it, activating your "rest and digest" system within 90 seconds.',
+      title: 'Comfort Comes First',
+      body: 'Breathing practices should feel manageable. You can shorten a practice, return to normal breathing, or stop if you feel dizzy, distressed, or uncomfortable.',
       type: 'science',
       iconName: 'zap',
       color: '#88B3B5',
     },
     {
       id: 'science-gut',
-      title: 'Your Second Brain',
-      body: '500 million neurons in your gut produce 95% of your body\'s serotonin. Gut awareness exercises tap into this happiness pathway.',
+      title: 'Context Helps Patterns',
+      body: 'Sleep, meals, movement, stress, medication, illness, and many other factors can affect body sensations. Repeated records provide context, but they do not establish a cause.',
       type: 'science',
       iconName: 'circle',
       color: '#C4A484',
     },
     {
       id: 'science-hrv',
-      title: 'HRV: Your Resilience Score',
-      body: 'Heart Rate Variability measures vagal tone - your stress resilience. Just 5 minutes of box breathing can increase HRV by 10-15% within a single session.',
+      title: 'Wearables Need Context',
+      body: 'Wearable readings vary between people and across days. Compare them cautiously with your own recent pattern rather than treating one number as a verdict about health or resilience.',
       type: 'science',
       iconName: 'activity',
       color: '#E8B4B8',
@@ -500,17 +526,18 @@ export function generateAdvisorState(
   currentStreak: number,
   totalMinutes: number,
   wearableData: WearableDataPoint[],
+  bodyMarks: BodyMark[],
 ): AdvisorState {
   const name = profile?.name || 'there';
   const greeting = getGreeting(name);
   const streakMessage = getStreakMessage(currentStreak);
   const todayFocus = getTodayFocus(profile, sessions, checkins, assessments);
 
-  const exerciseRecs = getExerciseRecommendations(profile, sessions, checkins, assessments, wearableData);
+  const exerciseRecs = getExerciseRecommendations(profile, sessions, checkins, assessments, wearableData, bodyMarks);
   const systemRecs = getSystemRecommendations(profile, sessions, checkins, assessments, todayCheckedIn, currentStreak);
   const allRecs = [...systemRecs, ...exerciseRecs].sort((a, b) => b.priority - a.priority);
 
-  const insights = generateInsights(profile, sessions, checkins, assessments, currentStreak, totalMinutes, wearableData);
+  const insights = generateInsights(profile, sessions, checkins, assessments, currentStreak, totalMinutes, wearableData, bodyMarks);
 
   const nextExercise = exerciseRecs.length > 0
     ? EXERCISES.find(e => e.id === exerciseRecs[0].actionId) || null

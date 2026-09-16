@@ -313,7 +313,7 @@ export default function HomeScreen() {
     if (currentStreak < 7) return `${currentStreak} days of consistent awareness. Keep going.`;
     if (currentStreak < 14) return `${currentStreak} days. Notice what is becoming more familiar with practice.`;
     if (currentStreak < 30) return `${currentStreak} days. Remarkable dedication to yourself.`;
-    return `${currentStreak} days. You are genuinely rewiring your brain.`;
+    return `${currentStreak} days. A sustained record of showing up for practice.`;
   }, [currentStreak, sessions]);
 
   const recentArticles = useMemo(() => {
@@ -325,6 +325,9 @@ export default function HomeScreen() {
   }, []);
 
   const nextExercise = advisorState.nextExercise;
+  const nextExerciseRecommendation = nextExercise
+    ? advisorState.recommendations.find(rec => rec.type === 'exercise' && rec.actionId === nextExercise.id)
+    : null;
   const evidenceBadge = nextExercise ? (EVIDENCE_LABELS[nextExercise.methodology] || 'Emerging Science') : '';
 
   return (
@@ -341,9 +344,9 @@ export default function HomeScreen() {
         <View style={styles.heroTopRow}>
           <View style={styles.heroLeft}>
             <Text style={styles.greeting}>{greeting}</Text>
-            {profile?.primaryCondition && (
+            {profile?.conditions?.[0] && (
               <Text style={styles.conditionLabel}>
-                {CONDITIONS.find(c => c.id === profile.primaryCondition)?.title}
+                {CONDITIONS.find(c => c.id === profile.conditions?.[0])?.name}
               </Text>
             )}
             <Text style={styles.greetingSubtext}>{subtext}</Text>
@@ -479,10 +482,10 @@ export default function HomeScreen() {
                 </View>
                 <Text style={styles.nextExerciseTitle}>{nextExercise.title}</Text>
                 <Text style={styles.nextExerciseSubtitle}>{nextExercise.subtitle}</Text>
-                {topRecommendations[0]?.reason ? (
+                {nextExerciseRecommendation?.reason ? (
                   <View style={styles.recReasonRow}>
                     <Feather name="zap" size={11} color="rgba(255,255,255,0.7)" />
-                    <Text style={styles.recReasonText}>{topRecommendations[0].reason}</Text>
+                    <Text style={styles.recReasonText}>{nextExerciseRecommendation.reason}</Text>
                   </View>
                 ) : null}
                 <View style={styles.nextExerciseMeta}>
@@ -619,7 +622,7 @@ export default function HomeScreen() {
           <View style={styles.section}>
             <ContextualExerciseSection
               title="Your nervous system needs support"
-              subtitle="Elevated stress detected. These exercises activate your vagal brake for rapid calm."
+              subtitle="Your recent check-in included higher stress. These practices offer gentle, structured ways to pause."
               accentColor="#88B3B5"
               iconName="radio"
               exerciseIds={nervousSystemExerciseIds}

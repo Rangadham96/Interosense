@@ -207,8 +207,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       totalMinutes,
       maxAwareness,
       articlesRead: articlesRead.length,
+      bodyMarks: bodyMarks.length,
     });
-  }, [totalSessions, currentStreak, categoriesExplored, checkins.length, totalMinutes, maxAwareness, articlesRead.length]);
+  }, [totalSessions, currentStreak, categoriesExplored, checkins.length, totalMinutes, maxAwareness, articlesRead.length, bodyMarks.length]);
 
   const goalStats = useMemo<GoalStats>(() => ({
     totalSessions,
@@ -266,8 +267,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       currentStreak,
       totalMinutes,
       wearableData,
+      bodyMarks,
     );
-  }, [profile, sessions, checkins, assessments, todayCheckedIn, currentStreak, totalMinutes, wearableData]);
+  }, [profile, sessions, checkins, assessments, todayCheckedIn, currentStreak, totalMinutes, wearableData, bodyMarks]);
 
   const completeOnboarding = useCallback(async (prof: UserProfile) => {
     await Storage.setOnboardingComplete();
