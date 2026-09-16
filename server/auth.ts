@@ -506,7 +506,7 @@ router.post("/api/auth/social", async (req: Request, res: Response) => {
       }
       // Apple only sends email on the first sign-in; subsequent sign-ins omit it.
       // On repeat sign-ins, look up the existing account by providerId (sub).
-      verifiedEmail = claims.email ?? null;
+      verifiedEmail = claims.email?.toLowerCase() ?? null;
       verifiedName = name || null;
       providerId = claims.sub;
 
