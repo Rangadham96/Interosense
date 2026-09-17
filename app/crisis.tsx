@@ -419,7 +419,7 @@ export default function CrisisScreen() {
     .map(c => ({ conditionId: c, ...CONDITION_COPING[c] }));
 
   const handleEmergencyCall = () => {
-    try { Linking.openURL('tel:911'); } catch {}
+    try { Linking.openURL('tel:112'); } catch {}
   };
 
   const handleCrisisText = () => {
@@ -457,7 +457,7 @@ export default function CrisisScreen() {
 
             <Pressable style={styles.emergencyBtn} onPress={handleEmergencyCall}>
               <Feather name="phone" size={20} color="#FFFFFF" />
-              <Text style={styles.emergencyBtnText}>Call Emergency Services (911)</Text>
+               <Text style={styles.emergencyBtnText}>Call Emergency Services (112)</Text>
             </Pressable>
 
             <Pressable style={styles.crisisTextBtn} onPress={handleCrisisText}>
@@ -517,6 +517,9 @@ export default function CrisisScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>MORE RESOURCES</Text>
           <View style={styles.resourcesCard}>
+            <ResourceRow icon="phone" title="Kiran Mental Health Helpline" detail="1800-599-0019" url="tel:18005990019" />
+            <ResourceRow icon="phone-call" title="iCall" detail="+91 9152987821" url="tel:+919152987821" />
+            <ResourceRow icon="heart" title="Vandrevala Foundation" detail="+91 9999666555" url="tel:+919999666555" />
             <ResourceRow icon="phone" title="988 Suicide & Crisis Lifeline" detail="Call or text 988" url="tel:988" />
             <ResourceRow icon="phone-call" title="SAMHSA Helpline" detail="1-800-662-4357 (24/7)" url="tel:18006624357" />
             <ResourceRow icon="globe" title="International Crisis Lines" detail="findahelpline.com" url="https://findahelpline.com" />

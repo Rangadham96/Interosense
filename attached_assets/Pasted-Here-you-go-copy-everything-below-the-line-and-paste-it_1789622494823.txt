@@ -1,0 +1,19 @@
+Here you go — copy everything below the line and paste it into the Replit agent as one prompt:
+
+---
+
+I need you to fix the marketing copy on our landing page (interosense.com) so it accurately matches what the app actually does, and update the crisis resources in the app. We currently have a trust problem: the website overpromises, and the code tells the truth. Please make these specific changes:
+
+1. **Fix the pricing section.** The homepage currently says "Start for Free. Always." and lists "Everything in Free: All 25+ guided exercises unlocked, clinical assessments (GAD-7, PHQ-9, PCL-5, MAIA-2), AI-powered daily personalisation, advanced progress analytics." This is wrong. Our actual free tier (see `constants/free-limits.ts`) gives users: 5 guided exercises, 3 articles, the crisis toolkit, and daily check-ins. Clinical assessments, the full exercise library, the full article library, advanced analytics, data export, and wearable integration are premium features behind a Razorpay subscription. Rewrite the pricing section to honestly describe what's free and what's premium, and mention the subscription with its Razorpay pricing.
+
+2. **Keep only this promise unchanged:** "The crisis toolkit is always free. No exceptions." That part is true and should stay.
+
+3. **Soften the statistics.** The claim "Clinical trials show interoceptive body-awareness training reduces anxiety symptoms by 30–40% in participants with GAD" is stated too confidently. Rewrite it to make clear this is from therapist-delivered clinical trials (MABT studies), that Interosense is a training app based on that research, and that individual results vary. Do not remove the science section — just make it honest rather than promotional.
+
+4. Keep the testimonials exactly as they are — they're already labeled "illustrative," which is good and must stay.
+
+5. **Add Indian crisis resources to the app's crisis toolkit**, alongside the existing US ones: Kiran helpline 1800-599-0019, iCall (+91 9152987821), and Vandrevala Foundation (+91 9999666555). Make the emergency call button use 112 (India's emergency number) instead of 911, since our users are primarily in India. Keep the international resources (findahelpline.com) as they are.
+
+6. Do not change any app functionality, screens, or code logic beyond the crisis resources — the rest is landing page copy only.
+
+7. After making the changes, show me the exact new wording for the pricing section and the statistics section before I deploy, so I can review the English.
