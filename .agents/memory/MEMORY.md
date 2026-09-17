@@ -7,3 +7,4 @@
 - [Body-pattern privacy boundary](body-pattern-privacy.md) — deterministic personalization may use structured entries; free-text notes stay out unless the user explicitly opts in.
 - [Expo workflow on Replit](expo-workflow.md) — backend owns web preview; run Metro as a console workflow without a port health gate and ignore managed temp dirs.
 - [Pathway safety adaptation](pathway-safety-adaptation.md) — 14-day progression follows completion and comfort, never calendar streaks or awareness improvement.
+- [Weekly useful-change review](weekly-useful-change.md) — compare direct self-reports separately; never infer missing recovery or combine measures into one score.

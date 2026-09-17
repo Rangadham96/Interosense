@@ -119,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Not authenticated" });
     }
     try {
-      const { id, date, awarenessScore, energyLevel, sleepQuality, stressLevel, mood, sensations, bodyAreas, notes } = req.body;
+      const { id, date, awarenessScore, energyLevel, sleepQuality, stressLevel, recoveryAfterStress, mood, sensations, bodyAreas, notes } = req.body;
       const checkin = await createCheckin({
         id,
         userId: req.session.userId,
@@ -128,6 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         energyLevel: energyLevel ?? 5,
         sleepQuality: sleepQuality ?? 5,
         stressLevel: stressLevel ?? 5,
+        recoveryAfterStress: typeof recoveryAfterStress === "number" ? recoveryAfterStress : null,
         mood: mood ?? "",
         sensations: sensations ?? [],
         bodyAreas: bodyAreas ?? [],

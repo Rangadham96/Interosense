@@ -85,13 +85,14 @@ const STEP_QUESTIONS: Record<number, string> = {
   1: 'What is your energy like right now?',
   2: 'How did you sleep last night?',
   3: 'How much stress is your body carrying right now?',
-  4: 'Which word best captures your emotional weather right now?',
-  5: 'What sensations are you noticing in your body?',
-  6: 'Where in your body do you feel these sensations most?',
-  7: 'Is there anything else your body is trying to tell you today?',
+  4: 'After recent stress, how recovered do you feel right now?',
+  5: 'Which word best captures your emotional weather right now?',
+  6: 'What sensations are you noticing in your body?',
+  7: 'Where in your body do you feel these sensations most?',
+  8: 'Is there anything else your body is trying to tell you today?',
 };
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
 
 const CHECK_IN_BENEFITS = [
   'Personalises your exercises for today',
@@ -246,6 +247,7 @@ export default function CheckinScreen() {
   const [energy, setEnergy] = useState(5);
   const [sleep, setSleep] = useState(5);
   const [stress, setStress] = useState(5);
+  const [recoveryAfterStress, setRecoveryAfterStress] = useState(5);
   const [selectedMood, setSelectedMood] = useState('');
   const [selectedSensations, setSelectedSensations] = useState<string[]>([]);
   const [selectedBodyAreas, setSelectedBodyAreas] = useState<string[]>([]);
@@ -264,6 +266,7 @@ export default function CheckinScreen() {
     setEnergy(5);
     setSleep(5);
     setStress(5);
+    setRecoveryAfterStress(5);
     setSelectedMood('');
     setSelectedSensations([]);
     setSelectedBodyAreas([]);
@@ -279,6 +282,7 @@ export default function CheckinScreen() {
       energyLevel: energy,
       sleepQuality: sleep,
       stressLevel: stress,
+      recoveryAfterStress,
       mood: selectedMood,
       sensations: selectedSensations,
       bodyAreas: selectedBodyAreas,
@@ -306,7 +310,7 @@ export default function CheckinScreen() {
   };
 
   const canNext = () => {
-    if (step === 4 && !selectedMood) return false;
+    if (step === 5 && !selectedMood) return false;
     return true;
   };
 
@@ -316,6 +320,7 @@ export default function CheckinScreen() {
       'Energy Level',
       'Sleep Quality',
       'Stress Level',
+      'Recovery After Stress',
       'Current Mood',
       'Body Sensations',
       'Body Areas',
@@ -325,7 +330,7 @@ export default function CheckinScreen() {
   };
 
   const getStepIcon = (): string => {
-    const icons = ['activity', 'battery-charging', 'moon', 'alert-circle', 'smile', 'thermometer', 'user', 'edit-3'];
+    const icons = ['activity', 'battery-charging', 'moon', 'alert-circle', 'refresh-cw', 'smile', 'thermometer', 'user', 'edit-3'];
     return icons[step] || 'check';
   };
 
@@ -340,9 +345,9 @@ export default function CheckinScreen() {
             <View style={styles.checkIconContainer}>
               <Feather name="check-circle" size={56} color={Colors.success} />
             </View>
-            <Text style={styles.alreadyTitle}>You've already checked in today</Text>
+            <Text style={styles.alreadyTitle}>You&apos;ve already checked in today</Text>
             <Text style={styles.alreadySubtitle}>
-              Your body's signals have been recorded. Your exercises are personalised for today.
+              Your body&apos;s signals have been recorded. Your exercises are personalised for today.
             </Text>
             {todayCheckin && (
               <View style={styles.summaryCard}>
@@ -351,6 +356,9 @@ export default function CheckinScreen() {
                 <SummaryRow label="Sleep" value={`${todayCheckin.sleepQuality}/10`} />
                 {todayCheckin.stressLevel !== undefined && (
                   <SummaryRow label="Stress" value={`${todayCheckin.stressLevel}/10`} />
+                )}
+                {todayCheckin.recoveryAfterStress !== undefined && (
+                  <SummaryRow label="Recovery after stress" value={`${todayCheckin.recoveryAfterStress}/10`} />
                 )}
                 <SummaryRow label="Mood" value={todayCheckin.mood ? todayCheckin.mood.charAt(0).toUpperCase() + todayCheckin.mood.slice(1) : '-'} />
                 {todayCheckin.sensations.length > 0 && (
@@ -433,6 +441,7 @@ export default function CheckinScreen() {
               <SummaryRow label="Energy" value={`${energy}/10`} />
               <SummaryRow label="Sleep" value={`${sleep}/10`} />
               <SummaryRow label="Stress" value={`${stress}/10`} />
+              <SummaryRow label="Recovery after stress" value={`${recoveryAfterStress}/10`} />
               <SummaryRow label="Mood" value={selectedMood ? selectedMood.charAt(0).toUpperCase() + selectedMood.slice(1) : '-'} />
               {selectedSensations.length > 0 && <SummaryRow label="Sensations" value={selectedSensations.join(', ')} />}
               {selectedBodyAreas.length > 0 && <SummaryRow label="Body Areas" value={selectedBodyAreas.join(', ')} />}
@@ -547,6 +556,14 @@ export default function CheckinScreen() {
         {step === 4 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
             <Text style={styles.stepQuestion}>{STEP_QUESTIONS[4]}</Text>
+            <Text style={styles.stepHint}>Answer from your own experience. This is a personal snapshot, not a measure of how quickly you should recover.</Text>
+            <ScaleSelector value={recoveryAfterStress} onChange={setRecoveryAfterStress} leftLabel="Not Recovered" rightLabel="Fully Recovered" color={Colors.secondary} />
+          </Animated.View>
+        )}
+
+        {step === 5 && (
+          <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
+            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[5]}</Text>
             <View style={styles.moodGrid}>
               {MOODS.map(mood => {
                 const isSelected = selectedMood === mood.key;
@@ -566,9 +583,9 @@ export default function CheckinScreen() {
           </Animated.View>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[5]}</Text>
+            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[6]}</Text>
             <Text style={styles.stepHint}>Select all that apply. Building sensation vocabulary is a core interoceptive skill. There are no wrong answers.</Text>
             <View style={styles.sensationContainer}>
               {SENSATIONS.map(s => {
@@ -590,9 +607,9 @@ export default function CheckinScreen() {
           </Animated.View>
         )}
 
-        {step === 6 && (
+        {step === 7 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[6]}</Text>
+            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[7]}</Text>
             <Text style={styles.stepHint}>Mapping sensations to body regions can make them easier to describe. Select anywhere you notice something.</Text>
             <View style={styles.sensationContainer}>
               {BODY_AREAS.map(a => {
@@ -614,9 +631,9 @@ export default function CheckinScreen() {
           </Animated.View>
         )}
 
-        {step === 7 && (
+        {step === 8 && (
           <Animated.View entering={FadeIn.duration(250)} style={styles.stepContent}>
-            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[7]}</Text>
+            <Text style={styles.stepQuestion}>{STEP_QUESTIONS[8]}</Text>
             <Text style={styles.stepHint}>Record any patterns, triggers, or observations. This is just for you.</Text>
             <TextInput
               style={styles.notesInput}

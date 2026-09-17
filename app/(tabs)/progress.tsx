@@ -11,6 +11,7 @@ import { ACHIEVEMENTS, TIER_COLORS } from '@/constants/achievements';
 import { CLINICAL_SCALES, MAIA2_SCALE, generateClinicianReport, PastMaia2Assessment, hasCompleteSubscaleScores } from '@/constants/clinical-scales';
 import RadarChart from '@/components/RadarChart';
 import { formatPatternLabel, getBodyPatternSummary } from '@/lib/body-patterns';
+import { buildWeeklyReview, WeeklyMetricTrend } from '@/lib/weekly-review';
 
 const CATEGORY_LABELS: Record<string, string> = {
   heartbeat: 'Heartbeat',
@@ -39,6 +40,7 @@ export default function ProgressScreen() {
     longestStreak,
     averageAwareness,
     unlockedAchievements,
+    pathway14,
   } = useApp();
 
   const last7Checkins = useMemo(() => {
@@ -203,6 +205,11 @@ export default function ProgressScreen() {
     };
   }, [checkins]);
 
+  const weeklyReview = useMemo(
+    () => buildWeeklyReview(pathway14, sessions, checkins),
+    [pathway14, sessions, checkins],
+  );
+
   return (
     <View style={[styles.container, { paddingTop: topPadding }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -212,6 +219,66 @@ export default function ProgressScreen() {
             <GetHelpLink />
           </View>
           <Text style={styles.subtitle}>Your interoceptive journey, visualised</Text>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Weekly Useful Change</Text>
+            <Text style={styles.weeklyReviewPeriod}>
+              Since {format(parseISO(weeklyReview.currentStart), 'MMM d')}
+            </Text>
+          </View>
+          <View style={[styles.card, styles.weeklyReviewCard]}>
+            <Text style={styles.weeklyReviewIntro}>
+              This compares your own submitted responses with the previous seven days. Each measure stays separate, and missing answers are not estimated.
+            </Text>
+            {weeklyReview.metrics.map(metric => (
+              <View key={metric.key} style={styles.weeklyMetricRow}>
+                <View style={styles.weeklyMetricMain}>
+                  <Text style={styles.weeklyMetricLabel}>{metric.label}</Text>
+                  <Text style={styles.weeklyMetricSource}>{metric.source}</Text>
+                </View>
+                {metric.currentAverage === null ? (
+                  <Text style={styles.weeklyMetricMissing}>Not recorded</Text>
+                ) : (
+                  <View style={styles.weeklyMetricValueWrap}>
+                    <Text style={styles.weeklyMetricValue}>
+                      {metric.currentAverage.toFixed(1)}
+                      <Text style={styles.weeklyMetricScale}>/{metric.scale}</Text>
+                    </Text>
+                    <View style={styles.weeklyTrendRow}>
+                      <Feather
+                        name={getWeeklyTrendIcon(metric.trend)}
+                        size={12}
+                        color={getWeeklyTrendColor(metric.trend)}
+                      />
+                      <Text style={[styles.weeklyTrendText, { color: getWeeklyTrendColor(metric.trend) }]}>
+                        {getWeeklyTrendLabel(metric.trend)}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+            ))}
+            {!weeklyReview.hasCurrentData && (
+              <View style={styles.weeklyEmptyActions}>
+                <Text style={styles.weeklyEmptyText}>
+                  Complete a pathway practice or check-in to start this week&apos;s personal review.
+                </Text>
+                <View style={styles.weeklyActionRow}>
+                  <TouchableOpacity style={styles.weeklyPrimaryAction} onPress={() => router.push('/pathway' as any)}>
+                    <Text style={styles.weeklyPrimaryActionText}>Open Pathway</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.weeklySecondaryAction} onPress={() => router.push('/(tabs)/checkin')}>
+                    <Text style={styles.weeklySecondaryActionText}>Check In</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+            <Text style={styles.weeklyReviewCaution}>
+              Higher or lower means only that your report changed. It does not prove improvement, decline, or a clinical effect.
+            </Text>
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -854,6 +921,27 @@ function interpolateColor(colorA: string, colorB: string, t: number): string {
   return `rgb(${Math.round(r1 + (r2 - r1) * t)}, ${Math.round(g1 + (g2 - g1) * t)}, ${Math.round(b1 + (b2 - b1) * t)})`;
 }
 
+function getWeeklyTrendLabel(trend: WeeklyMetricTrend): string {
+  if (trend === 'higher') return 'Higher than prior week';
+  if (trend === 'lower') return 'Lower than prior week';
+  if (trend === 'steady') return 'Similar to prior week';
+  if (trend === 'baseline') return 'First week recorded';
+  return 'Not recorded';
+}
+
+function getWeeklyTrendIcon(trend: WeeklyMetricTrend): 'arrow-up' | 'arrow-down' | 'minus' | 'circle' {
+  if (trend === 'higher') return 'arrow-up';
+  if (trend === 'lower') return 'arrow-down';
+  if (trend === 'steady') return 'minus';
+  return 'circle';
+}
+
+function getWeeklyTrendColor(trend: WeeklyMetricTrend): string {
+  if (trend === 'higher') return Colors.primary;
+  if (trend === 'lower') return Colors.accentDark;
+  return Colors.textTertiary;
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   scrollContent: { paddingHorizontal: 20 },
@@ -873,6 +961,30 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 12, fontFamily: 'Nunito_700Bold', color: Colors.textSecondary, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 12 },
   seeAll: { fontSize: 13, fontFamily: 'Nunito_600SemiBold', color: Colors.primary, marginBottom: 12 },
   card: { backgroundColor: Colors.surface, borderRadius: 16, padding: 20 },
+  weeklyReviewPeriod: { fontFamily: 'Nunito_600SemiBold', fontSize: 12, color: Colors.primary, marginBottom: 12 },
+  weeklyReviewCard: { padding: 18, borderWidth: 1, borderColor: Colors.primaryLight },
+  weeklyReviewIntro: { fontFamily: 'Nunito_400Regular', fontSize: 13, lineHeight: 19, color: Colors.textSecondary, marginBottom: 8 },
+  weeklyMetricRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13,
+    borderTopWidth: 1, borderTopColor: Colors.borderLight,
+  },
+  weeklyMetricMain: { flex: 1 },
+  weeklyMetricLabel: { fontFamily: 'Nunito_700Bold', fontSize: 14, color: Colors.text },
+  weeklyMetricSource: { fontFamily: 'Nunito_400Regular', fontSize: 11, color: Colors.textTertiary, marginTop: 2 },
+  weeklyMetricValueWrap: { alignItems: 'flex-end' },
+  weeklyMetricValue: { fontFamily: 'Nunito_800ExtraBold', fontSize: 19, color: Colors.text },
+  weeklyMetricScale: { fontFamily: 'Nunito_500Medium', fontSize: 11, color: Colors.textTertiary },
+  weeklyMetricMissing: { fontFamily: 'Nunito_600SemiBold', fontSize: 12, color: Colors.textTertiary },
+  weeklyTrendRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
+  weeklyTrendText: { fontFamily: 'Nunito_600SemiBold', fontSize: 10 },
+  weeklyEmptyActions: { backgroundColor: Colors.backgroundSecondary, borderRadius: 12, padding: 13, marginTop: 8 },
+  weeklyEmptyText: { fontFamily: 'Nunito_400Regular', fontSize: 12, lineHeight: 17, color: Colors.textSecondary },
+  weeklyActionRow: { flexDirection: 'row', gap: 8, marginTop: 11 },
+  weeklyPrimaryAction: { backgroundColor: Colors.primary, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9 },
+  weeklyPrimaryActionText: { fontFamily: 'Nunito_700Bold', fontSize: 12, color: Colors.textInverse },
+  weeklySecondaryAction: { borderWidth: 1, borderColor: Colors.primary, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9 },
+  weeklySecondaryActionText: { fontFamily: 'Nunito_700Bold', fontSize: 12, color: Colors.primary },
+  weeklyReviewCaution: { fontFamily: 'Nunito_400Regular', fontSize: 11, lineHeight: 16, color: Colors.textTertiary, marginTop: 10 },
   bodyPatternCard: { padding: 18 },
   bodyPatternHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   bodyPatternIcon: {

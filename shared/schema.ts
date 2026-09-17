@@ -60,6 +60,7 @@ export const dailyCheckins = pgTable("daily_checkins", {
   energyLevel: integer("energy_level").notNull().default(5),
   sleepQuality: integer("sleep_quality").notNull().default(5),
   stressLevel: integer("stress_level").notNull().default(5),
+  recoveryAfterStress: integer("recovery_after_stress"),
   mood: text("mood").notNull().default(""),
   sensations: jsonb("sensations").$type<string[]>().notNull().default([]),
   bodyAreas: jsonb("body_areas").$type<string[]>().notNull().default([]),

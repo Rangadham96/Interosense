@@ -53,6 +53,7 @@ export interface CheckinRecord {
   sensations: string[];
   notes: string;
   stressLevel?: number;
+  recoveryAfterStress?: number;
   bodyAreas?: string[];
 }
 

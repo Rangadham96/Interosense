@@ -25,16 +25,9 @@ import type { Recommendation, InsightCard } from '@/lib/personalization-engine';
 import { apiRequest } from '@/lib/query-client';
 import { getWearableContext } from '@/lib/health';
 import { getCompletedPathwayDays, getPathwayPurpose } from '@/lib/pathway';
+import { HOME_SCIENCE_CLAIMS } from '@/constants/claim-registry';
 
-const DAILY_SCIENCE_INSIGHTS = [
-  { label: 'BODY AWARENESS', text: 'Interoceptive practice helps you pay closer attention to body signals and describe what you notice.' },
-  { label: 'BREATHING COMFORT', text: 'Slow breathing feels settling for some people and uncomfortable for others. Use a natural pace, and stop if you feel dizzy or distressed.' },
-  { label: 'WEARABLE CONTEXT', text: 'Heart rate variability changes for many reasons. Compare readings with your own recent pattern rather than treating one number as a resilience score.' },
-  { label: 'CONSISTENCY', text: 'Regular practice gives you repeated opportunities to notice patterns and learn which responses feel useful.' },
-  { label: 'GUT-BRAIN CONTEXT', text: 'The gut and brain communicate through several pathways. Abdominal sensations can be noticed without assuming they explain mood or health.' },
-  { label: 'INTEROCEPTION', text: 'Interoception includes noticing signals such as breath, heartbeat, temperature, hunger, and tension. Accuracy and comfort can vary by signal and situation.' },
-  { label: 'BREATH & EMOTION', text: 'Breathing and emotion can influence each other, but responses differ. Treat each practice as an observation rather than a promised result.' },
-];
+const DAILY_SCIENCE_INSIGHTS = HOME_SCIENCE_CLAIMS;
 
 function getTimeOfDayGreeting(name: string): { greeting: string; subtext: string } {
   const hour = new Date().getHours();
