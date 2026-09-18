@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { PathwayState } from '@/lib/pathway';
+import type { CrisisRegion } from '@/lib/crisis-resources';
 
 const KEYS = {
   ONBOARDING_COMPLETE: '@interosense:onboarding_complete',
@@ -89,6 +90,7 @@ export interface AppSettings {
   reminderTime: string;
   reducedMotion: boolean;
   fontSize: 'small' | 'medium' | 'large';
+  crisisRegion?: CrisisRegion;
 }
 
 export interface AssessmentRecord {

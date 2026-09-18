@@ -24,9 +24,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
+import { CRISIS_REGION_OPTIONS, CRISIS_RESOURCES, detectCrisisRegion, type CrisisRegion } from '@/lib/crisis-resources';
 import * as Haptics from 'expo-haptics';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const FASTEST_EXERCISES = [
   {
@@ -407,11 +406,13 @@ function GroundingModal({ onClose }: { onClose: () => void }) {
 export default function CrisisScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { profile } = useApp();
+  const { profile, settings, updateSettings } = useApp();
   const topInset = Math.max(insets.top, Platform.OS === 'web' ? 20 : 0);
   const bottomInset = Platform.OS === 'web' ? 34 : insets.bottom;
   const [activeTechnique, setActiveTechnique] = useState<typeof FASTEST_EXERCISES[0] | null>(null);
   const [showGrounding, setShowGrounding] = useState(false);
+  const selectedRegion: CrisisRegion = settings.crisisRegion || detectCrisisRegion();
+  const regionResources = CRISIS_RESOURCES[selectedRegion];
 
   const userConditions = profile?.conditions || [];
   const relevantCoping = userConditions
@@ -419,11 +420,23 @@ export default function CrisisScreen() {
     .map(c => ({ conditionId: c, ...CONDITION_COPING[c] }));
 
   const handleEmergencyCall = () => {
-    try { Linking.openURL('tel:112'); } catch {}
+    if (!regionResources.emergencyNumber) {
+      try { Linking.openURL(regionResources.secondaryUrl); } catch {}
+      return;
+    }
+    try { Linking.openURL(`tel:${regionResources.emergencyNumber}`); } catch {}
   };
 
   const handleCrisisText = () => {
-    try { Linking.openURL(Platform.OS === 'web' ? 'https://www.crisistextline.org' : 'sms:741741'); } catch {}
+    try {
+      Linking.openURL(Platform.OS === 'web' && selectedRegion === 'US'
+        ? 'https://www.crisistextline.org'
+        : regionResources.secondaryUrl);
+    } catch {}
+  };
+
+  const handleRegionChange = (region: CrisisRegion) => {
+    void updateSettings({ ...settings, crisisRegion: region });
   };
 
   const handleExercisePress = (ex: typeof FASTEST_EXERCISES[0]) => {
@@ -457,15 +470,40 @@ export default function CrisisScreen() {
 
             <Pressable style={styles.emergencyBtn} onPress={handleEmergencyCall}>
               <Feather name="phone" size={20} color="#FFFFFF" />
-               <Text style={styles.emergencyBtnText}>Call Emergency Services (112)</Text>
+               <Text style={styles.emergencyBtnText}>{regionResources.emergencyLabel}</Text>
             </Pressable>
 
             <Pressable style={styles.crisisTextBtn} onPress={handleCrisisText}>
               <Feather name="message-square" size={18} color="#D32F2F" />
-              <Text style={styles.crisisTextBtnText}>Crisis Text Line, Text HOME to 741741</Text>
+              <Text style={styles.crisisTextBtnText}>{regionResources.secondaryLabel}</Text>
             </Pressable>
           </View>
         </Animated.View>
+
+        <View style={styles.regionCard}>
+          <View style={styles.regionCardCopy}>
+            <Text style={styles.regionCardTitle}>Show support for</Text>
+            <Text style={styles.regionCardHint}>Choose a region. No precise location is collected.</Text>
+          </View>
+          <View style={styles.regionOptions}>
+            {CRISIS_REGION_OPTIONS.map(option => {
+              const isSelected = option.code === selectedRegion;
+              return (
+                <Pressable
+                  key={option.code}
+                  style={[styles.regionOption, isSelected && styles.regionOptionSelected]}
+                  onPress={() => handleRegionChange(option.code)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                >
+                  <Text style={[styles.regionOptionText, isSelected && styles.regionOptionTextSelected]}>
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>RIGHT NOW, TRY THIS</Text>
@@ -516,14 +554,11 @@ export default function CrisisScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>MORE RESOURCES</Text>
+          <Text style={styles.sectionSub}>Showing local resources for {regionResources.label} first.</Text>
           <View style={styles.resourcesCard}>
-            <ResourceRow icon="phone" title="Kiran Mental Health Helpline" detail="1800-599-0019" url="tel:18005990019" />
-            <ResourceRow icon="phone-call" title="iCall" detail="+91 9152987821" url="tel:+919152987821" />
-            <ResourceRow icon="heart" title="Vandrevala Foundation" detail="+91 9999666555" url="tel:+919999666555" />
-            <ResourceRow icon="phone" title="988 Suicide & Crisis Lifeline" detail="Call or text 988" url="tel:988" />
-            <ResourceRow icon="phone-call" title="SAMHSA Helpline" detail="1-800-662-4357 (24/7)" url="tel:18006624357" />
-            <ResourceRow icon="globe" title="International Crisis Lines" detail="findahelpline.com" url="https://findahelpline.com" />
-            <ResourceRow icon="shield" title="Veterans Crisis Line" detail="Dial 988, then press 1" url="tel:988" last />
+            {[...regionResources.localResources, ...regionResources.additionalResources].map((resource, index, resources) => (
+              <ResourceRow key={`${resource.title}-${resource.detail}`} {...resource} last={index === resources.length - 1} />
+            ))}
           </View>
         </View>
       </ScrollView>
